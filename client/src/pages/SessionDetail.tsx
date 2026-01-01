@@ -200,7 +200,7 @@ export default function SessionDetail() {
               <div>
                 <h3 className="mb-3 text-sm font-medium text-muted-foreground">Spreker</h3>
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-16 w-16">
+                  <Avatar className="h-16 w-16 shrink-0">
                     {session.speakerPhotoUrl ? (
                       <AvatarImage src={session.speakerPhotoUrl} alt={session.speakerName} />
                     ) : null}
@@ -208,11 +208,11 @@ export default function SessionDetail() {
                       {getInitials(session.speakerName)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="font-semibold" data-testid="text-speaker-name">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold truncate" data-testid="text-speaker-name">
                       {session.speakerName}
                     </p>
-                    <p className="text-sm text-muted-foreground" data-testid="text-speaker-email">
+                    <p className="text-sm text-muted-foreground truncate" data-testid="text-speaker-email">
                       {session.speakerEmail}
                     </p>
                   </div>
