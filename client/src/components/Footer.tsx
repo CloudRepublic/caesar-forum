@@ -1,0 +1,33 @@
+export function Footer() {
+  return (
+    <footer className="border-t bg-muted/30 py-8">
+      <div className="mx-auto max-w-7xl px-4 md:px-8">
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <div className="flex items-center gap-2" data-testid="footer-logo">
+            <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
+              <span className="text-xs font-bold text-primary-foreground">CF</span>
+            </div>
+            <span className="text-sm font-medium">Caesar Forum</span>
+          </div>
+          
+          <p className="text-sm text-muted-foreground">
+            Een intern platform van{" "}
+            <a
+              href="https://caesar.nl"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+              data-testid="link-caesar-nl"
+            >
+              Caesar.nl
+            </a>
+          </p>
+          
+          <p className="text-xs text-muted-foreground" data-testid="text-copyright">
+            &copy; {new Date().getFullYear()} Caesar Groep
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
