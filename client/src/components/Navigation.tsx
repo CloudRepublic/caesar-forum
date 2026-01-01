@@ -2,11 +2,11 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export function Navigation() {
-  const { user, logout } = useUser();
+  const { user, logout, loginAsMockUser } = useUser();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -53,7 +53,7 @@ export function Navigation() {
         </div>
 
         <div className="flex items-center gap-4">
-          {user && (
+          {user ? (
             <div className="hidden items-center gap-4 md:flex">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
@@ -80,6 +80,17 @@ export function Navigation() {
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
+          ) : (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={loginAsMockUser}
+              data-testid="button-login"
+              className="hidden md:flex"
+            >
+              <LogIn className="mr-2 h-4 w-4" />
+              Inloggen (Demo)
+            </Button>
           )}
 
           <Button
@@ -110,7 +121,7 @@ export function Navigation() {
                 </Button>
               </Link>
             ))}
-            {user && (
+            {user ? (
               <>
                 <div className="my-2 border-t" />
                 <div className="flex items-center gap-2 px-4 py-2">
@@ -135,6 +146,22 @@ export function Navigation() {
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Uitloggen
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="my-2 border-t" />
+                <Button
+                  variant="default"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    loginAsMockUser();
+                    setMobileMenuOpen(false);
+                  }}
+                  data-testid="button-mobile-login"
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Inloggen (Demo)
                 </Button>
               </>
             )}

@@ -4,6 +4,7 @@ import type { User } from "@shared/schema";
 interface UserContextType {
   user: User | null;
   login: (user: User) => void;
+  loginAsMockUser: () => void;
   logout: () => void;
 }
 
@@ -23,12 +24,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
   }, []);
 
+  const loginAsMockUser = useCallback(() => {
+    setUser(mockUser);
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={{ user, login, loginAsMockUser, logout }}>
       {children}
     </UserContext.Provider>
   );
