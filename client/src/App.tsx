@@ -8,12 +8,14 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import Home from "@/pages/Home";
 import MySessions from "@/pages/MySessions";
+import SessionDetail from "@/pages/SessionDetail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/sessie/:id" component={SessionDetail} />
       <Route path="/mijn-sessies" component={MySessions} />
       <Route component={NotFound} />
     </Switch>

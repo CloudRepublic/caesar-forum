@@ -1,8 +1,9 @@
+import { Link } from "wouter";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Clock, MapPin, User, Users, Check } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Clock, MapPin, Users, Check } from "lucide-react";
 import type { Session, SessionType } from "@shared/schema";
 
 interface SessionCardProps {
@@ -77,12 +78,14 @@ export function SessionCard({
       </CardHeader>
 
       <CardContent className="flex-1 space-y-4">
-        <h3
-          className="text-xl font-semibold leading-tight"
-          data-testid={`text-title-${session.id}`}
-        >
-          {session.title}
-        </h3>
+        <Link href={`/sessie/${session.id}`}>
+          <h3
+            className="text-xl font-semibold leading-tight hover:text-primary cursor-pointer transition-colors"
+            data-testid={`text-title-${session.id}`}
+          >
+            {session.title}
+          </h3>
+        </Link>
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -99,6 +102,9 @@ export function SessionCard({
 
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
+              {session.speakerPhotoUrl ? (
+                <AvatarImage src={session.speakerPhotoUrl} alt={session.speakerName} />
+              ) : null}
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {getInitials(session.speakerName)}
               </AvatarFallback>

@@ -15,6 +15,7 @@ export const sessionSchema = z.object({
   room: z.string(),
   speakerName: z.string(),
   speakerEmail: z.string(),
+  speakerPhotoUrl: z.string().optional(),
   attendees: z.array(z.string()), // Array of email addresses
 });
 
