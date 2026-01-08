@@ -173,9 +173,17 @@ export default function SessionDetail() {
         <div className="lg:col-span-2">
           <div className="prose prose-lg dark:prose-invert max-w-none">
             <h2 className="text-xl font-semibold">Over deze sessie</h2>
-            <div className="text-muted-foreground" data-testid="text-session-description">
-              {session.description}
-            </div>
+            {session.descriptionHtml ? (
+              <div 
+                className="text-muted-foreground [&>p]:mb-4 [&>ul]:mb-4 [&>ul]:list-disc [&>ul]:pl-6 [&>ol]:mb-4 [&>ol]:list-decimal [&>ol]:pl-6"
+                data-testid="text-session-description"
+                dangerouslySetInnerHTML={{ __html: session.descriptionHtml }}
+              />
+            ) : (
+              <div className="text-muted-foreground" data-testid="text-session-description">
+                {session.description}
+              </div>
+            )}
           </div>
         </div>
 

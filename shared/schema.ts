@@ -4,7 +4,8 @@ import { z } from "zod";
 export const sessionSchema = z.object({
   id: z.string(),
   title: z.string(),
-  description: z.string(),
+  description: z.string(), // Plain text fallback
+  descriptionHtml: z.string().optional(), // Sanitized HTML content from Outlook
   categories: z.array(z.string()), // Outlook categories (e.g., ["Talk", "Workshop"])
   startTime: z.string(), // ISO datetime
   endTime: z.string(), // ISO datetime

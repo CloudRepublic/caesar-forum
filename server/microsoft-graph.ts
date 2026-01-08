@@ -1,5 +1,6 @@
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import { Client } from "@microsoft/microsoft-graph-client";
+import DOMPurify from "isomorphic-dompurify";
 import type { Session, ForumEdition, ForumData } from "@shared/schema";
 
 const FORUM_MAILBOX = "forum@caesar.nl";
@@ -369,9 +370,9 @@ export class MicrosoftGraphService {
 
     const sessions: Session[] = sessionEvents.map((event) => {
       const bodyContent = event.body?.content || "";
-      const description = event.body?.contentType === "html" 
-        ? stripHtml(bodyContent) 
-        : bodyContent;
+      const isHtml = event.body?.contentType === "html";
+      const description = isHtml ? stripHtml(bodyContent) : bodyContent;
+      const descriptionHtml = isHtml ? DOMPurify.sanitize(bodyContent) : undefined;
       
       const humanAttendees = (event.attendees || [])
         .filter((a) => a.type.toLowerCase() !== "resource");
@@ -393,6 +394,7 @@ export class MicrosoftGraphService {
         id: event.id,
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
+        descriptionHtml: descriptionHtml,
         categories: getCategories(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
@@ -420,9 +422,9 @@ export class MicrosoftGraphService {
       }, `Session ID: ${id}`);
 
       const bodyContent = event.body?.content || "";
-      const description = event.body?.contentType === "html" 
-        ? stripHtml(bodyContent) 
-        : bodyContent;
+      const isHtml = event.body?.contentType === "html";
+      const description = isHtml ? stripHtml(bodyContent) : bodyContent;
+      const descriptionHtml = isHtml ? DOMPurify.sanitize(bodyContent) : undefined;
 
       const humanAttendees = (event.attendees || [])
         .filter((a) => a.type.toLowerCase() !== "resource");
@@ -444,6 +446,7 @@ export class MicrosoftGraphService {
         id: event.id,
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
+        descriptionHtml: descriptionHtml,
         categories: getCategories(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
