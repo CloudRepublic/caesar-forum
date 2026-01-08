@@ -22,9 +22,23 @@ interface CalendarEvent {
 
 function parseSessionType(categories: string[] | undefined): SessionType {
   if (!categories || categories.length === 0) return "talk";
-  const category = categories[0].toLowerCase();
-  if (category.includes("workshop")) return "workshop";
-  if (category.includes("discussie") || category.includes("discussion")) return "discussie";
+  
+  for (const category of categories) {
+    const lowerCategory = category.toLowerCase().trim();
+    
+    if (lowerCategory === "workshop" || lowerCategory.startsWith("workshop")) {
+      return "workshop";
+    }
+    if (lowerCategory === "discussie" || lowerCategory === "discussion" || 
+        lowerCategory.startsWith("discussie") || lowerCategory.startsWith("discussion")) {
+      return "discussie";
+    }
+    if (lowerCategory === "talk" || lowerCategory === "presentatie" || 
+        lowerCategory.startsWith("talk") || lowerCategory.startsWith("presentatie")) {
+      return "talk";
+    }
+  }
+  
   return "talk";
 }
 

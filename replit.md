@@ -41,6 +41,12 @@ Preferred communication style: Simple, everyday language.
   - `AZURE_CLIENT_ID`: Azure AD application client ID
   - `AZURE_CLIENT_SECRET`: Application secret (expires Jan 8, 2027)
   - `AZURE_TENANT_ID`: Caesar M365 tenant ID
+- **Session Type via Categories**: Use Outlook categories to set session type:
+  - "Talk" or "Presentatie" → Talk
+  - "Workshop" → Workshop  
+  - "Discussie" or "Discussion" → Discussie
+  - No category → defaults to Talk
+- **All-day Event**: An all-day event determines the Forum date, but is not shown as a session
 
 ### Key Design Decisions
 
