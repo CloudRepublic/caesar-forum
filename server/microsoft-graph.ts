@@ -16,16 +16,24 @@ function sanitizeHtml(html: string): string {
 
 // Parse back-matter metadata from description (YAML-style block at end)
 // Format: ---\nkey: value\nkey2: value2\n---
+// Flexible to handle Outlook's HTML structure where each line becomes a paragraph
 interface BackMatter {
   metadata: Record<string, string>;
   content: string;
 }
 
 function parseBackMatter(text: string): BackMatter {
+  // Normalize text: collapse multiple newlines/whitespace to single newlines
+  const normalizedText = text
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/\n\s*\n/g, "\n")
+    .trim();
+  
   // Match a YAML-style block at the end: ---\n...\n---
-  // The block should be preceded by newlines or whitespace
-  const backMatterRegex = /[\r\n\s]*---[\r\n]+([\s\S]*?)[\r\n]+---[\r\n\s]*$/;
-  const match = text.match(backMatterRegex);
+  // Allow for flexible whitespace and empty lines between elements
+  const backMatterRegex = /[\n\s]*---[\n\s]+([\s\S]*?)[\n\s]+---[\n\s]*$/;
+  const match = normalizedText.match(backMatterRegex);
   
   if (!match) {
     return { metadata: {}, content: text };
@@ -35,16 +43,24 @@ function parseBackMatter(text: string): BackMatter {
   const yamlContent = match[1];
   
   // Parse simple key: value pairs
-  const lines = yamlContent.split(/[\r\n]+/);
+  const lines = yamlContent.split(/[\n]+/);
   for (const line of lines) {
-    const colonIndex = line.indexOf(":");
+    const trimmedLine = line.trim();
+    if (!trimmedLine) continue;
+    
+    const colonIndex = trimmedLine.indexOf(":");
     if (colonIndex > 0) {
-      const key = line.substring(0, colonIndex).trim().toLowerCase();
-      const value = line.substring(colonIndex + 1).trim();
+      const key = trimmedLine.substring(0, colonIndex).trim().toLowerCase();
+      const value = trimmedLine.substring(colonIndex + 1).trim();
       if (key && value) {
         metadata[key] = value;
       }
     }
+  }
+  
+  // Only return metadata if we found valid key-value pairs
+  if (Object.keys(metadata).length === 0) {
+    return { metadata: {}, content: text };
   }
   
   // Remove the back-matter block from content
@@ -55,8 +71,14 @@ function parseBackMatter(text: string): BackMatter {
 
 // Strip back-matter from HTML content (for display)
 function stripBackMatterFromHtml(html: string): string {
-  // First convert to plain text to find the back-matter
-  const textContent = html.replace(/<[^>]*>/g, "\n");
+  // First convert to plain text to check if back-matter exists
+  const textContent = html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/?(p|div)[^>]*>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\n\s*\n/g, "\n");
+  
   const { metadata } = parseBackMatter(textContent);
   
   if (Object.keys(metadata).length === 0) {
@@ -64,12 +86,23 @@ function stripBackMatterFromHtml(html: string): string {
   }
   
   // Remove the back-matter block from HTML
-  // Look for patterns like <p>---</p> or ---<br> or similar
+  // Handle various Outlook patterns:
+  // - <p>---</p><p>slug: value</p><p>---</p>
+  // - <div>---</div><div>slug: value</div><div>---</div>
+  // - ---<br>slug: value<br>---
   let result = html;
   
-  // Match the back-matter section in HTML (including surrounding tags)
-  const htmlBackMatterRegex = /(<p>|<br\s*\/?>|\s)*---(<\/p>|<br\s*\/?>|\s)*([\s\S]*?)(<p>|<br\s*\/?>|\s)*---(<\/p>|<br\s*\/?>|\s)*$/i;
-  result = result.replace(htmlBackMatterRegex, "");
+  // Pattern 1: Block elements (p/div) wrapping each line
+  const blockPattern = /(\s*<(p|div)[^>]*>\s*---\s*<\/(p|div)>\s*)(<(p|div)[^>]*>[^<]*:[^<]*<\/(p|div)>\s*)*(\s*<(p|div)[^>]*>\s*---\s*<\/(p|div)>\s*)$/i;
+  result = result.replace(blockPattern, "");
+  
+  // Pattern 2: BR-separated content
+  const brPattern = /(\s*---\s*(<br\s*\/?>)\s*)([^<]*:[^<]*(<br\s*\/?>)\s*)*(\s*---\s*(<br\s*\/?>)?\s*)$/i;
+  result = result.replace(brPattern, "");
+  
+  // Pattern 3: Mixed - opening/closing dashes in blocks, content with BRs
+  const mixedPattern = /(\s*<(p|div)[^>]*>\s*---[\s\S]*?---\s*<\/(p|div)>\s*)$/i;
+  result = result.replace(mixedPattern, "");
   
   return result.trim();
 }
