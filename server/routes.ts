@@ -40,8 +40,8 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid request body", details: parsed.error.errors });
       }
 
-      const { sessionId, userEmail } = parsed.data;
-      const session = await storage.registerForSession(sessionId, userEmail);
+      const { sessionId, userEmail, userName } = parsed.data;
+      const session = await storage.registerForSession(sessionId, userEmail, userName);
       
       if (!session) {
         return res.status(404).json({ error: "Session not found" });

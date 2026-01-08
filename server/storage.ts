@@ -1,4 +1,5 @@
 import type { Session, ForumEdition, ForumData } from "@shared/schema";
+import { getMicrosoftGraphService } from "./microsoft-graph";
 
 // Mock data for Caesar Forum demo
 const mockEdition: ForumEdition = {
@@ -92,7 +93,7 @@ const mockSessions: Session[] = [
 export interface IStorage {
   getForumData(): Promise<ForumData>;
   getSession(id: string): Promise<Session | undefined>;
-  registerForSession(sessionId: string, userEmail: string): Promise<Session | undefined>;
+  registerForSession(sessionId: string, userEmail: string, userName?: string): Promise<Session | undefined>;
   unregisterFromSession(sessionId: string, userEmail: string): Promise<Session | undefined>;
 }
 
@@ -141,4 +142,117 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class GraphStorage implements IStorage {
+  private memStorage: MemStorage;
+  private graphFailures: number = 0;
+  private lastGraphAttempt: Date | null = null;
+  private readonly MAX_FAILURES = 3;
+  private readonly RETRY_DELAY_MS = 60000;
+
+  constructor() {
+    this.memStorage = new MemStorage();
+  }
+
+  private shouldTryGraph(): boolean {
+    if (this.graphFailures >= this.MAX_FAILURES) {
+      if (this.lastGraphAttempt && Date.now() - this.lastGraphAttempt.getTime() > this.RETRY_DELAY_MS) {
+        console.log("Retrying Microsoft Graph after cooldown period...");
+        this.graphFailures = 0;
+        return true;
+      }
+      return false;
+    }
+    return true;
+  }
+
+  private recordGraphSuccess(): void {
+    this.graphFailures = 0;
+    this.lastGraphAttempt = new Date();
+  }
+
+  private recordGraphFailure(error: unknown): void {
+    this.graphFailures++;
+    this.lastGraphAttempt = new Date();
+    console.error(`Microsoft Graph failure (${this.graphFailures}/${this.MAX_FAILURES}):`, error);
+  }
+
+  async getForumData(): Promise<ForumData> {
+    if (!this.shouldTryGraph()) {
+      console.log("Using mock data (Graph temporarily unavailable)");
+      return this.memStorage.getForumData();
+    }
+
+    try {
+      const graphService = getMicrosoftGraphService();
+      const result = await graphService.getForumData();
+      this.recordGraphSuccess();
+      return result;
+    } catch (error) {
+      this.recordGraphFailure(error);
+      return this.memStorage.getForumData();
+    }
+  }
+
+  async getSession(id: string): Promise<Session | undefined> {
+    if (!this.shouldTryGraph()) {
+      return this.memStorage.getSession(id);
+    }
+
+    try {
+      const graphService = getMicrosoftGraphService();
+      const session = await graphService.getSession(id);
+      if (session) {
+        this.recordGraphSuccess();
+        return session;
+      }
+      return this.memStorage.getSession(id);
+    } catch (error) {
+      this.recordGraphFailure(error);
+      return this.memStorage.getSession(id);
+    }
+  }
+
+  async registerForSession(sessionId: string, userEmail: string, userName?: string): Promise<Session | undefined> {
+    if (!this.shouldTryGraph()) {
+      console.warn("Registration using mock data - changes will not sync to Outlook calendar");
+      return this.memStorage.registerForSession(sessionId, userEmail);
+    }
+
+    try {
+      const graphService = getMicrosoftGraphService();
+      const result = await graphService.registerForSession(sessionId, userEmail, userName || userEmail);
+      if (result) {
+        this.recordGraphSuccess();
+        return result;
+      }
+      throw new Error("Registration returned no result");
+    } catch (error) {
+      this.recordGraphFailure(error);
+      console.warn("Registration failed on Graph API, falling back to mock data");
+      return this.memStorage.registerForSession(sessionId, userEmail);
+    }
+  }
+
+  async unregisterFromSession(sessionId: string, userEmail: string): Promise<Session | undefined> {
+    if (!this.shouldTryGraph()) {
+      console.warn("Unregistration using mock data - changes will not sync to Outlook calendar");
+      return this.memStorage.unregisterFromSession(sessionId, userEmail);
+    }
+
+    try {
+      const graphService = getMicrosoftGraphService();
+      const result = await graphService.unregisterFromSession(sessionId, userEmail);
+      if (result) {
+        this.recordGraphSuccess();
+        return result;
+      }
+      throw new Error("Unregistration returned no result");
+    } catch (error) {
+      this.recordGraphFailure(error);
+      console.warn("Unregistration failed on Graph API, falling back to mock data");
+      return this.memStorage.unregisterFromSession(sessionId, userEmail);
+    }
+  }
+}
+
+export const storage = new GraphStorage();

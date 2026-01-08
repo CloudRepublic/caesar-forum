@@ -1,0 +1,291 @@
+import { ConfidentialClientApplication } from "@azure/msal-node";
+import { Client } from "@microsoft/microsoft-graph-client";
+import type { Session, SessionType, ForumEdition, ForumData } from "@shared/schema";
+
+const FORUM_MAILBOX = "forum@caesar.nl";
+
+interface CalendarEvent {
+  id: string;
+  subject: string;
+  body?: { content: string; contentType: string };
+  start: { dateTime: string; timeZone: string };
+  end: { dateTime: string; timeZone: string };
+  location?: { displayName: string };
+  organizer?: { emailAddress: { name: string; address: string } };
+  categories?: string[];
+  attendees?: Array<{
+    emailAddress: { name: string; address: string };
+    type: string;
+    status: { response: string };
+  }>;
+}
+
+function parseSessionType(categories: string[] | undefined): SessionType {
+  if (!categories || categories.length === 0) return "talk";
+  const category = categories[0].toLowerCase();
+  if (category.includes("workshop")) return "workshop";
+  if (category.includes("discussie") || category.includes("discussion")) return "discussie";
+  return "talk";
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function extractSpeakerPhoto(body: string | undefined): string | undefined {
+  if (!body) return undefined;
+  const imgMatch = body.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (!imgMatch) return undefined;
+  const url = imgMatch[1];
+  if (url.startsWith("cid:") || url.startsWith("data:")) return undefined;
+  return url;
+}
+
+export class MicrosoftGraphService {
+  private msalClient: ConfidentialClientApplication;
+  private graphClient: Client | null = null;
+  private accessToken: string | null = null;
+  private tokenExpiry: Date | null = null;
+
+  constructor() {
+    const clientId = process.env.AZURE_CLIENT_ID;
+    const clientSecret = process.env.AZURE_CLIENT_SECRET;
+    const tenantId = process.env.AZURE_TENANT_ID;
+
+    if (!clientId || !clientSecret || !tenantId) {
+      throw new Error("Missing Azure credentials. Please set AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, and AZURE_TENANT_ID environment variables.");
+    }
+
+    this.msalClient = new ConfidentialClientApplication({
+      auth: {
+        clientId,
+        clientSecret,
+        authority: `https://login.microsoftonline.com/${tenantId}`,
+      },
+    });
+  }
+
+  private async getAccessToken(): Promise<string> {
+    if (this.accessToken && this.tokenExpiry && this.tokenExpiry > new Date()) {
+      return this.accessToken;
+    }
+
+    const result = await this.msalClient.acquireTokenByClientCredential({
+      scopes: ["https://graph.microsoft.com/.default"],
+    });
+
+    if (!result || !result.accessToken) {
+      throw new Error("Failed to acquire access token from Microsoft identity platform");
+    }
+
+    this.accessToken = result.accessToken;
+    this.tokenExpiry = result.expiresOn || new Date(Date.now() + 3600 * 1000);
+    return this.accessToken;
+  }
+
+  private async getClient(): Promise<Client> {
+    if (this.graphClient) {
+      return this.graphClient;
+    }
+
+    this.graphClient = Client.init({
+      authProvider: async (done) => {
+        try {
+          const token = await this.getAccessToken();
+          done(null, token);
+        } catch (error) {
+          done(error as Error, null);
+        }
+      },
+    });
+
+    return this.graphClient;
+  }
+
+  async getCalendarEvents(startDate: Date, endDate: Date): Promise<CalendarEvent[]> {
+    const client = await this.getClient();
+
+    const response = await client
+      .api(`/users/${FORUM_MAILBOX}/calendar/events`)
+      .select("id,subject,body,start,end,location,organizer,categories,attendees")
+      .filter(`start/dateTime ge '${startDate.toISOString()}' and start/dateTime le '${endDate.toISOString()}'`)
+      .orderby("start/dateTime")
+      .top(100)
+      .get();
+
+    return response.value as CalendarEvent[];
+  }
+
+  async getForumData(): Promise<ForumData> {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 3, 0);
+
+    const events = await this.getCalendarEvents(startDate, endDate);
+
+    if (events.length === 0) {
+      return {
+        edition: {
+          id: "no-events",
+          title: "Geen aankomende sessies",
+          date: now.toISOString().split("T")[0],
+          location: "Caesar Hoofdkantoor, Utrecht",
+        },
+        sessions: [],
+      };
+    }
+
+    const firstEventDate = new Date(events[0].start.dateTime);
+    const monthNames = [
+      "Januari", "Februari", "Maart", "April", "Mei", "Juni",
+      "Juli", "Augustus", "September", "Oktober", "November", "December"
+    ];
+
+    const edition: ForumEdition = {
+      id: `edition-${firstEventDate.getFullYear()}-${String(firstEventDate.getMonth() + 1).padStart(2, "0")}`,
+      title: `Caesar Forum - ${monthNames[firstEventDate.getMonth()]} ${firstEventDate.getFullYear()}`,
+      date: firstEventDate.toISOString().split("T")[0],
+      location: "Caesar Hoofdkantoor, Utrecht",
+    };
+
+    const sessions: Session[] = events.map((event) => {
+      const bodyContent = event.body?.content || "";
+      const description = event.body?.contentType === "html" 
+        ? stripHtml(bodyContent) 
+        : bodyContent;
+      
+      const acceptedAttendees = (event.attendees || [])
+        .filter((a) => a.status.response === "accepted" || a.status.response === "tentativelyAccepted")
+        .map((a) => a.emailAddress.address);
+
+      return {
+        id: event.id,
+        title: event.subject,
+        description: description || "Geen beschrijving beschikbaar.",
+        type: parseSessionType(event.categories),
+        startTime: event.start.dateTime,
+        endTime: event.end.dateTime,
+        room: event.location?.displayName || "Zaal nog te bepalen",
+        speakerName: event.organizer?.emailAddress.name || "Onbekende spreker",
+        speakerEmail: event.organizer?.emailAddress.address || "",
+        speakerPhotoUrl: extractSpeakerPhoto(bodyContent),
+        attendees: acceptedAttendees,
+      };
+    });
+
+    return { edition, sessions };
+  }
+
+  async getSession(id: string): Promise<Session | undefined> {
+    try {
+      const client = await this.getClient();
+      
+      const event = await client
+        .api(`/users/${FORUM_MAILBOX}/calendar/events/${id}`)
+        .select("id,subject,body,start,end,location,organizer,categories,attendees")
+        .get() as CalendarEvent;
+
+      const bodyContent = event.body?.content || "";
+      const description = event.body?.contentType === "html" 
+        ? stripHtml(bodyContent) 
+        : bodyContent;
+
+      const acceptedAttendees = (event.attendees || [])
+        .filter((a) => a.status.response === "accepted" || a.status.response === "tentativelyAccepted")
+        .map((a) => a.emailAddress.address);
+
+      return {
+        id: event.id,
+        title: event.subject,
+        description: description || "Geen beschrijving beschikbaar.",
+        type: parseSessionType(event.categories),
+        startTime: event.start.dateTime,
+        endTime: event.end.dateTime,
+        room: event.location?.displayName || "Zaal nog te bepalen",
+        speakerName: event.organizer?.emailAddress.name || "Onbekende spreker",
+        speakerEmail: event.organizer?.emailAddress.address || "",
+        speakerPhotoUrl: extractSpeakerPhoto(bodyContent),
+        attendees: acceptedAttendees,
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  async registerForSession(sessionId: string, userEmail: string, userName: string): Promise<Session | undefined> {
+    try {
+      const client = await this.getClient();
+
+      const event = await client
+        .api(`/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`)
+        .select("attendees")
+        .get() as CalendarEvent;
+
+      const existingAttendees = event.attendees || [];
+      const alreadyRegistered = existingAttendees.some(
+        (a) => a.emailAddress.address.toLowerCase() === userEmail.toLowerCase()
+      );
+
+      if (!alreadyRegistered) {
+        const updatedAttendees = [
+          ...existingAttendees,
+          {
+            emailAddress: { address: userEmail, name: userName },
+            type: "required",
+          },
+        ];
+
+        await client
+          .api(`/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`)
+          .patch({ attendees: updatedAttendees });
+      }
+
+      return this.getSession(sessionId);
+    } catch {
+      return undefined;
+    }
+  }
+
+  async unregisterFromSession(sessionId: string, userEmail: string): Promise<Session | undefined> {
+    try {
+      const client = await this.getClient();
+
+      const event = await client
+        .api(`/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`)
+        .select("attendees")
+        .get() as CalendarEvent;
+
+      const existingAttendees = event.attendees || [];
+      const updatedAttendees = existingAttendees.filter(
+        (a) => a.emailAddress.address.toLowerCase() !== userEmail.toLowerCase()
+      );
+
+      await client
+        .api(`/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`)
+        .patch({ attendees: updatedAttendees });
+
+      return this.getSession(sessionId);
+    } catch {
+      return undefined;
+    }
+  }
+}
+
+let graphService: MicrosoftGraphService | null = null;
+
+export function getMicrosoftGraphService(): MicrosoftGraphService {
+  if (!graphService) {
+    graphService = new MicrosoftGraphService();
+  }
+  return graphService;
+}

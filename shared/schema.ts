@@ -44,6 +44,7 @@ export type User = z.infer<typeof userSchema>;
 export const registrationRequestSchema = z.object({
   sessionId: z.string(),
   userEmail: z.string().email(),
+  userName: z.string().optional(),
 });
 
 export type RegistrationRequest = z.infer<typeof registrationRequestSchema>;

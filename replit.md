@@ -28,8 +28,19 @@ Preferred communication style: Simple, everyday language.
 ### Data Layer
 - **ORM**: Drizzle ORM with PostgreSQL dialect
 - **Schema Validation**: Zod with drizzle-zod integration
-- **Current Storage**: In-memory mock data (designed for PostgreSQL migration)
+- **Primary Storage**: Microsoft Graph API (forum@caesar.nl calendar)
+- **Fallback Storage**: In-memory mock data when Graph API unavailable
 - **Schema Location**: `shared/schema.ts` contains all type definitions
+
+### Microsoft Graph Integration
+- **Authentication**: Azure AD application with client credentials flow
+- **Library**: @azure/msal-node for token acquisition, @microsoft/microsoft-graph-client for API calls
+- **Scope**: Calendars.ReadWrite on forum@caesar.nl mailbox only
+- **Service Location**: `server/microsoft-graph.ts`
+- **Environment Variables Required**:
+  - `AZURE_CLIENT_ID`: Azure AD application client ID
+  - `AZURE_CLIENT_SECRET`: Application secret (expires Jan 8, 2027)
+  - `AZURE_TENANT_ID`: Caesar M365 tenant ID
 
 ### Key Design Decisions
 
@@ -48,11 +59,14 @@ Preferred communication style: Simple, everyday language.
 - **Drizzle Kit**: Database migrations and schema push (`db:push` script)
 
 ### Third-Party Services
+- **Microsoft Graph API**: Calendar integration with forum@caesar.nl shared mailbox
 - **Google Fonts**: Inter font family loaded via CDN
 - **connect-pg-simple**: PostgreSQL session store (available but not currently active)
 
 ### Key NPM Packages
 - `@tanstack/react-query`: Server state management
+- `@azure/msal-node`: Microsoft identity platform authentication
+- `@microsoft/microsoft-graph-client`: Microsoft Graph API client
 - `drizzle-orm` / `drizzle-zod`: Database ORM and validation
 - `express`: HTTP server framework
 - `zod`: Schema validation

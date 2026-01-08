@@ -25,6 +25,7 @@ export default function Home() {
       return apiRequest("POST", "/api/sessions/register", {
         sessionId,
         userEmail: user?.email,
+        userName: user?.name,
       });
     },
     onSuccess: () => {

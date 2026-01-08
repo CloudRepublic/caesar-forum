@@ -39,6 +39,7 @@ export default function SessionDetail() {
       await apiRequest("POST", "/api/sessions/register", {
         sessionId,
         userEmail: user?.email,
+        userName: user?.name,
       });
     },
     onSuccess: () => {
