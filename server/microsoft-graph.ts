@@ -156,6 +156,14 @@ export class MicrosoftGraphService {
     return startsAtMidnight && isFullDay;
   }
 
+  private isSameDate(date1: Date, date2: Date): boolean {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  }
+
   async getForumData(): Promise<ForumData> {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -166,14 +174,15 @@ export class MicrosoftGraphService {
       this.getMasterCategories(),
     ]);
 
+    // Find the first upcoming all-day event - this defines the Forum
     const allDayEvent = events.find((e) => this.isAllDayEvent(e));
-    const sessionEvents = events.filter((e) => !this.isAllDayEvent(e));
 
-    if (sessionEvents.length === 0 && !allDayEvent) {
+    // No all-day event means no Forum
+    if (!allDayEvent) {
       return {
         edition: {
           id: "no-events",
-          title: "Geen aankomende sessies",
+          title: "Geen aankomend event",
           date: now.toISOString().split("T")[0],
           location: "Caesar Hoofdkantoor, Utrecht",
         },
@@ -181,22 +190,27 @@ export class MicrosoftGraphService {
       };
     }
 
-    const forumDate = allDayEvent 
-      ? new Date(allDayEvent.start.dateTime)
-      : sessionEvents.length > 0 
-        ? new Date(sessionEvents[0].start.dateTime)
-        : now;
+    // The forum date is determined by the all-day event
+    const forumDate = new Date(allDayEvent.start.dateTime);
+
+    // Only sessions on the same date as the all-day event count
+    const sessionEvents = events.filter((e) => {
+      if (this.isAllDayEvent(e)) return false;
+      const eventDate = new Date(e.start.dateTime);
+      return this.isSameDate(eventDate, forumDate);
+    });
 
     const monthNames = [
       "Januari", "Februari", "Maart", "April", "Mei", "Juni",
       "Juli", "Augustus", "September", "Oktober", "November", "December"
     ];
 
+    // Use the all-day event's subject as the forum title
     const edition: ForumEdition = {
-      id: `edition-${forumDate.getFullYear()}-${String(forumDate.getMonth() + 1).padStart(2, "0")}`,
-      title: `Caesar Forum - ${monthNames[forumDate.getMonth()]} ${forumDate.getFullYear()}`,
+      id: `edition-${forumDate.getFullYear()}-${String(forumDate.getMonth() + 1).padStart(2, "0")}-${String(forumDate.getDate()).padStart(2, "0")}`,
+      title: allDayEvent.subject,
       date: forumDate.toISOString().split("T")[0],
-      location: allDayEvent?.location?.displayName || "Caesar Hoofdkantoor, Utrecht",
+      location: allDayEvent.location?.displayName || "Caesar Hoofdkantoor, Utrecht",
     };
 
     const sessions: Session[] = sessionEvents.map((event) => {
