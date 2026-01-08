@@ -67,37 +67,41 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
                 </span>
               </div>
 
-              <div className="mb-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/80">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-white" data-testid="text-session-count">
-                    {sessions.length}
-                  </span>
-                  <span>sessies</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span className="text-2xl font-bold text-white" data-testid="text-registration-count">
-                    {totalRegistrations}
-                  </span>
-                  <span>inschrijvingen</span>
-                </div>
-                {userEmail && userRegistrations > 0 && (
-                  <div className="rounded-full bg-white/20 px-3 py-1">
-                    <span data-testid="text-user-registrations">
-                      Jij: {userRegistrations} sessie{userRegistrations !== 1 ? "s" : ""}
-                    </span>
+              {sessions.length > 0 && (
+                <>
+                  <div className="mb-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/80">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-white" data-testid="text-session-count">
+                        {sessions.length}
+                      </span>
+                      <span>sessies</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span className="text-2xl font-bold text-white" data-testid="text-registration-count">
+                        {totalRegistrations}
+                      </span>
+                      <span>inschrijvingen</span>
+                    </div>
+                    {userEmail && userRegistrations > 0 && (
+                      <div className="rounded-full bg-white/20 px-3 py-1">
+                        <span data-testid="text-user-registrations">
+                          Jij: {userRegistrations} sessie{userRegistrations !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <Button
-                size="lg"
-                onClick={scrollToSessions}
-                className="bg-white text-black hover:bg-white/90"
-                data-testid="button-view-sessions"
-              >
-                Bekijk Sessies
-              </Button>
+                  <Button
+                    size="lg"
+                    onClick={scrollToSessions}
+                    className="bg-white text-black hover:bg-white/90"
+                    data-testid="button-view-sessions"
+                  >
+                    Bekijk Sessies
+                  </Button>
+                </>
+              )}
             </>
           ) : (
             <>
