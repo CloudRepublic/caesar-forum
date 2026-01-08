@@ -71,7 +71,7 @@ export function SessionCard({
       </CardHeader>
 
       <CardContent className="flex-1 space-y-4">
-        <Link href={`/sessie/${session.id}`}>
+        <Link href={`/sessies/${session.slug}`}>
           <h3
             className="text-xl font-semibold leading-tight hover:text-primary cursor-pointer transition-colors"
             data-testid={`text-title-${session.id}`}

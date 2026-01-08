@@ -3,6 +3,7 @@ import { z } from "zod";
 // Session schema - categories come directly from Outlook
 export const sessionSchema = z.object({
   id: z.string(),
+  slug: z.string(), // URL-friendly identifier (e.g., "farewell-swashbuckle-a1b2c3")
   title: z.string(),
   description: z.string(), // Plain text fallback
   descriptionHtml: z.string().optional(), // Sanitized HTML content from Outlook

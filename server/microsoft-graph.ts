@@ -14,6 +14,30 @@ function sanitizeHtml(html: string): string {
   return sanitized;
 }
 
+// Generate URL-friendly slug from title with short hash suffix for uniqueness
+function generateSlug(title: string, graphId: string): string {
+  // Create slug from title
+  const titleSlug = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special chars
+    .replace(/\s+/g, "-") // Spaces to hyphens
+    .replace(/-+/g, "-") // Multiple hyphens to single
+    .replace(/^-|-$/g, "") // Trim hyphens
+    .substring(0, 50); // Limit length
+  
+  // Create short hash from Graph ID for uniqueness
+  let hash = 0;
+  for (let i = 0; i < graphId.length; i++) {
+    hash = ((hash << 5) - hash) + graphId.charCodeAt(i);
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  const hashSuffix = Math.abs(hash).toString(36).substring(0, 6);
+  
+  return `${titleSlug}-${hashSuffix}`;
+}
+
 const FORUM_MAILBOX = "forum@caesar.nl";
 
 // Logging utilities
@@ -403,6 +427,7 @@ export class MicrosoftGraphService {
 
       return {
         id: event.id,
+        slug: generateSlug(event.subject, event.id),
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
         descriptionHtml: descriptionHtml,
@@ -455,6 +480,7 @@ export class MicrosoftGraphService {
 
       return {
         id: event.id,
+        slug: generateSlug(event.subject, event.id),
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
         descriptionHtml: descriptionHtml,

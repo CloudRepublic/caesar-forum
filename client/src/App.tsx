@@ -15,7 +15,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/sessie/:id" component={SessionDetail} />
+      <Route path="/sessies/:slug" component={SessionDetail} />
       <Route path="/mijn-sessies" component={MySessions} />
       <Route component={NotFound} />
     </Switch>

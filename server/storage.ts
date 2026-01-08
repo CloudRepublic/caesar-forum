@@ -12,6 +12,7 @@ const mockEdition: ForumEdition = {
 const mockSessions: Session[] = [
   {
     id: "session-1",
+    slug: "introductie-tot-ai-in-it-dienstverlening-abc123",
     title: "Introductie tot AI in IT-dienstverlening",
     description: "Ontdek hoe AI de manier waarop we IT-diensten leveren fundamenteel verandert.",
     categories: ["Talk"],
@@ -25,6 +26,7 @@ const mockSessions: Session[] = [
   },
   {
     id: "session-2",
+    slug: "workshop-cloud-architecture-best-practices-def456",
     title: "Workshop: Cloud Architecture Best Practices",
     description: "Hands-on workshop waarin we moderne cloud architectuur patronen verkennen.",
     categories: ["Workshop"],
@@ -38,6 +40,7 @@ const mockSessions: Session[] = [
   },
   {
     id: "session-3",
+    slug: "de-toekomst-van-yivi-en-digitale-identiteit-ghi789",
     title: "De toekomst van Yivi en digitale identiteit",
     description: "Een deep dive in Yivi, onze digitale identiteitsoplossing.",
     categories: ["Talk", "Demo"],
@@ -54,6 +57,7 @@ const mockSessions: Session[] = [
 export interface IStorage {
   getForumData(): Promise<ForumData>;
   getSession(id: string): Promise<Session | undefined>;
+  getSessionBySlug(slug: string): Promise<Session | undefined>;
   registerForSession(sessionId: string, userEmail: string, userName?: string): Promise<Session | undefined>;
   unregisterFromSession(sessionId: string, userEmail: string): Promise<Session | undefined>;
   getUserPhoto(email: string): Promise<Buffer | null>;
@@ -83,6 +87,10 @@ export class MemStorage implements IStorage {
 
   async getSession(id: string): Promise<Session | undefined> {
     return this.sessions.get(id);
+  }
+
+  async getSessionBySlug(slug: string): Promise<Session | undefined> {
+    return Array.from(this.sessions.values()).find((s) => s.slug === slug);
   }
 
   async registerForSession(sessionId: string, userEmail: string): Promise<Session | undefined> {
@@ -176,6 +184,16 @@ export class GraphStorage implements IStorage {
       this.recordGraphFailure(error);
       return this.memStorage.getSession(id);
     }
+  }
+
+  async getSessionBySlug(slug: string): Promise<Session | undefined> {
+    // Get all forum data and find session by slug
+    const forumData = await this.getForumData();
+    const session = forumData.sessions.find((s) => s.slug === slug);
+    if (session) {
+      return session;
+    }
+    return this.memStorage.getSessionBySlug(slug);
   }
 
   async registerForSession(sessionId: string, userEmail: string, userName?: string): Promise<Session | undefined> {

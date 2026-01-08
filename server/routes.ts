@@ -49,7 +49,21 @@ export async function registerRoutes(
     }
   });
 
-  // Get single session
+  // Get single session by slug
+  app.get("/api/sessions/slug/:slug", async (req: Request, res: Response) => {
+    try {
+      const session = await storage.getSessionBySlug(req.params.slug);
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      res.json(session);
+    } catch (error) {
+      console.error("Error fetching session by slug:", error);
+      res.status(500).json({ error: "Failed to fetch session" });
+    }
+  });
+
+  // Get single session by ID (legacy, for registrations)
   app.get("/api/sessions/:id", async (req: Request, res: Response) => {
     try {
       const session = await storage.getSession(req.params.id);

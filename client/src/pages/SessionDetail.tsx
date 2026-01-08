@@ -12,22 +12,27 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Session } from "@shared/schema";
 
 export default function SessionDetail() {
-  const [, params] = useRoute("/sessie/:id");
-  const sessionId = params?.id;
+  const [, params] = useRoute("/sessies/:slug");
+  const slug = params?.slug;
   const { user } = useUser();
   const { toast } = useToast();
 
   const { data: session, isLoading, error } = useQuery<Session>({
-    queryKey: [`/api/sessions/${sessionId}`],
-    enabled: !!sessionId,
+    queryKey: ["/api/sessions/slug", slug],
+    queryFn: async () => {
+      const res = await fetch(`/api/sessions/slug/${slug}`);
+      if (!res.ok) throw new Error("Session not found");
+      return res.json();
+    },
+    enabled: !!slug,
   });
 
   const registerMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/sessions/register", { sessionId });
+      await apiRequest("POST", "/api/sessions/register", { sessionId: session?.id });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sessions/slug", slug] });
       queryClient.invalidateQueries({ queryKey: ["/api/forum"] });
       toast({
         title: "Ingeschreven",
@@ -45,10 +50,10 @@ export default function SessionDetail() {
 
   const unregisterMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/sessions/unregister", { sessionId });
+      await apiRequest("POST", "/api/sessions/unregister", { sessionId: session?.id });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sessions/slug", slug] });
       queryClient.invalidateQueries({ queryKey: ["/api/forum"] });
       toast({
         title: "Uitgeschreven",
