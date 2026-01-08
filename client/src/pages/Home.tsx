@@ -122,6 +122,7 @@ export default function Home() {
 
   const edition = data?.edition || null;
   const sessions = data?.sessions || [];
+  const hasEvent = edition && edition.id !== "no-events";
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,8 +132,10 @@ export default function Home() {
         userEmail={user?.email}
       />
 
-      <section id="sessions" className="mx-auto max-w-7xl px-4 py-12 md:px-8">
-        {sessions.length > 0 ? (
+      {/* Only show sessions section when there's an actual event */}
+      {hasEvent && (
+        <section id="sessions" className="mx-auto max-w-7xl px-4 py-12 md:px-8">
+          {sessions.length > 0 ? (
           <>
             <div className="mb-8">
               <SessionFilters
@@ -166,7 +169,8 @@ export default function Home() {
         ) : (
           <EmptyState type="no-sessions" />
         )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

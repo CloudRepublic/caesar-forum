@@ -54,7 +54,9 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
               >
                 {edition.title}
               </h1>
-              {sessions.length > 0 && (
+
+              {/* Show date/location when there's an actual event (not "no-events") */}
+              {edition.id !== "no-events" && (
                 <div className="mb-6 flex flex-wrap items-center justify-center gap-4 text-white/90">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
@@ -69,40 +71,42 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
                 </div>
               )}
 
-              {sessions.length > 0 && (
-                <>
-                  <div className="mb-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/80">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-white" data-testid="text-session-count">
-                        {sessions.length}
-                      </span>
-                      <span>sessies</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      <span className="text-2xl font-bold text-white" data-testid="text-registration-count">
-                        {totalRegistrations}
-                      </span>
-                      <span>inschrijvingen</span>
-                    </div>
-                    {userEmail && userRegistrations > 0 && (
-                      <div className="rounded-full bg-white/20 px-3 py-1">
-                        <span data-testid="text-user-registrations">
-                          Jij: {userRegistrations} sessie{userRegistrations !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    )}
+              {/* Show stats when there's an actual event */}
+              {edition.id !== "no-events" && (
+                <div className="mb-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/80">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-white" data-testid="text-session-count">
+                      {sessions.length}
+                    </span>
+                    <span>sessies</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    <span className="text-2xl font-bold text-white" data-testid="text-registration-count">
+                      {totalRegistrations}
+                    </span>
+                    <span>inschrijvingen</span>
+                  </div>
+                  {userEmail && userRegistrations > 0 && (
+                    <div className="rounded-full bg-white/20 px-3 py-1">
+                      <span data-testid="text-user-registrations">
+                        Jij: {userRegistrations} sessie{userRegistrations !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                  <Button
-                    size="lg"
-                    onClick={scrollToSessions}
-                    className="bg-white text-black hover:bg-white/90"
-                    data-testid="button-view-sessions"
-                  >
-                    Bekijk Sessies
-                  </Button>
-                </>
+              {/* Only show button when there are actual sessions to view */}
+              {sessions.length > 0 && (
+                <Button
+                  size="lg"
+                  onClick={scrollToSessions}
+                  className="bg-white text-black hover:bg-white/90"
+                  data-testid="button-view-sessions"
+                >
+                  Bekijk Sessies
+                </Button>
               )}
             </>
           ) : (

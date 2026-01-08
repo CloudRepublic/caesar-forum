@@ -15,13 +15,26 @@ export async function registerRoutes(
   // Use ?test=no-events to simulate no upcoming events
   app.get("/api/forum", async (req: Request, res: Response) => {
     try {
-      // Test mode: simulate no events
+      // Test mode: simulate no events at all
       if (req.query.test === "no-events") {
         return res.json({
           edition: {
             id: "no-events",
-            title: "Geen aankomende sessies",
+            title: "Geen aankomend event",
             date: new Date().toISOString().split("T")[0],
+            location: "",
+          },
+          sessions: [],
+        });
+      }
+
+      // Test mode: simulate event exists but no sessions yet
+      if (req.query.test === "no-sessions") {
+        return res.json({
+          edition: {
+            id: "edition-2026-02",
+            title: "Caesar Forum - Februari 2026",
+            date: "2026-02-10",
             location: "Caesar Hoofdkantoor, Utrecht",
           },
           sessions: [],
