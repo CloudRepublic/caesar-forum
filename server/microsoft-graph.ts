@@ -287,15 +287,41 @@ export class MicrosoftGraphService {
     }
   }
 
+  private normalizeEmailToCaesar(email: string): string | null {
+    const knownDomains = ["cloudrepublic.nl", "cloudrepublic.com"];
+    const parts = email.split("@");
+    if (parts.length !== 2) return null;
+    const [localPart, domain] = parts;
+    if (knownDomains.includes(domain.toLowerCase())) {
+      return `${localPart}@caesar.nl`;
+    }
+    return null;
+  }
+
   async getUserPhoto(email: string): Promise<Buffer | null> {
+    const client = await this.getClient();
+    
+    // Try original email first
     try {
-      const client = await this.getClient();
       const response = await client
         .api(`/users/${email}/photo/$value`)
         .responseType("arraybuffer" as any)
         .get();
       return Buffer.from(response);
     } catch {
+      // If failed, try caesar.nl variant
+      const caesarEmail = this.normalizeEmailToCaesar(email);
+      if (caesarEmail) {
+        try {
+          const response = await client
+            .api(`/users/${caesarEmail}/photo/$value`)
+            .responseType("arraybuffer" as any)
+            .get();
+          return Buffer.from(response);
+        } catch {
+          return null;
+        }
+      }
       return null;
     }
   }
