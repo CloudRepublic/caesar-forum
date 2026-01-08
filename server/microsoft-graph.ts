@@ -213,10 +213,21 @@ export class MicrosoftGraphService {
         ? stripHtml(bodyContent) 
         : bodyContent;
       
-      const acceptedAttendees = (event.attendees || [])
-        .filter((a) => a.type.toLowerCase() !== "resource")
+      const humanAttendees = (event.attendees || [])
+        .filter((a) => a.type.toLowerCase() !== "resource");
+      
+      const requiredAttendee = humanAttendees.find((a) => a.type.toLowerCase() === "required");
+      
+      const acceptedAttendees = humanAttendees
         .filter((a) => a.status.response === "accepted" || a.status.response === "tentativelyAccepted")
         .map((a) => a.emailAddress.address);
+
+      const speakerName = requiredAttendee?.emailAddress.name || 
+                          event.organizer?.emailAddress.name || 
+                          "Onbekende spreker";
+      const speakerEmail = requiredAttendee?.emailAddress.address || 
+                           event.organizer?.emailAddress.address || 
+                           "";
 
       return {
         id: event.id,
@@ -226,8 +237,8 @@ export class MicrosoftGraphService {
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",
-        speakerName: event.organizer?.emailAddress.name || "Onbekende spreker",
-        speakerEmail: event.organizer?.emailAddress.address || "",
+        speakerName,
+        speakerEmail,
         speakerPhotoUrl: extractSpeakerPhoto(bodyContent),
         attendees: acceptedAttendees,
       };
@@ -250,10 +261,21 @@ export class MicrosoftGraphService {
         ? stripHtml(bodyContent) 
         : bodyContent;
 
-      const acceptedAttendees = (event.attendees || [])
-        .filter((a) => a.type.toLowerCase() !== "resource")
+      const humanAttendees = (event.attendees || [])
+        .filter((a) => a.type.toLowerCase() !== "resource");
+      
+      const requiredAttendee = humanAttendees.find((a) => a.type.toLowerCase() === "required");
+      
+      const acceptedAttendees = humanAttendees
         .filter((a) => a.status.response === "accepted" || a.status.response === "tentativelyAccepted")
         .map((a) => a.emailAddress.address);
+
+      const speakerName = requiredAttendee?.emailAddress.name || 
+                          event.organizer?.emailAddress.name || 
+                          "Onbekende spreker";
+      const speakerEmail = requiredAttendee?.emailAddress.address || 
+                           event.organizer?.emailAddress.address || 
+                           "";
 
       return {
         id: event.id,
@@ -263,8 +285,8 @@ export class MicrosoftGraphService {
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",
-        speakerName: event.organizer?.emailAddress.name || "Onbekende spreker",
-        speakerEmail: event.organizer?.emailAddress.address || "",
+        speakerName,
+        speakerEmail,
         speakerPhotoUrl: extractSpeakerPhoto(bodyContent),
         attendees: acceptedAttendees,
       };
