@@ -1,7 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Calendar, Users } from "lucide-react";
+import { useMemo } from "react";
 import type { ForumEdition, Session } from "@shared/schema";
-import heroImage from "@assets/generated_images/professional_team_collaboration_meeting.png";
+
+import backdrop1 from "@assets/backdrops/RL_09185.jpg";
+import backdrop2 from "@assets/backdrops/RL_09221.jpg";
+
+const backdropImages = [backdrop1, backdrop2];
+
+function getRandomBackdrop() {
+  return backdropImages[Math.floor(Math.random() * backdropImages.length)];
+}
 
 interface HeroSectionProps {
   edition: ForumEdition | null;
@@ -10,6 +19,8 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) {
+  const backdropImage = useMemo(() => getRandomBackdrop(), []);
+  
   const totalRegistrations = sessions.reduce(
     (sum, session) => sum + session.attendees.length,
     0
@@ -40,7 +51,7 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
     <section className="relative min-h-[60vh] overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        style={{ backgroundImage: `url(${backdropImage})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
 
