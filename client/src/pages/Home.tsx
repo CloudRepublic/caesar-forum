@@ -123,9 +123,10 @@ export default function Home() {
   const edition = data?.edition || null;
   const sessions = data?.sessions || [];
   const hasEvent = edition && edition.id !== "no-events";
+  const hasSessions = sessions.length > 0;
 
   return (
-    <div className={`bg-background ${hasEvent ? "min-h-screen" : ""}`}>
+    <div className={`bg-background ${hasEvent && hasSessions ? "min-h-screen" : ""}`}>
       <HeroSection
         edition={edition}
         sessions={sessions}
