@@ -1,15 +1,11 @@
 import { z } from "zod";
 
-// Session types
-export const sessionTypeEnum = z.enum(["talk", "workshop", "discussie"]);
-export type SessionType = z.infer<typeof sessionTypeEnum>;
-
-// Session schema
+// Session schema - category comes directly from Outlook
 export const sessionSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string(),
-  type: sessionTypeEnum,
+  category: z.string().optional(), // Outlook category (e.g., "Talk", "Workshop", "Demo")
   startTime: z.string(), // ISO datetime
   endTime: z.string(), // ISO datetime
   room: z.string(),

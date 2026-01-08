@@ -9,19 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Session, SessionType } from "@shared/schema";
-
-const typeLabels: Record<SessionType, string> = {
-  talk: "Talk",
-  workshop: "Workshop",
-  discussie: "Discussie",
-};
-
-const typeColors: Record<SessionType, string> = {
-  talk: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  workshop: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  discussie: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-};
+import type { Session } from "@shared/schema";
 
 export default function SessionDetail() {
   const [, params] = useRoute("/sessie/:id");
@@ -162,13 +150,15 @@ export default function SessionDetail() {
       </Link>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <Badge
-          variant="secondary"
-          className={`${typeColors[session.type]} no-default-hover-elevate no-default-active-elevate`}
-          data-testid="badge-session-type"
-        >
-          {typeLabels[session.type]}
-        </Badge>
+        {session.category && (
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 no-default-hover-elevate no-default-active-elevate"
+            data-testid="badge-session-category"
+          >
+            {session.category}
+          </Badge>
+        )}
         {isRegistered && (
           <Badge
             variant="default"

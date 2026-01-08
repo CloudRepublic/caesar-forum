@@ -1,6 +1,6 @@
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import { Client } from "@microsoft/microsoft-graph-client";
-import type { Session, SessionType, ForumEdition, ForumData } from "@shared/schema";
+import type { Session, ForumEdition, ForumData } from "@shared/schema";
 
 const FORUM_MAILBOX = "forum@caesar.nl";
 
@@ -26,38 +26,9 @@ interface OutlookCategory {
   color: string;
 }
 
-function parseSessionType(categories: string[] | undefined, masterCategories: OutlookCategory[]): SessionType {
-  if (!categories || categories.length === 0) return "talk";
-  
-  const workshopCategories = masterCategories
-    .filter(c => c.displayName.toLowerCase().includes("workshop"))
-    .map(c => c.displayName.toLowerCase());
-  
-  const discussieCategories = masterCategories
-    .filter(c => c.displayName.toLowerCase().includes("discussie") || 
-                 c.displayName.toLowerCase().includes("discussion") ||
-                 c.displayName.toLowerCase().includes("brainstorm"))
-    .map(c => c.displayName.toLowerCase());
-  
-  const talkCategories = masterCategories
-    .filter(c => c.displayName.toLowerCase().includes("talk") || c.displayName.toLowerCase().includes("presentatie"))
-    .map(c => c.displayName.toLowerCase());
-  
-  for (const category of categories) {
-    const lowerCategory = category.toLowerCase().trim();
-    
-    if (workshopCategories.includes(lowerCategory) || lowerCategory.includes("workshop")) {
-      return "workshop";
-    }
-    if (discussieCategories.includes(lowerCategory) || lowerCategory.includes("discussie") || lowerCategory.includes("discussion") || lowerCategory.includes("brainstorm")) {
-      return "discussie";
-    }
-    if (talkCategories.includes(lowerCategory) || lowerCategory.includes("talk") || lowerCategory.includes("presentatie")) {
-      return "talk";
-    }
-  }
-  
-  return "talk";
+function getFirstCategory(categories: string[] | undefined): string | undefined {
+  if (!categories || categories.length === 0) return undefined;
+  return categories[0];
 }
 
 function stripHtml(html: string): string {
@@ -250,7 +221,7 @@ export class MicrosoftGraphService {
         id: event.id,
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
-        type: parseSessionType(event.categories, masterCategories),
+        category: getFirstCategory(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",
@@ -268,13 +239,10 @@ export class MicrosoftGraphService {
     try {
       const client = await this.getClient();
       
-      const [event, masterCategories] = await Promise.all([
-        client
-          .api(`/users/${FORUM_MAILBOX}/calendar/events/${id}`)
-          .select("id,subject,body,start,end,location,organizer,categories,attendees")
-          .get() as Promise<CalendarEvent>,
-        this.getMasterCategories(),
-      ]);
+      const event = await client
+        .api(`/users/${FORUM_MAILBOX}/calendar/events/${id}`)
+        .select("id,subject,body,start,end,location,organizer,categories,attendees")
+        .get() as CalendarEvent;
 
       const bodyContent = event.body?.content || "";
       const description = event.body?.contentType === "html" 
@@ -289,7 +257,7 @@ export class MicrosoftGraphService {
         id: event.id,
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
-        type: parseSessionType(event.categories, masterCategories),
+        category: getFirstCategory(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",

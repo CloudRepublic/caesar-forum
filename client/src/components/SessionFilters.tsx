@@ -1,27 +1,21 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import type { SessionType } from "@shared/schema";
 
 interface SessionFiltersProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  activeFilter: SessionType | "all";
-  onFilterChange: (filter: SessionType | "all") => void;
+  activeFilter: string;
+  onFilterChange: (filter: string) => void;
+  availableCategories: string[];
 }
-
-const filters: { value: SessionType | "all"; label: string }[] = [
-  { value: "all", label: "Alle" },
-  { value: "talk", label: "Talks" },
-  { value: "workshop", label: "Workshops" },
-  { value: "discussie", label: "Discussies" },
-];
 
 export function SessionFilters({
   searchQuery,
   onSearchChange,
   activeFilter,
   onFilterChange,
+  availableCategories,
 }: SessionFiltersProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -38,15 +32,23 @@ export function SessionFilters({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        {filters.map((filter) => (
+        <Button
+          variant={activeFilter === "all" ? "secondary" : "ghost"}
+          size="sm"
+          onClick={() => onFilterChange("all")}
+          data-testid="button-filter-all"
+        >
+          Alle
+        </Button>
+        {availableCategories.map((category) => (
           <Button
-            key={filter.value}
-            variant={activeFilter === filter.value ? "secondary" : "ghost"}
+            key={category}
+            variant={activeFilter === category ? "secondary" : "ghost"}
             size="sm"
-            onClick={() => onFilterChange(filter.value)}
-            data-testid={`button-filter-${filter.value}`}
+            onClick={() => onFilterChange(category)}
+            data-testid={`button-filter-${category.toLowerCase()}`}
           >
-            {filter.label}
+            {category}
           </Button>
         ))}
       </div>

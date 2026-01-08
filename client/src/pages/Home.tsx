@@ -8,13 +8,13 @@ import { SessionFilters } from "@/components/SessionFilters";
 import { EmptyState } from "@/components/EmptyState";
 import { HeroSkeleton, SessionGridSkeleton } from "@/components/LoadingState";
 import { useToast } from "@/hooks/use-toast";
-import type { ForumData, Session, SessionType } from "@shared/schema";
+import type { ForumData } from "@shared/schema";
 
 export default function Home() {
   const { user } = useUser();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<SessionType | "all">("all");
+  const [activeFilter, setActiveFilter] = useState<string>("all");
 
   const { data, isLoading, error } = useQuery<ForumData>({
     queryKey: ["/api/forum"],
@@ -67,6 +67,17 @@ export default function Home() {
     },
   });
 
+  const availableCategories = useMemo(() => {
+    if (!data?.sessions) return [];
+    const categories = new Set<string>();
+    data.sessions.forEach((session) => {
+      if (session.category) {
+        categories.add(session.category);
+      }
+    });
+    return Array.from(categories).sort();
+  }, [data?.sessions]);
+
   const filteredSessions = useMemo(() => {
     if (!data?.sessions) return [];
 
@@ -79,7 +90,7 @@ export default function Home() {
         session.room.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesFilter =
-        activeFilter === "all" || session.type === activeFilter;
+        activeFilter === "all" || session.category === activeFilter;
 
       return matchesSearch && matchesFilter;
     });
@@ -134,6 +145,7 @@ export default function Home() {
                 onSearchChange={setSearchQuery}
                 activeFilter={activeFilter}
                 onFilterChange={setActiveFilter}
+                availableCategories={availableCategories}
               />
             </div>
 

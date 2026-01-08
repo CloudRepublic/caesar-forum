@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, MapPin, Users, Check } from "lucide-react";
-import type { Session, SessionType } from "@shared/schema";
+import type { Session } from "@shared/schema";
 
 interface SessionCardProps {
   session: Session;
@@ -13,18 +13,6 @@ interface SessionCardProps {
   onUnregister: (sessionId: string) => void;
   isPending?: boolean;
 }
-
-const typeLabels: Record<SessionType, string> = {
-  talk: "Talk",
-  workshop: "Workshop",
-  discussie: "Discussie",
-};
-
-const typeColors: Record<SessionType, string> = {
-  talk: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  workshop: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  discussie: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-};
 
 export function SessionCard({
   session,
@@ -58,13 +46,15 @@ export function SessionCard({
       data-testid={`card-session-${session.id}`}
     >
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-4">
-        <Badge
-          variant="secondary"
-          className={`${typeColors[session.type]} no-default-hover-elevate no-default-active-elevate`}
-          data-testid={`badge-type-${session.id}`}
-        >
-          {typeLabels[session.type]}
-        </Badge>
+        {session.category && (
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 no-default-hover-elevate no-default-active-elevate"
+            data-testid={`badge-category-${session.id}`}
+          >
+            {session.category}
+          </Badge>
+        )}
         {isRegistered && (
           <Badge
             variant="default"
