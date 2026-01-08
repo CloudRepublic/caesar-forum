@@ -173,7 +173,7 @@ export default function SessionDetail() {
         <div className="lg:col-span-2">
           <div className="prose prose-lg dark:prose-invert max-w-none">
             <h2 className="text-xl font-semibold">Over deze sessie</h2>
-            <div className="whitespace-pre-line text-muted-foreground" data-testid="text-session-description">
+            <div className="text-muted-foreground" data-testid="text-session-description">
               {session.description}
             </div>
           </div>
