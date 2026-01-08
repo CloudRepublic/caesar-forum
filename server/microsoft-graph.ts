@@ -3,6 +3,14 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import DOMPurify from "isomorphic-dompurify";
 import type { Session, ForumEdition, ForumData } from "@shared/schema";
 
+// Sanitize HTML while removing inline styles and font tags
+function sanitizeHtml(html: string): string {
+  return DOMPurify.sanitize(html, {
+    FORBID_TAGS: ["style", "font"],
+    FORBID_ATTR: ["style", "class", "face", "size", "color"],
+  });
+}
+
 const FORUM_MAILBOX = "forum@caesar.nl";
 
 // Logging utilities
@@ -372,7 +380,7 @@ export class MicrosoftGraphService {
       const bodyContent = event.body?.content || "";
       const isHtml = event.body?.contentType === "html";
       const description = isHtml ? stripHtml(bodyContent) : bodyContent;
-      const descriptionHtml = isHtml ? DOMPurify.sanitize(bodyContent) : undefined;
+      const descriptionHtml = isHtml ? sanitizeHtml(bodyContent) : undefined;
       
       const humanAttendees = (event.attendees || [])
         .filter((a) => a.type.toLowerCase() !== "resource");
@@ -424,7 +432,7 @@ export class MicrosoftGraphService {
       const bodyContent = event.body?.content || "";
       const isHtml = event.body?.contentType === "html";
       const description = isHtml ? stripHtml(bodyContent) : bodyContent;
-      const descriptionHtml = isHtml ? DOMPurify.sanitize(bodyContent) : undefined;
+      const descriptionHtml = isHtml ? sanitizeHtml(bodyContent) : undefined;
 
       const humanAttendees = (event.attendees || [])
         .filter((a) => a.type.toLowerCase() !== "resource");
