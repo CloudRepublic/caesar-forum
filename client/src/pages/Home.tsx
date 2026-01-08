@@ -7,7 +7,7 @@ import { SessionCard } from "@/components/SessionCard";
 import { SessionTimeline } from "@/components/SessionTimeline";
 import { SessionFilters, type ViewMode } from "@/components/SessionFilters";
 import { EmptyState } from "@/components/EmptyState";
-import { HeroSkeleton, SessionGridSkeleton } from "@/components/LoadingState";
+import { HeroSkeleton, SessionGridSkeleton, SessionTimelineSkeleton } from "@/components/LoadingState";
 import { useToast } from "@/hooks/use-toast";
 import type { ForumData } from "@shared/schema";
 
@@ -116,7 +116,7 @@ export default function Home() {
       <div className="min-h-screen bg-background">
         <HeroSkeleton />
         <section className="mx-auto max-w-7xl px-4 py-12 md:px-8">
-          <SessionGridSkeleton />
+          {viewMode === "grid" ? <SessionGridSkeleton /> : <SessionTimelineSkeleton />}
         </section>
       </div>
     );
