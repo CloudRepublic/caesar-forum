@@ -3,11 +3,12 @@ export function Footer() {
     <footer className="border-t bg-muted/30 py-8">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex items-center gap-2" data-testid="footer-logo">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
-              <span className="text-xs font-bold text-primary-foreground">CF</span>
-            </div>
-            <span className="text-sm font-medium">Caesar Forum</span>
+          <div className="flex items-center" data-testid="footer-logo">
+            <img 
+              src="/logo.svg" 
+              alt="Caesar Forum" 
+              className="h-6"
+            />
           </div>
           
           <p className="text-sm text-muted-foreground">
