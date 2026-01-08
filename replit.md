@@ -44,7 +44,15 @@ Preferred communication style: Simple, everyday language.
 - **Categories from Outlook**: Events can have multiple categories from Outlook (e.g., "Talk", "Workshop", "Demo", "Brainstorm", "Hackathon", "Promotion"). All categories are shown as-is with no mapping. Filters only appear for categories that have events.
 - **Speaker Detection**: The first "required" attendee is used as the speaker. If no required attendee exists, falls back to the event organizer. Users who register via the app are added as "optional" attendees so they don't interfere with speaker detection.
 - **Speaker Photos**: Fetched automatically from Microsoft 365 via `/api/users/{email}/photo` endpoint. Uses the speaker's email to retrieve their M365 profile photo.
-- **All-day Event**: An all-day event determines the Forum date, but is not shown as a session
+- **All-day Event**: An all-day event determines the Forum date and title; only sessions on that same date are shown
+
+### Error Handling & Resilience
+- **Retry Mechanism**: All Graph API calls use exponential backoff with jitter (max 3 retries, 1-30 second delays)
+- **Token Refresh**: 401 errors trigger automatic token invalidation and re-acquisition
+- **403 Handling**: Permission errors are logged but not retried (indicates mailbox access issues)
+- **429 Throttling**: Respects Microsoft's Retry-After header, otherwise uses exponential backoff
+- **Logging**: All API requests/responses logged with timestamps, method, endpoint, status, and duration
+- **Authentication Monitoring**: Separate logging for auth failures to aid troubleshooting
 
 ### User Authentication (Entra ID)
 - **Provider**: Microsoft Entra ID (Azure AD) with OAuth 2.0 authorization code flow + PKCE

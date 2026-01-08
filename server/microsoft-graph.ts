@@ -4,6 +4,64 @@ import type { Session, ForumEdition, ForumData } from "@shared/schema";
 
 const FORUM_MAILBOX = "forum@caesar.nl";
 
+// Logging utilities
+function logApiRequest(method: string, endpoint: string, context?: string) {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] [API REQUEST] ${method} ${endpoint}${context ? ` (${context})` : ""}`);
+}
+
+function logApiResponse(method: string, endpoint: string, status: number | string, durationMs: number) {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] [API RESPONSE] ${method} ${endpoint} - Status: ${status} - Duration: ${durationMs}ms`);
+}
+
+function logApiError(method: string, endpoint: string, error: unknown, durationMs?: number, context?: string) {
+  const timestamp = new Date().toISOString();
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const statusCode = (error as any)?.statusCode || (error as any)?.code || "UNKNOWN";
+  const durationStr = durationMs !== undefined ? ` - Duration: ${durationMs}ms` : "";
+  console.error(`[${timestamp}] [API ERROR] ${method} ${endpoint} - Status: ${statusCode}${durationStr} - Error: ${errorMessage}${context ? ` - Context: ${context}` : ""}`);
+}
+
+function logAuthFailure(reason: string, details?: string) {
+  const timestamp = new Date().toISOString();
+  console.error(`[${timestamp}] [AUTH FAILURE] ${reason}${details ? ` - ${details}` : ""}`);
+}
+
+function logThrottling(endpoint: string, retryAfterMs: number, attempt: number) {
+  const timestamp = new Date().toISOString();
+  console.warn(`[${timestamp}] [THROTTLING] ${endpoint} - Retry after ${retryAfterMs}ms - Attempt ${attempt}`);
+}
+
+// Retry configuration
+interface RetryConfig {
+  maxRetries: number;
+  baseDelayMs: number;
+  maxDelayMs: number;
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 30000,
+};
+
+// Calculate exponential backoff delay
+function calculateBackoffDelay(attempt: number, config: RetryConfig): number {
+  const delay = Math.min(
+    config.baseDelayMs * Math.pow(2, attempt),
+    config.maxDelayMs
+  );
+  // Add jitter (10-20% randomness)
+  const jitter = delay * (0.1 + Math.random() * 0.1);
+  return Math.floor(delay + jitter);
+}
+
+// Sleep utility
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 interface CalendarEvent {
   id: string;
   subject: string;
@@ -54,6 +112,7 @@ export class MicrosoftGraphService {
   private cachedCategories: OutlookCategory[] | null = null;
   private categoriesCacheExpiry: Date | null = null;
   private readonly CATEGORIES_CACHE_MS = 3600000; // 1 hour
+  private readonly retryConfig: RetryConfig = DEFAULT_RETRY_CONFIG;
 
   constructor() {
     const clientId = process.env.AZURE_CLIENT_ID;
@@ -78,17 +137,34 @@ export class MicrosoftGraphService {
       return this.accessToken;
     }
 
-    const result = await this.msalClient.acquireTokenByClientCredential({
-      scopes: ["https://graph.microsoft.com/.default"],
-    });
+    logApiRequest("POST", "https://login.microsoftonline.com/.../token", "Token acquisition");
+    const startTime = Date.now();
 
-    if (!result || !result.accessToken) {
-      throw new Error("Failed to acquire access token from Microsoft identity platform");
+    try {
+      const result = await this.msalClient.acquireTokenByClientCredential({
+        scopes: ["https://graph.microsoft.com/.default"],
+      });
+
+      if (!result || !result.accessToken) {
+        logAuthFailure("Token acquisition failed", "No access token in response");
+        throw new Error("Failed to acquire access token from Microsoft identity platform");
+      }
+
+      this.accessToken = result.accessToken;
+      this.tokenExpiry = result.expiresOn || new Date(Date.now() + 3600 * 1000);
+      logApiResponse("POST", "token", "SUCCESS", Date.now() - startTime);
+      return this.accessToken;
+    } catch (error) {
+      logAuthFailure("Token acquisition error", error instanceof Error ? error.message : String(error));
+      throw error;
     }
+  }
 
-    this.accessToken = result.accessToken;
-    this.tokenExpiry = result.expiresOn || new Date(Date.now() + 3600 * 1000);
-    return this.accessToken;
+  private invalidateToken(): void {
+    this.accessToken = null;
+    this.tokenExpiry = null;
+    this.graphClient = null;
+    console.log(`[${new Date().toISOString()}] [TOKEN] Token invalidated for refresh`);
   }
 
   private async getClient(): Promise<Client> {
@@ -110,18 +186,92 @@ export class MicrosoftGraphService {
     return this.graphClient;
   }
 
+  // Execute Graph API call with retry and error handling
+  private async executeWithRetry<T>(
+    method: string,
+    endpoint: string,
+    operation: () => Promise<T>,
+    context?: string
+  ): Promise<T> {
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= this.retryConfig.maxRetries; attempt++) {
+      const startTime = Date.now();
+      logApiRequest(method, endpoint, context);
+
+      try {
+        const result = await operation();
+        logApiResponse(method, endpoint, "SUCCESS", Date.now() - startTime);
+        return result;
+      } catch (error: unknown) {
+        lastError = error;
+        const statusCode = (error as any)?.statusCode || (error as any)?.code;
+        const durationMs = Date.now() - startTime;
+
+        // Handle specific error codes
+        if (statusCode === 401) {
+          logAuthFailure("401 Unauthorized", endpoint);
+          // Invalidate token and retry with fresh token
+          this.invalidateToken();
+          if (attempt < this.retryConfig.maxRetries) {
+            const delay = calculateBackoffDelay(attempt, this.retryConfig);
+            console.log(`[${new Date().toISOString()}] [RETRY] Attempt ${attempt + 1}/${this.retryConfig.maxRetries} after 401 - waiting ${delay}ms`);
+            await sleep(delay);
+            continue;
+          }
+        }
+
+        if (statusCode === 403) {
+          logApiError(method, endpoint, error, durationMs, "403 Forbidden - Access denied to mailbox or resource");
+          // Don't retry 403 - it's a permission issue
+          throw new Error(`Access denied to ${endpoint}. Check mailbox permissions and application consent.`);
+        }
+
+        if (statusCode === 429) {
+          // Get Retry-After header if available
+          const retryAfterHeader = (error as any)?.headers?.get?.("Retry-After");
+          const retryAfterMs = retryAfterHeader 
+            ? parseInt(retryAfterHeader, 10) * 1000 
+            : calculateBackoffDelay(attempt, this.retryConfig);
+          
+          logThrottling(endpoint, retryAfterMs, attempt + 1);
+          
+          if (attempt < this.retryConfig.maxRetries) {
+            await sleep(retryAfterMs);
+            continue;
+          }
+        }
+
+        // For other errors, use exponential backoff
+        logApiError(method, endpoint, error, durationMs, `Attempt ${attempt + 1}`);
+        
+        if (attempt < this.retryConfig.maxRetries) {
+          const delay = calculateBackoffDelay(attempt, this.retryConfig);
+          console.log(`[${new Date().toISOString()}] [RETRY] Attempt ${attempt + 1}/${this.retryConfig.maxRetries} - waiting ${delay}ms`);
+          await sleep(delay);
+        }
+      }
+    }
+
+    // All retries exhausted
+    const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
+    throw new Error(`Failed after ${this.retryConfig.maxRetries + 1} attempts: ${errorMessage}`);
+  }
+
   async getCalendarEvents(startDate: Date, endDate: Date): Promise<CalendarEvent[]> {
-    const client = await this.getClient();
-
-    const response = await client
-      .api(`/users/${FORUM_MAILBOX}/calendar/events`)
-      .select("id,subject,body,start,end,location,organizer,categories,attendees")
-      .filter(`start/dateTime ge '${startDate.toISOString()}' and start/dateTime le '${endDate.toISOString()}'`)
-      .orderby("start/dateTime")
-      .top(100)
-      .get();
-
-    return response.value as CalendarEvent[];
+    const endpoint = `/users/${FORUM_MAILBOX}/calendar/events`;
+    
+    return this.executeWithRetry("GET", endpoint, async () => {
+      const client = await this.getClient();
+      const response = await client
+        .api(endpoint)
+        .select("id,subject,body,start,end,location,organizer,categories,attendees")
+        .filter(`start/dateTime ge '${startDate.toISOString()}' and start/dateTime le '${endDate.toISOString()}'`)
+        .orderby("start/dateTime")
+        .top(100)
+        .get();
+      return response.value as CalendarEvent[];
+    }, `Date range: ${startDate.toISOString().split("T")[0]} to ${endDate.toISOString().split("T")[0]}`);
   }
 
   async getMasterCategories(): Promise<OutlookCategory[]> {
@@ -129,17 +279,21 @@ export class MicrosoftGraphService {
       return this.cachedCategories;
     }
 
+    const endpoint = `/users/${FORUM_MAILBOX}/outlook/masterCategories`;
+    
     try {
-      const client = await this.getClient();
-      const response = await client
-        .api(`/users/${FORUM_MAILBOX}/outlook/masterCategories`)
-        .get();
-      this.cachedCategories = response.value as OutlookCategory[];
+      const categories = await this.executeWithRetry("GET", endpoint, async () => {
+        const client = await this.getClient();
+        const response = await client.api(endpoint).get();
+        return response.value as OutlookCategory[];
+      });
+      
+      this.cachedCategories = categories;
       this.categoriesCacheExpiry = new Date(Date.now() + this.CATEGORIES_CACHE_MS);
-      console.log("Fetched master categories:", this.cachedCategories.map(c => c.displayName));
+      console.log(`[${new Date().toISOString()}] [CACHE] Master categories cached: ${categories.map(c => c.displayName).join(", ")}`);
       return this.cachedCategories;
     } catch (error) {
-      console.error("Failed to fetch master categories:", error);
+      logApiError("GET", endpoint, error, undefined, "Falling back to empty categories");
       return [];
     }
   }
@@ -254,13 +408,16 @@ export class MicrosoftGraphService {
   }
 
   async getSession(id: string): Promise<Session | undefined> {
+    const endpoint = `/users/${FORUM_MAILBOX}/calendar/events/${id}`;
+    
     try {
-      const client = await this.getClient();
-      
-      const event = await client
-        .api(`/users/${FORUM_MAILBOX}/calendar/events/${id}`)
-        .select("id,subject,body,start,end,location,organizer,categories,attendees")
-        .get() as CalendarEvent;
+      const event = await this.executeWithRetry("GET", endpoint, async () => {
+        const client = await this.getClient();
+        return await client
+          .api(endpoint)
+          .select("id,subject,body,start,end,location,organizer,categories,attendees")
+          .get() as CalendarEvent;
+      }, `Session ID: ${id}`);
 
       const bodyContent = event.body?.content || "";
       const description = event.body?.contentType === "html" 
@@ -296,7 +453,8 @@ export class MicrosoftGraphService {
         speakerPhotoUrl: speakerEmail ? `/api/users/${encodeURIComponent(speakerEmail)}/photo` : undefined,
         attendees: acceptedAttendees,
       };
-    } catch {
+    } catch (error) {
+      logApiError("GET", endpoint, error, undefined, `Session not found: ${id}`);
       return undefined;
     }
   }
@@ -313,25 +471,32 @@ export class MicrosoftGraphService {
   }
 
   async getUserPhoto(email: string): Promise<Buffer | null> {
-    const client = await this.getClient();
+    const endpoint = `/users/${email}/photo/$value`;
     
     // Try original email first
     try {
-      const response = await client
-        .api(`/users/${email}/photo/$value`)
-        .responseType("arraybuffer" as any)
-        .get();
-      return Buffer.from(response);
+      return await this.executeWithRetry("GET", endpoint, async () => {
+        const client = await this.getClient();
+        const response = await client
+          .api(endpoint)
+          .responseType("arraybuffer" as any)
+          .get();
+        return Buffer.from(response);
+      }, `User photo: ${email}`);
     } catch {
       // If failed, try caesar.nl variant
       const caesarEmail = this.normalizeEmailToCaesar(email);
       if (caesarEmail) {
+        const altEndpoint = `/users/${caesarEmail}/photo/$value`;
         try {
-          const response = await client
-            .api(`/users/${caesarEmail}/photo/$value`)
-            .responseType("arraybuffer" as any)
-            .get();
-          return Buffer.from(response);
+          return await this.executeWithRetry("GET", altEndpoint, async () => {
+            const client = await this.getClient();
+            const response = await client
+              .api(altEndpoint)
+              .responseType("arraybuffer" as any)
+              .get();
+            return Buffer.from(response);
+          }, `User photo (caesar.nl): ${caesarEmail}`);
         } catch {
           return null;
         }
@@ -341,13 +506,14 @@ export class MicrosoftGraphService {
   }
 
   async registerForSession(sessionId: string, userEmail: string, userName: string): Promise<Session | undefined> {
+    const endpoint = `/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`;
+    
     try {
-      const client = await this.getClient();
-
-      const event = await client
-        .api(`/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`)
-        .select("attendees")
-        .get() as CalendarEvent;
+      // Get current attendees
+      const event = await this.executeWithRetry("GET", endpoint, async () => {
+        const client = await this.getClient();
+        return await client.api(endpoint).select("attendees").get() as CalendarEvent;
+      }, `Get attendees for registration: ${userEmail}`);
 
       const existingAttendees = event.attendees || [];
       const alreadyRegistered = existingAttendees.some(
@@ -363,37 +529,46 @@ export class MicrosoftGraphService {
           },
         ];
 
-        await client
-          .api(`/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`)
-          .patch({ attendees: updatedAttendees });
+        await this.executeWithRetry("PATCH", endpoint, async () => {
+          const client = await this.getClient();
+          return await client.api(endpoint).patch({ attendees: updatedAttendees });
+        }, `Register user: ${userEmail}`);
+        
+        console.log(`[${new Date().toISOString()}] [REGISTRATION] User ${userEmail} registered for session ${sessionId}`);
       }
 
       return this.getSession(sessionId);
-    } catch {
+    } catch (error) {
+      logApiError("PATCH", endpoint, error, undefined, `Registration failed for ${userEmail}`);
       return undefined;
     }
   }
 
   async unregisterFromSession(sessionId: string, userEmail: string): Promise<Session | undefined> {
+    const endpoint = `/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`;
+    
     try {
-      const client = await this.getClient();
-
-      const event = await client
-        .api(`/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`)
-        .select("attendees")
-        .get() as CalendarEvent;
+      // Get current attendees
+      const event = await this.executeWithRetry("GET", endpoint, async () => {
+        const client = await this.getClient();
+        return await client.api(endpoint).select("attendees").get() as CalendarEvent;
+      }, `Get attendees for unregistration: ${userEmail}`);
 
       const existingAttendees = event.attendees || [];
       const updatedAttendees = existingAttendees.filter(
         (a) => a.emailAddress.address.toLowerCase() !== userEmail.toLowerCase()
       );
 
-      await client
-        .api(`/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`)
-        .patch({ attendees: updatedAttendees });
+      await this.executeWithRetry("PATCH", endpoint, async () => {
+        const client = await this.getClient();
+        return await client.api(endpoint).patch({ attendees: updatedAttendees });
+      }, `Unregister user: ${userEmail}`);
+      
+      console.log(`[${new Date().toISOString()}] [REGISTRATION] User ${userEmail} unregistered from session ${sessionId}`);
 
       return this.getSession(sessionId);
-    } catch {
+    } catch (error) {
+      logApiError("PATCH", endpoint, error, undefined, `Unregistration failed for ${userEmail}`);
       return undefined;
     }
   }
