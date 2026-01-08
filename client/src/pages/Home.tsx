@@ -16,7 +16,15 @@ export default function Home() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem("forum-view-mode");
+    return (saved === "grid" || saved === "timeline") ? saved : "grid";
+  });
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem("forum-view-mode", mode);
+  };
 
   // Support test mode via ?test=no-events URL parameter
   const testMode = new URLSearchParams(window.location.search).get("test");
@@ -148,7 +156,7 @@ export default function Home() {
                 onFilterChange={setActiveFilter}
                 availableCategories={availableCategories}
                 viewMode={viewMode}
-                onViewModeChange={setViewMode}
+                onViewModeChange={handleViewModeChange}
               />
             </div>
 
