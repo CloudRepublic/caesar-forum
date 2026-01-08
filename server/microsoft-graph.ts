@@ -214,6 +214,7 @@ export class MicrosoftGraphService {
         : bodyContent;
       
       const acceptedAttendees = (event.attendees || [])
+        .filter((a) => a.type.toLowerCase() !== "resource")
         .filter((a) => a.status.response === "accepted" || a.status.response === "tentativelyAccepted")
         .map((a) => a.emailAddress.address);
 
@@ -250,6 +251,7 @@ export class MicrosoftGraphService {
         : bodyContent;
 
       const acceptedAttendees = (event.attendees || [])
+        .filter((a) => a.type.toLowerCase() !== "resource")
         .filter((a) => a.status.response === "accepted" || a.status.response === "tentativelyAccepted")
         .map((a) => a.emailAddress.address);
 
