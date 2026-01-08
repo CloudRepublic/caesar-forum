@@ -54,18 +54,20 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
               >
                 {edition.title}
               </h1>
-              <div className="mb-6 flex flex-wrap items-center justify-center gap-4 text-white/90">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  <span className="text-lg" data-testid="text-hero-date">
-                    {formatDate(edition.date)}
+              {sessions.length > 0 && (
+                <div className="mb-6 flex flex-wrap items-center justify-center gap-4 text-white/90">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    <span className="text-lg" data-testid="text-hero-date">
+                      {formatDate(edition.date)}
+                    </span>
+                  </div>
+                  <span className="hidden text-white/50 md:inline">|</span>
+                  <span className="text-lg" data-testid="text-hero-location">
+                    {edition.location}
                   </span>
                 </div>
-                <span className="hidden text-white/50 md:inline">|</span>
-                <span className="text-lg" data-testid="text-hero-location">
-                  {edition.location}
-                </span>
-              </div>
+              )}
 
               {sessions.length > 0 && (
                 <>
