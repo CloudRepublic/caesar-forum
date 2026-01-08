@@ -27,13 +27,13 @@ function generateSlug(title: string, graphId: string): string {
     .replace(/^-|-$/g, "") // Trim hyphens
     .substring(0, 50); // Limit length
   
-  // Create short hash from Graph ID for uniqueness
+  // Create short hash from Graph ID for uniqueness (always 6 chars)
   let hash = 0;
   for (let i = 0; i < graphId.length; i++) {
     hash = ((hash << 5) - hash) + graphId.charCodeAt(i);
     hash = hash & hash; // Convert to 32-bit integer
   }
-  const hashSuffix = Math.abs(hash).toString(36).substring(0, 6);
+  const hashSuffix = Math.abs(hash).toString(36).padStart(6, "0").substring(0, 6);
   
   return `${titleSlug}-${hashSuffix}`;
 }
