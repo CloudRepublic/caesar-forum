@@ -126,6 +126,18 @@ export class MicrosoftGraphService {
     return response.value as CalendarEvent[];
   }
 
+  private isAllDayEvent(event: CalendarEvent): boolean {
+    const start = new Date(event.start.dateTime);
+    const end = new Date(event.end.dateTime);
+    const durationMs = end.getTime() - start.getTime();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    
+    const startsAtMidnight = start.getHours() === 0 && start.getMinutes() === 0;
+    const isFullDay = durationMs >= oneDayMs;
+    
+    return startsAtMidnight && isFullDay;
+  }
+
   async getForumData(): Promise<ForumData> {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -133,7 +145,10 @@ export class MicrosoftGraphService {
 
     const events = await this.getCalendarEvents(startDate, endDate);
 
-    if (events.length === 0) {
+    const allDayEvent = events.find((e) => this.isAllDayEvent(e));
+    const sessionEvents = events.filter((e) => !this.isAllDayEvent(e));
+
+    if (sessionEvents.length === 0 && !allDayEvent) {
       return {
         edition: {
           id: "no-events",
@@ -145,20 +160,25 @@ export class MicrosoftGraphService {
       };
     }
 
-    const firstEventDate = new Date(events[0].start.dateTime);
+    const forumDate = allDayEvent 
+      ? new Date(allDayEvent.start.dateTime)
+      : sessionEvents.length > 0 
+        ? new Date(sessionEvents[0].start.dateTime)
+        : now;
+
     const monthNames = [
       "Januari", "Februari", "Maart", "April", "Mei", "Juni",
       "Juli", "Augustus", "September", "Oktober", "November", "December"
     ];
 
     const edition: ForumEdition = {
-      id: `edition-${firstEventDate.getFullYear()}-${String(firstEventDate.getMonth() + 1).padStart(2, "0")}`,
-      title: `Caesar Forum - ${monthNames[firstEventDate.getMonth()]} ${firstEventDate.getFullYear()}`,
-      date: firstEventDate.toISOString().split("T")[0],
-      location: "Caesar Hoofdkantoor, Utrecht",
+      id: `edition-${forumDate.getFullYear()}-${String(forumDate.getMonth() + 1).padStart(2, "0")}`,
+      title: `Caesar Forum - ${monthNames[forumDate.getMonth()]} ${forumDate.getFullYear()}`,
+      date: forumDate.toISOString().split("T")[0],
+      location: allDayEvent?.location?.displayName || "Caesar Hoofdkantoor, Utrecht",
     };
 
-    const sessions: Session[] = events.map((event) => {
+    const sessions: Session[] = sessionEvents.map((event) => {
       const bodyContent = event.body?.content || "";
       const description = event.body?.contentType === "html" 
         ? stripHtml(bodyContent) 
