@@ -16,8 +16,12 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
+  // Support test mode via ?test=no-events URL parameter
+  const testMode = new URLSearchParams(window.location.search).get("test");
+  const apiUrl = testMode ? `/api/forum?test=${testMode}` : "/api/forum";
+
   const { data, isLoading, error } = useQuery<ForumData>({
-    queryKey: ["/api/forum"],
+    queryKey: [apiUrl],
   });
 
   const registerMutation = useMutation({

@@ -12,8 +12,22 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   // Get forum data (edition + sessions)
-  app.get("/api/forum", async (_req: Request, res: Response) => {
+  // Use ?test=no-events to simulate no upcoming events
+  app.get("/api/forum", async (req: Request, res: Response) => {
     try {
+      // Test mode: simulate no events
+      if (req.query.test === "no-events") {
+        return res.json({
+          edition: {
+            id: "no-events",
+            title: "Geen aankomende sessies",
+            date: new Date().toISOString().split("T")[0],
+            location: "Caesar Hoofdkantoor, Utrecht",
+          },
+          sessions: [],
+        });
+      }
+
       const data = await storage.getForumData();
       res.json(data);
     } catch (error) {
