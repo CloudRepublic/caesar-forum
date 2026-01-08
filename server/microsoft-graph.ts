@@ -314,7 +314,7 @@ export class MicrosoftGraphService {
           ...existingAttendees,
           {
             emailAddress: { address: userEmail, name: userName },
-            type: "required",
+            type: "optional",
           },
         ];
 
