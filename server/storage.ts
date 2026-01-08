@@ -56,6 +56,7 @@ export interface IStorage {
   getSession(id: string): Promise<Session | undefined>;
   registerForSession(sessionId: string, userEmail: string, userName?: string): Promise<Session | undefined>;
   unregisterFromSession(sessionId: string, userEmail: string): Promise<Session | undefined>;
+  getUserPhoto(email: string): Promise<Buffer | null>;
 }
 
 export class MemStorage implements IStorage {
@@ -100,6 +101,10 @@ export class MemStorage implements IStorage {
 
     session.attendees = session.attendees.filter((email) => email !== userEmail);
     return session;
+  }
+
+  async getUserPhoto(_email: string): Promise<Buffer | null> {
+    return null;
   }
 }
 
@@ -212,6 +217,15 @@ export class GraphStorage implements IStorage {
       this.recordGraphFailure(error);
       console.warn("Unregistration failed on Graph API, falling back to mock data");
       return this.memStorage.unregisterFromSession(sessionId, userEmail);
+    }
+  }
+
+  async getUserPhoto(email: string): Promise<Buffer | null> {
+    try {
+      const graphService = getMicrosoftGraphService();
+      return await graphService.getUserPhoto(email);
+    } catch {
+      return null;
     }
   }
 }

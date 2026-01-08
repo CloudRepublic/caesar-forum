@@ -90,5 +90,24 @@ export async function registerRoutes(
     }
   });
 
+  // Get user photo from Microsoft Graph
+  app.get("/api/users/:email/photo", async (req: Request, res: Response) => {
+    try {
+      const email = decodeURIComponent(req.params.email);
+      const photoBuffer = await storage.getUserPhoto(email);
+      
+      if (!photoBuffer) {
+        return res.status(404).json({ error: "Photo not found" });
+      }
+
+      res.set("Content-Type", "image/jpeg");
+      res.set("Cache-Control", "public, max-age=86400");
+      res.send(photoBuffer);
+    } catch (error) {
+      console.error("Error fetching user photo:", error);
+      res.status(500).json({ error: "Failed to fetch user photo" });
+    }
+  });
+
   return httpServer;
 }

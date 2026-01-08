@@ -45,14 +45,6 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-function extractSpeakerPhoto(body: string | undefined): string | undefined {
-  if (!body) return undefined;
-  const imgMatch = body.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (!imgMatch) return undefined;
-  const url = imgMatch[1];
-  if (url.startsWith("cid:") || url.startsWith("data:")) return undefined;
-  return url;
-}
 
 export class MicrosoftGraphService {
   private msalClient: ConfidentialClientApplication;
@@ -239,7 +231,7 @@ export class MicrosoftGraphService {
         room: event.location?.displayName || "Zaal nog te bepalen",
         speakerName,
         speakerEmail,
-        speakerPhotoUrl: extractSpeakerPhoto(bodyContent),
+        speakerPhotoUrl: speakerEmail ? `/api/users/${encodeURIComponent(speakerEmail)}/photo` : undefined,
         attendees: acceptedAttendees,
       };
     });
@@ -287,11 +279,24 @@ export class MicrosoftGraphService {
         room: event.location?.displayName || "Zaal nog te bepalen",
         speakerName,
         speakerEmail,
-        speakerPhotoUrl: extractSpeakerPhoto(bodyContent),
+        speakerPhotoUrl: speakerEmail ? `/api/users/${encodeURIComponent(speakerEmail)}/photo` : undefined,
         attendees: acceptedAttendees,
       };
     } catch {
       return undefined;
+    }
+  }
+
+  async getUserPhoto(email: string): Promise<Buffer | null> {
+    try {
+      const client = await this.getClient();
+      const response = await client
+        .api(`/users/${email}/photo/$value`)
+        .responseType("arraybuffer" as any)
+        .get();
+      return Buffer.from(response);
+    } catch {
+      return null;
     }
   }
 
