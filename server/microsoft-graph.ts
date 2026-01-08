@@ -26,9 +26,9 @@ interface OutlookCategory {
   color: string;
 }
 
-function getFirstCategory(categories: string[] | undefined): string | undefined {
-  if (!categories || categories.length === 0) return undefined;
-  return categories[0];
+function getCategories(categories: string[] | undefined): string[] {
+  if (!categories || categories.length === 0) return [];
+  return categories;
 }
 
 function stripHtml(html: string): string {
@@ -221,7 +221,7 @@ export class MicrosoftGraphService {
         id: event.id,
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
-        category: getFirstCategory(event.categories),
+        categories: getCategories(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",
@@ -257,7 +257,7 @@ export class MicrosoftGraphService {
         id: event.id,
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
-        category: getFirstCategory(event.categories),
+        categories: getCategories(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",

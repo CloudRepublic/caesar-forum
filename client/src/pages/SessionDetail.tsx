@@ -150,15 +150,16 @@ export default function SessionDetail() {
       </Link>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        {session.category && (
+        {session.categories.map((category) => (
           <Badge
+            key={category}
             variant="secondary"
             className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 no-default-hover-elevate no-default-active-elevate"
-            data-testid="badge-session-category"
+            data-testid={`badge-session-category-${category.toLowerCase()}`}
           >
-            {session.category}
+            {category}
           </Badge>
-        )}
+        ))}
         {isRegistered && (
           <Badge
             variant="default"

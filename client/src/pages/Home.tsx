@@ -71,9 +71,7 @@ export default function Home() {
     if (!data?.sessions) return [];
     const categories = new Set<string>();
     data.sessions.forEach((session) => {
-      if (session.category) {
-        categories.add(session.category);
-      }
+      session.categories.forEach((cat) => categories.add(cat));
     });
     return Array.from(categories).sort();
   }, [data?.sessions]);
@@ -90,7 +88,7 @@ export default function Home() {
         session.room.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesFilter =
-        activeFilter === "all" || session.category === activeFilter;
+        activeFilter === "all" || session.categories.includes(activeFilter);
 
       return matchesSearch && matchesFilter;
     });

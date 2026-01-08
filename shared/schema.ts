@@ -1,11 +1,11 @@
 import { z } from "zod";
 
-// Session schema - category comes directly from Outlook
+// Session schema - categories come directly from Outlook
 export const sessionSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string(),
-  category: z.string().optional(), // Outlook category (e.g., "Talk", "Workshop", "Demo")
+  categories: z.array(z.string()), // Outlook categories (e.g., ["Talk", "Workshop"])
   startTime: z.string(), // ISO datetime
   endTime: z.string(), // ISO datetime
   room: z.string(),

@@ -46,15 +46,18 @@ export function SessionCard({
       data-testid={`card-session-${session.id}`}
     >
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-4">
-        {session.category && (
-          <Badge
-            variant="secondary"
-            className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 no-default-hover-elevate no-default-active-elevate"
-            data-testid={`badge-category-${session.id}`}
-          >
-            {session.category}
-          </Badge>
-        )}
+        <div className="flex flex-wrap gap-1">
+          {session.categories.map((category) => (
+            <Badge
+              key={category}
+              variant="secondary"
+              className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 no-default-hover-elevate no-default-active-elevate"
+              data-testid={`badge-category-${session.id}-${category.toLowerCase()}`}
+            >
+              {category}
+            </Badge>
+          ))}
+        </div>
         {isRegistered && (
           <Badge
             variant="default"
