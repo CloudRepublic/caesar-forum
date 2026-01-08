@@ -4,7 +4,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useUser } from "@/context/UserContext";
 import { HeroSection } from "@/components/HeroSection";
 import { SessionCard } from "@/components/SessionCard";
-import { SessionFilters } from "@/components/SessionFilters";
+import { SessionTimeline } from "@/components/SessionTimeline";
+import { SessionFilters, type ViewMode } from "@/components/SessionFilters";
 import { EmptyState } from "@/components/EmptyState";
 import { HeroSkeleton, SessionGridSkeleton } from "@/components/LoadingState";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +16,7 @@ export default function Home() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   // Support test mode via ?test=no-events URL parameter
   const testMode = new URLSearchParams(window.location.search).get("test");
@@ -145,24 +147,36 @@ export default function Home() {
                 activeFilter={activeFilter}
                 onFilterChange={setActiveFilter}
                 availableCategories={availableCategories}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
               />
             </div>
 
             {filteredSessions.length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredSessions.map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    userEmail={user?.email}
-                    onRegister={handleRegister}
-                    onUnregister={handleUnregister}
-                    isPending={
-                      registerMutation.isPending || unregisterMutation.isPending
-                    }
-                  />
-                ))}
-              </div>
+              viewMode === "grid" ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredSessions.map((session) => (
+                    <SessionCard
+                      key={session.id}
+                      session={session}
+                      userEmail={user?.email}
+                      onRegister={handleRegister}
+                      onUnregister={handleUnregister}
+                      isPending={
+                        registerMutation.isPending || unregisterMutation.isPending
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <SessionTimeline
+                  sessions={filteredSessions}
+                  userEmail={user?.email}
+                  onRegister={handleRegister}
+                  onUnregister={handleUnregister}
+                  isPending={registerMutation.isPending || unregisterMutation.isPending}
+                />
+              )
             ) : (
               <EmptyState type="no-results" searchQuery={searchQuery} />
             )}
