@@ -47,7 +47,7 @@ export function SessionCard({
     >
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-4">
         <div className="flex flex-wrap gap-1">
-          {session.categories.map((category) => (
+          {(session.categories || []).map((category) => (
             <Badge
               key={category}
               variant="secondary"

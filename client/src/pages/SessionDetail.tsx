@@ -24,11 +24,7 @@ export default function SessionDetail() {
 
   const registerMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/sessions/register", {
-        sessionId,
-        userEmail: user?.email,
-        userName: user?.name,
-      });
+      await apiRequest("POST", "/api/sessions/register", { sessionId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
@@ -49,10 +45,7 @@ export default function SessionDetail() {
 
   const unregisterMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/sessions/unregister", {
-        sessionId,
-        userEmail: user?.email,
-      });
+      await apiRequest("POST", "/api/sessions/unregister", { sessionId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
@@ -150,7 +143,7 @@ export default function SessionDetail() {
       </Link>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        {session.categories.map((category) => (
+        {(session.categories || []).map((category) => (
           <Badge
             key={category}
             variant="secondary"

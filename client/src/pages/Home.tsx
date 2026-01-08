@@ -22,11 +22,7 @@ export default function Home() {
 
   const registerMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      return apiRequest("POST", "/api/sessions/register", {
-        sessionId,
-        userEmail: user?.email,
-        userName: user?.name,
-      });
+      return apiRequest("POST", "/api/sessions/register", { sessionId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/forum"] });
@@ -46,10 +42,7 @@ export default function Home() {
 
   const unregisterMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      return apiRequest("POST", "/api/sessions/unregister", {
-        sessionId,
-        userEmail: user?.email,
-      });
+      return apiRequest("POST", "/api/sessions/unregister", { sessionId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/forum"] });
@@ -71,7 +64,7 @@ export default function Home() {
     if (!data?.sessions) return [];
     const categories = new Set<string>();
     data.sessions.forEach((session) => {
-      session.categories.forEach((cat) => categories.add(cat));
+      (session.categories || []).forEach((cat) => categories.add(cat));
     });
     return Array.from(categories).sort();
   }, [data?.sessions]);
@@ -88,7 +81,7 @@ export default function Home() {
         session.room.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesFilter =
-        activeFilter === "all" || session.categories.includes(activeFilter);
+        activeFilter === "all" || (session.categories || []).includes(activeFilter);
 
       return matchesSearch && matchesFilter;
     });

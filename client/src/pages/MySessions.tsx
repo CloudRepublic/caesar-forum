@@ -21,10 +21,7 @@ export default function MySessions() {
 
   const unregisterMutation = useMutation({
     mutationFn: async (sessionId: string) => {
-      return apiRequest("POST", "/api/sessions/unregister", {
-        sessionId,
-        userEmail: user?.email,
-      });
+      return apiRequest("POST", "/api/sessions/unregister", { sessionId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/forum"] });

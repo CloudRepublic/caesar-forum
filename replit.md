@@ -41,13 +41,23 @@ Preferred communication style: Simple, everyday language.
   - `AZURE_CLIENT_ID`: Azure AD application client ID
   - `AZURE_CLIENT_SECRET`: Application secret (expires Jan 8, 2027)
   - `AZURE_TENANT_ID`: Caesar M365 tenant ID
-- **Session Type via Categories**: Categories are fetched dynamically from Outlook. Currently available:
-  - "Talk" → Talk
-  - "Workshop" → Workshop  
-  - "Brainstorm", "Discussie", "Discussion" → Discussie
-  - "Hackathon", "Demo", "Promotion" → Talk (no specific mapping)
-  - No category → defaults to Talk
+- **Categories from Outlook**: Events can have multiple categories from Outlook (e.g., "Talk", "Workshop", "Demo", "Brainstorm", "Hackathon", "Promotion"). All categories are shown as-is with no mapping. Filters only appear for categories that have events.
 - **All-day Event**: An all-day event determines the Forum date, but is not shown as a session
+
+### User Authentication (Entra ID)
+- **Provider**: Microsoft Entra ID (Azure AD) with OAuth 2.0 authorization code flow + PKCE
+- **Library**: @azure/msal-node for server-side authentication
+- **Session Store**: connect-pg-simple (PostgreSQL-backed session store)
+- **Routes**:
+  - `GET /auth/login` - Initiates OAuth flow with PKCE
+  - `GET /auth/redirect` - Handles OAuth callback, stores user in session
+  - `GET /auth/logout` - Clears session and redirects to Entra logout
+  - `GET /api/me` - Returns authenticated user from session (401 if not logged in)
+- **Environment Variables Required**:
+  - `SESSION_SECRET`: Secret for signing session cookies
+  - Same Azure credentials as Graph API (AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID)
+- **Frontend Integration**: UserContext fetches /api/me on mount and provides login/logout functions
+- **Registration Protection**: All registration APIs require authenticated session (returns 401 otherwise)
 
 ### Key Design Decisions
 
@@ -57,7 +67,7 @@ Preferred communication style: Simple, everyday language.
 
 3. **Component Library**: shadcn/ui provides accessible, customizable components without external dependencies - components are copied into the codebase rather than imported from npm
 
-4. **Mock Authentication**: Currently uses hardcoded mock user; designed for future integration with real auth system
+4. **Outlook is Leading**: All session categories come directly from Outlook calendar events. The app only shows filters for categories that have events. No hardcoded category mappings.
 
 ## External Dependencies
 

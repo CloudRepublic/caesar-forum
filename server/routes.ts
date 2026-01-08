@@ -1,14 +1,18 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { registrationRequestSchema } from "@shared/schema";
+import { z } from "zod";
+
+const sessionIdSchema = z.object({
+  sessionId: z.string(),
+});
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   // Get forum data (edition + sessions)
-  app.get("/api/forum", async (_req, res) => {
+  app.get("/api/forum", async (_req: Request, res: Response) => {
     try {
       const data = await storage.getForumData();
       res.json(data);
@@ -19,7 +23,7 @@ export async function registerRoutes(
   });
 
   // Get single session
-  app.get("/api/sessions/:id", async (req, res) => {
+  app.get("/api/sessions/:id", async (req: Request, res: Response) => {
     try {
       const session = await storage.getSession(req.params.id);
       if (!session) {
@@ -32,16 +36,21 @@ export async function registerRoutes(
     }
   });
 
-  // Register for a session
-  app.post("/api/sessions/register", async (req, res) => {
+  // Register for a session (requires authentication)
+  app.post("/api/sessions/register", async (req: Request, res: Response) => {
     try {
-      const parsed = registrationRequestSchema.safeParse(req.body);
+      const user = req.session.user;
+      if (!user) {
+        return res.status(401).json({ error: "Je moet ingelogd zijn om je in te schrijven" });
+      }
+
+      const parsed = sessionIdSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: "Invalid request body", details: parsed.error.errors });
       }
 
-      const { sessionId, userEmail, userName } = parsed.data;
-      const session = await storage.registerForSession(sessionId, userEmail, userName);
+      const { sessionId } = parsed.data;
+      const session = await storage.registerForSession(sessionId, user.email, user.name);
       
       if (!session) {
         return res.status(404).json({ error: "Session not found" });
@@ -54,16 +63,21 @@ export async function registerRoutes(
     }
   });
 
-  // Unregister from a session
-  app.post("/api/sessions/unregister", async (req, res) => {
+  // Unregister from a session (requires authentication)
+  app.post("/api/sessions/unregister", async (req: Request, res: Response) => {
     try {
-      const parsed = registrationRequestSchema.safeParse(req.body);
+      const user = req.session.user;
+      if (!user) {
+        return res.status(401).json({ error: "Je moet ingelogd zijn om je uit te schrijven" });
+      }
+
+      const parsed = sessionIdSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: "Invalid request body", details: parsed.error.errors });
       }
 
-      const { sessionId, userEmail } = parsed.data;
-      const session = await storage.unregisterFromSession(sessionId, userEmail);
+      const { sessionId } = parsed.data;
+      const session = await storage.unregisterFromSession(sessionId, user.email);
       
       if (!session) {
         return res.status(404).json({ error: "Session not found" });

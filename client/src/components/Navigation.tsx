@@ -6,7 +6,7 @@ import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 export function Navigation() {
-  const { user, logout, loginAsMockUser } = useUser();
+  const { user, login, logout, isLoading } = useUser();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -53,7 +53,9 @@ export function Navigation() {
         </div>
 
         <div className="flex items-center gap-4">
-          {user ? (
+          {isLoading ? (
+            <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
+          ) : user ? (
             <div className="hidden items-center gap-4 md:flex">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
@@ -84,12 +86,12 @@ export function Navigation() {
             <Button
               variant="default"
               size="sm"
-              onClick={loginAsMockUser}
+              onClick={login}
               data-testid="button-login"
               className="hidden md:flex"
             >
               <LogIn className="mr-2 h-4 w-4" />
-              Inloggen (Demo)
+              Inloggen met Microsoft
             </Button>
           )}
 
@@ -155,13 +157,13 @@ export function Navigation() {
                   variant="default"
                   className="w-full justify-start"
                   onClick={() => {
-                    loginAsMockUser();
+                    login();
                     setMobileMenuOpen(false);
                   }}
                   data-testid="button-mobile-login"
                 >
                   <LogIn className="mr-2 h-4 w-4" />
-                  Inloggen (Demo)
+                  Inloggen met Microsoft
                 </Button>
               </>
             )}

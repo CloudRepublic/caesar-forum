@@ -1,39 +1,43 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 
 interface UserContextType {
   user: User | null;
-  login: (user: User) => void;
-  loginAsMockUser: () => void;
+  isLoading: boolean;
+  login: () => void;
   logout: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Mock user for demo
-const mockUser: User = {
-  id: "user-1",
-  name: "Jan de Vries",
-  email: "jan.devries@caesar.nl",
-};
-
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(mockUser);
+  const [user, setUser] = useState<User | null>(null);
 
-  const login = useCallback((newUser: User) => {
-    setUser(newUser);
-  }, []);
+  const { data, isLoading, error } = useQuery<User>({
+    queryKey: ["/api/me"],
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const loginAsMockUser = useCallback(() => {
-    setUser(mockUser);
+  useEffect(() => {
+    if (data && !error) {
+      setUser(data);
+    } else if (error) {
+      setUser(null);
+    }
+  }, [data, error]);
+
+  const login = useCallback(() => {
+    window.location.href = "/auth/login";
   }, []);
 
   const logout = useCallback(() => {
-    setUser(null);
+    window.location.href = "/auth/logout";
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, login, loginAsMockUser, logout }}>
+    <UserContext.Provider value={{ user, isLoading, login, logout }}>
       {children}
     </UserContext.Provider>
   );
