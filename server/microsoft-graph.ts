@@ -14,6 +14,66 @@ function sanitizeHtml(html: string): string {
   return sanitized;
 }
 
+// Parse back-matter metadata from description (YAML-style block at end)
+// Format: ---\nkey: value\nkey2: value2\n---
+interface BackMatter {
+  metadata: Record<string, string>;
+  content: string;
+}
+
+function parseBackMatter(text: string): BackMatter {
+  // Match a YAML-style block at the end: ---\n...\n---
+  // The block should be preceded by newlines or whitespace
+  const backMatterRegex = /[\r\n\s]*---[\r\n]+([\s\S]*?)[\r\n]+---[\r\n\s]*$/;
+  const match = text.match(backMatterRegex);
+  
+  if (!match) {
+    return { metadata: {}, content: text };
+  }
+  
+  const metadata: Record<string, string> = {};
+  const yamlContent = match[1];
+  
+  // Parse simple key: value pairs
+  const lines = yamlContent.split(/[\r\n]+/);
+  for (const line of lines) {
+    const colonIndex = line.indexOf(":");
+    if (colonIndex > 0) {
+      const key = line.substring(0, colonIndex).trim().toLowerCase();
+      const value = line.substring(colonIndex + 1).trim();
+      if (key && value) {
+        metadata[key] = value;
+      }
+    }
+  }
+  
+  // Remove the back-matter block from content
+  const content = text.replace(backMatterRegex, "").trim();
+  
+  return { metadata, content };
+}
+
+// Strip back-matter from HTML content (for display)
+function stripBackMatterFromHtml(html: string): string {
+  // First convert to plain text to find the back-matter
+  const textContent = html.replace(/<[^>]*>/g, "\n");
+  const { metadata } = parseBackMatter(textContent);
+  
+  if (Object.keys(metadata).length === 0) {
+    return html;
+  }
+  
+  // Remove the back-matter block from HTML
+  // Look for patterns like <p>---</p> or ---<br> or similar
+  let result = html;
+  
+  // Match the back-matter section in HTML (including surrounding tags)
+  const htmlBackMatterRegex = /(<p>|<br\s*\/?>|\s)*---(<\/p>|<br\s*\/?>|\s)*([\s\S]*?)(<p>|<br\s*\/?>|\s)*---(<\/p>|<br\s*\/?>|\s)*$/i;
+  result = result.replace(htmlBackMatterRegex, "");
+  
+  return result.trim();
+}
+
 // Generate URL-friendly slug from title with short hash suffix for uniqueness
 function generateSlug(title: string, graphId: string): string {
   // Create slug from title
@@ -406,8 +466,17 @@ export class MicrosoftGraphService {
     const sessions: Session[] = sessionEvents.map((event) => {
       const bodyContent = event.body?.content || "";
       const isHtml = event.body?.contentType === "html";
-      const description = isHtml ? stripHtml(bodyContent) : bodyContent;
-      const descriptionHtml = isHtml ? sanitizeHtml(bodyContent) : undefined;
+      
+      // Parse back-matter metadata from plain text content
+      const plainText = isHtml ? stripHtml(bodyContent) : bodyContent;
+      const { metadata, content: cleanDescription } = parseBackMatter(plainText);
+      
+      // Use custom slug from back-matter if provided, otherwise generate
+      const customSlug = metadata["slug"];
+      const slug = customSlug || generateSlug(event.subject, event.id);
+      
+      // Strip back-matter from HTML for display
+      const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
       
       const humanAttendees = (event.attendees || [])
         .filter((a) => a.type.toLowerCase() !== "resource");
@@ -427,10 +496,10 @@ export class MicrosoftGraphService {
 
       return {
         id: event.id,
-        slug: generateSlug(event.subject, event.id),
+        slug,
         title: event.subject,
-        description: description || "Geen beschrijving beschikbaar.",
-        descriptionHtml: descriptionHtml,
+        description: cleanDescription || "Geen beschrijving beschikbaar.",
+        descriptionHtml: cleanHtml,
         categories: getCategories(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
@@ -459,8 +528,17 @@ export class MicrosoftGraphService {
 
       const bodyContent = event.body?.content || "";
       const isHtml = event.body?.contentType === "html";
-      const description = isHtml ? stripHtml(bodyContent) : bodyContent;
-      const descriptionHtml = isHtml ? sanitizeHtml(bodyContent) : undefined;
+      
+      // Parse back-matter metadata from plain text content
+      const plainText = isHtml ? stripHtml(bodyContent) : bodyContent;
+      const { metadata, content: cleanDescription } = parseBackMatter(plainText);
+      
+      // Use custom slug from back-matter if provided, otherwise generate
+      const customSlug = metadata["slug"];
+      const slug = customSlug || generateSlug(event.subject, event.id);
+      
+      // Strip back-matter from HTML for display
+      const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
 
       const humanAttendees = (event.attendees || [])
         .filter((a) => a.type.toLowerCase() !== "resource");
@@ -480,10 +558,10 @@ export class MicrosoftGraphService {
 
       return {
         id: event.id,
-        slug: generateSlug(event.subject, event.id),
+        slug,
         title: event.subject,
-        description: description || "Geen beschrijving beschikbaar.",
-        descriptionHtml: descriptionHtml,
+        description: cleanDescription || "Geen beschrijving beschikbaar.",
+        descriptionHtml: cleanHtml,
         categories: getCategories(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
