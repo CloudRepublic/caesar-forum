@@ -257,6 +257,34 @@ export default function SessionDetail() {
               </div>
             </CardContent>
           </Card>
+
+          {session.attendees.length > 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <h3 className="mb-4 text-sm font-medium text-muted-foreground">
+                  Deelnemers ({session.attendees.length})
+                </h3>
+                <div className="space-y-3">
+                  {session.attendees.map((email, index) => (
+                    <div
+                      key={email}
+                      className="flex items-center gap-3"
+                      data-testid={`attendee-${index}`}
+                    >
+                      <Avatar className="h-8 w-8 shrink-0">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {email.split("@")[0].slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm truncate" data-testid={`text-attendee-email-${index}`}>
+                        {email}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
