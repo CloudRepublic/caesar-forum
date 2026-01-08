@@ -20,21 +20,39 @@ interface CalendarEvent {
   }>;
 }
 
-function parseSessionType(categories: string[] | undefined): SessionType {
+interface OutlookCategory {
+  id: string;
+  displayName: string;
+  color: string;
+}
+
+function parseSessionType(categories: string[] | undefined, masterCategories: OutlookCategory[]): SessionType {
   if (!categories || categories.length === 0) return "talk";
+  
+  const workshopCategories = masterCategories
+    .filter(c => c.displayName.toLowerCase().includes("workshop"))
+    .map(c => c.displayName.toLowerCase());
+  
+  const discussieCategories = masterCategories
+    .filter(c => c.displayName.toLowerCase().includes("discussie") || 
+                 c.displayName.toLowerCase().includes("discussion") ||
+                 c.displayName.toLowerCase().includes("brainstorm"))
+    .map(c => c.displayName.toLowerCase());
+  
+  const talkCategories = masterCategories
+    .filter(c => c.displayName.toLowerCase().includes("talk") || c.displayName.toLowerCase().includes("presentatie"))
+    .map(c => c.displayName.toLowerCase());
   
   for (const category of categories) {
     const lowerCategory = category.toLowerCase().trim();
     
-    if (lowerCategory === "workshop" || lowerCategory.startsWith("workshop")) {
+    if (workshopCategories.includes(lowerCategory) || lowerCategory.includes("workshop")) {
       return "workshop";
     }
-    if (lowerCategory === "discussie" || lowerCategory === "discussion" || 
-        lowerCategory.startsWith("discussie") || lowerCategory.startsWith("discussion")) {
+    if (discussieCategories.includes(lowerCategory) || lowerCategory.includes("discussie") || lowerCategory.includes("discussion") || lowerCategory.includes("brainstorm")) {
       return "discussie";
     }
-    if (lowerCategory === "talk" || lowerCategory === "presentatie" || 
-        lowerCategory.startsWith("talk") || lowerCategory.startsWith("presentatie")) {
+    if (talkCategories.includes(lowerCategory) || lowerCategory.includes("talk") || lowerCategory.includes("presentatie")) {
       return "talk";
     }
   }
@@ -70,6 +88,9 @@ export class MicrosoftGraphService {
   private graphClient: Client | null = null;
   private accessToken: string | null = null;
   private tokenExpiry: Date | null = null;
+  private cachedCategories: OutlookCategory[] | null = null;
+  private categoriesCacheExpiry: Date | null = null;
+  private readonly CATEGORIES_CACHE_MS = 3600000; // 1 hour
 
   constructor() {
     const clientId = process.env.AZURE_CLIENT_ID;
@@ -140,6 +161,26 @@ export class MicrosoftGraphService {
     return response.value as CalendarEvent[];
   }
 
+  async getMasterCategories(): Promise<OutlookCategory[]> {
+    if (this.cachedCategories && this.categoriesCacheExpiry && this.categoriesCacheExpiry > new Date()) {
+      return this.cachedCategories;
+    }
+
+    try {
+      const client = await this.getClient();
+      const response = await client
+        .api(`/users/${FORUM_MAILBOX}/outlook/masterCategories`)
+        .get();
+      this.cachedCategories = response.value as OutlookCategory[];
+      this.categoriesCacheExpiry = new Date(Date.now() + this.CATEGORIES_CACHE_MS);
+      console.log("Fetched master categories:", this.cachedCategories.map(c => c.displayName));
+      return this.cachedCategories;
+    } catch (error) {
+      console.error("Failed to fetch master categories:", error);
+      return [];
+    }
+  }
+
   private isAllDayEvent(event: CalendarEvent): boolean {
     const start = new Date(event.start.dateTime);
     const end = new Date(event.end.dateTime);
@@ -157,7 +198,10 @@ export class MicrosoftGraphService {
     const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     const endDate = new Date(now.getFullYear(), now.getMonth() + 3, 0);
 
-    const events = await this.getCalendarEvents(startDate, endDate);
+    const [events, masterCategories] = await Promise.all([
+      this.getCalendarEvents(startDate, endDate),
+      this.getMasterCategories(),
+    ]);
 
     const allDayEvent = events.find((e) => this.isAllDayEvent(e));
     const sessionEvents = events.filter((e) => !this.isAllDayEvent(e));
@@ -206,7 +250,7 @@ export class MicrosoftGraphService {
         id: event.id,
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
-        type: parseSessionType(event.categories),
+        type: parseSessionType(event.categories, masterCategories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",
@@ -224,10 +268,13 @@ export class MicrosoftGraphService {
     try {
       const client = await this.getClient();
       
-      const event = await client
-        .api(`/users/${FORUM_MAILBOX}/calendar/events/${id}`)
-        .select("id,subject,body,start,end,location,organizer,categories,attendees")
-        .get() as CalendarEvent;
+      const [event, masterCategories] = await Promise.all([
+        client
+          .api(`/users/${FORUM_MAILBOX}/calendar/events/${id}`)
+          .select("id,subject,body,start,end,location,organizer,categories,attendees")
+          .get() as Promise<CalendarEvent>,
+        this.getMasterCategories(),
+      ]);
 
       const bodyContent = event.body?.content || "";
       const description = event.body?.contentType === "html" 
@@ -242,7 +289,7 @@ export class MicrosoftGraphService {
         id: event.id,
         title: event.subject,
         description: description || "Geen beschrijving beschikbaar.",
-        type: parseSessionType(event.categories),
+        type: parseSessionType(event.categories, masterCategories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",
