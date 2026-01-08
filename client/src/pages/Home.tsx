@@ -125,7 +125,7 @@ export default function Home() {
   const hasEvent = edition && edition.id !== "no-events";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`bg-background ${hasEvent ? "min-h-screen" : ""}`}>
       <HeroSection
         edition={edition}
         sessions={sessions}

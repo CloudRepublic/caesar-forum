@@ -36,17 +36,15 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
     }
   };
 
-  const isNoEvent = edition?.id === "no-events";
-
   return (
-    <section className={`relative overflow-hidden ${isNoEvent ? "min-h-[40vh]" : "min-h-[60vh]"}`}>
+    <section className="relative min-h-[60vh] overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${heroImage})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
 
-      <div className={`relative mx-auto flex max-w-7xl flex-col items-center justify-center px-4 text-center md:px-8 ${isNoEvent ? "min-h-[40vh] py-12" : "min-h-[60vh] py-20 md:py-32"}`}>
+      <div className="relative mx-auto flex min-h-[60vh] max-w-7xl flex-col items-center justify-center px-4 py-20 text-center md:px-8 md:py-32">
         <div className="rounded-xl bg-black/30 px-8 py-8 backdrop-blur-sm md:px-12 md:py-10">
           {edition ? (
             <>
