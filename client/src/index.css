@@ -85,6 +85,26 @@
   /* Fallback for older browsers */
   --destructive-border: hsl(var(--destructive));
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Category badge colors - Light mode (subtle, professional) */
+  --category-talk-bg: 215 75% 94%;
+  --category-talk-fg: 215 70% 35%;
+  --category-workshop-bg: 35 75% 92%;
+  --category-workshop-fg: 35 70% 30%;
+  --category-demo-bg: 280 60% 94%;
+  --category-demo-fg: 280 55% 35%;
+  --category-brainstorm-bg: 45 80% 92%;
+  --category-brainstorm-fg: 45 75% 28%;
+  --category-hackathon-bg: 340 65% 94%;
+  --category-hackathon-fg: 340 60% 35%;
+  --category-promotion-bg: 160 55% 92%;
+  --category-promotion-fg: 160 50% 30%;
+  --category-kennissessie-bg: 200 65% 93%;
+  --category-kennissessie-fg: 200 60% 32%;
+  --category-deepdive-bg: 250 60% 94%;
+  --category-deepdive-fg: 250 55% 38%;
+  --category-default-bg: 215 20% 94%;
+  --category-default-fg: 215 15% 35%;
 }
 
 .dark {
@@ -163,6 +183,26 @@
   /* Fallback for older browsers */
   --destructive-border: hsl(var(--destructive));
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Category badge colors - Dark mode (subtle, professional) */
+  --category-talk-bg: 215 50% 22%;
+  --category-talk-fg: 215 70% 80%;
+  --category-workshop-bg: 35 45% 20%;
+  --category-workshop-fg: 35 65% 78%;
+  --category-demo-bg: 280 40% 22%;
+  --category-demo-fg: 280 55% 80%;
+  --category-brainstorm-bg: 45 50% 18%;
+  --category-brainstorm-fg: 45 70% 78%;
+  --category-hackathon-bg: 340 45% 22%;
+  --category-hackathon-fg: 340 55% 82%;
+  --category-promotion-bg: 160 40% 18%;
+  --category-promotion-fg: 160 50% 75%;
+  --category-kennissessie-bg: 200 45% 20%;
+  --category-kennissessie-fg: 200 60% 78%;
+  --category-deepdive-bg: 250 40% 22%;
+  --category-deepdive-fg: 250 55% 82%;
+  --category-default-bg: 215 15% 22%;
+  --category-default-fg: 215 10% 78%;
 }
 
 @layer base {

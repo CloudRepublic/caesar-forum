@@ -6,6 +6,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, MapPin, Users, Check } from "lucide-react";
 import type { Session } from "@shared/schema";
 
+const categoryColorMap: Record<string, string> = {
+  talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
+  workshop: "bg-[hsl(var(--category-workshop-bg))] text-[hsl(var(--category-workshop-fg))]",
+  demo: "bg-[hsl(var(--category-demo-bg))] text-[hsl(var(--category-demo-fg))]",
+  brainstorm: "bg-[hsl(var(--category-brainstorm-bg))] text-[hsl(var(--category-brainstorm-fg))]",
+  hackathon: "bg-[hsl(var(--category-hackathon-bg))] text-[hsl(var(--category-hackathon-fg))]",
+  promotion: "bg-[hsl(var(--category-promotion-bg))] text-[hsl(var(--category-promotion-fg))]",
+  kennissessie: "bg-[hsl(var(--category-kennissessie-bg))] text-[hsl(var(--category-kennissessie-fg))]",
+  deepdive: "bg-[hsl(var(--category-deepdive-bg))] text-[hsl(var(--category-deepdive-fg))]",
+};
+
+function getCategoryColors(category: string): string {
+  const key = category.toLowerCase().replace(/\s+/g, "");
+  return categoryColorMap[key] || "bg-[hsl(var(--category-default-bg))] text-[hsl(var(--category-default-fg))]";
+}
+
 interface SessionCardProps {
   session: Session;
   userEmail: string | undefined;
@@ -51,7 +67,7 @@ export function SessionCard({
             <Badge
               key={category}
               variant="secondary"
-              className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 no-default-hover-elevate no-default-active-elevate"
+              className={`${getCategoryColors(category)} no-default-hover-elevate no-default-active-elevate`}
               data-testid={`badge-category-${session.id}-${category.toLowerCase()}`}
             >
               {category}
