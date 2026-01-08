@@ -3,12 +3,15 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import DOMPurify from "isomorphic-dompurify";
 import type { Session, ForumEdition, ForumData } from "@shared/schema";
 
-// Sanitize HTML while removing inline styles and font tags
+// Sanitize HTML while removing inline styles and font tags, convert divs to paragraphs
 function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
+  let sanitized = DOMPurify.sanitize(html, {
     FORBID_TAGS: ["style", "font"],
     FORBID_ATTR: ["style", "class", "face", "size", "color"],
   });
+  // Convert div tags to p tags for proper paragraph spacing
+  sanitized = sanitized.replace(/<div>/gi, "<p>").replace(/<\/div>/gi, "</p>");
+  return sanitized;
 }
 
 const FORUM_MAILBOX = "forum@caesar.nl";
