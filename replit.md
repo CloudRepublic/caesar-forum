@@ -45,6 +45,14 @@ Preferred communication style: Simple, everyday language.
 - **Speaker Detection**: The first "required" attendee is used as the speaker. If no required attendee exists, falls back to the event organizer. Users who register via the app are added as "optional" attendees so they don't interfere with speaker detection.
 - **Speaker Photos**: Fetched automatically from Microsoft 365 via `/api/users/{email}/photo` endpoint. Uses the speaker's email to retrieve their M365 profile photo.
 - **All-day Event**: An all-day event determines the Forum date and title; only sessions on that same date are shown
+- **Session URLs**: User-friendly URLs using slugs (e.g., `/sessies/angular-signal-forms-99v7g9`). Slugs are auto-generated from title + hash suffix for uniqueness.
+- **Custom Slugs via Back-matter**: Organizers can set custom slugs by adding YAML-style metadata at the end of the session description in Outlook:
+  ```
+  ---
+  slug: mijn-custom-slug
+  ---
+  ```
+  The back-matter block is stripped from the displayed description. This can be extended with additional metadata fields in the future.
 
 ### Error Handling & Resilience
 - **Retry Mechanism**: All Graph API calls use exponential backoff with jitter (max 3 retries, 1-30 second delays)
