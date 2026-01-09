@@ -539,11 +539,11 @@ export class MicrosoftGraphService {
       
       const requiredAttendee = humanAttendees.find((a) => a.type.toLowerCase() === "required");
       
-      // Include all optional attendees (registered via app) regardless of response status
+      // Include optional attendees (registered via app) who haven't declined
       // Also include anyone who explicitly accepted/tentatively accepted
       const registeredAttendees = humanAttendees
         .filter((a) => 
-          a.type.toLowerCase() === "optional" || 
+          (a.type.toLowerCase() === "optional" && a.status.response.toLowerCase() !== "declined") || 
           a.status.response === "accepted" || 
           a.status.response === "tentativelyAccepted"
         )
@@ -610,11 +610,11 @@ export class MicrosoftGraphService {
       
       const requiredAttendee = humanAttendees.find((a) => a.type.toLowerCase() === "required");
       
-      // Include all optional attendees (registered via app) regardless of response status
+      // Include optional attendees (registered via app) who haven't declined
       // Also include anyone who explicitly accepted/tentatively accepted
       const registeredAttendees = humanAttendees
         .filter((a) => 
-          a.type.toLowerCase() === "optional" || 
+          (a.type.toLowerCase() === "optional" && a.status.response.toLowerCase() !== "declined") || 
           a.status.response === "accepted" || 
           a.status.response === "tentativelyAccepted"
         )
