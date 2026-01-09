@@ -743,13 +743,21 @@ export class MicrosoftGraphService {
       }, `Get attendees for registration: ${userEmail}`);
 
       const existingAttendees = event.attendees || [];
-      const alreadyRegistered = existingAttendees.some(
+      const existingEntry = existingAttendees.find(
         (a) => emailsMatch(a.emailAddress.address, userEmail)
       );
+      
+      // Check if user already registered and not declined
+      const isActivelyRegistered = existingEntry && 
+        existingEntry.status.response.toLowerCase() !== "declined";
 
-      if (!alreadyRegistered) {
+      if (!isActivelyRegistered) {
+        // Remove any existing declined entry, then add fresh
+        const filteredAttendees = existingAttendees.filter(
+          (a) => !emailsMatch(a.emailAddress.address, userEmail)
+        );
         const updatedAttendees = [
-          ...existingAttendees,
+          ...filteredAttendees,
           {
             emailAddress: { address: userEmail, name: userName },
             type: "optional",
