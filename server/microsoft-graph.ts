@@ -516,8 +516,15 @@ export class MicrosoftGraphService {
       
       const requiredAttendee = humanAttendees.find((a) => a.type.toLowerCase() === "required");
       
-      const acceptedAttendees = humanAttendees
-        .filter((a) => a.status.response === "accepted" || a.status.response === "tentativelyAccepted")
+      // Include all optional attendees (registered via app) regardless of response status
+      // Also include anyone who explicitly accepted/tentatively accepted
+      const registeredAttendees = humanAttendees
+        .filter((a) => 
+          a.type.toLowerCase() === "optional" || 
+          a.status.response === "accepted" || 
+          a.status.response === "tentativelyAccepted"
+        )
+        .filter((a) => a.type.toLowerCase() !== "required")
         .map((a) => a.emailAddress.address);
 
       const speakerName = requiredAttendee?.emailAddress.name || 
@@ -540,7 +547,7 @@ export class MicrosoftGraphService {
         speakerName,
         speakerEmail,
         speakerPhotoUrl: speakerEmail ? `/api/users/${encodeURIComponent(speakerEmail)}/photo` : undefined,
-        attendees: acceptedAttendees,
+        attendees: registeredAttendees,
       };
     });
 
@@ -578,8 +585,15 @@ export class MicrosoftGraphService {
       
       const requiredAttendee = humanAttendees.find((a) => a.type.toLowerCase() === "required");
       
-      const acceptedAttendees = humanAttendees
-        .filter((a) => a.status.response === "accepted" || a.status.response === "tentativelyAccepted")
+      // Include all optional attendees (registered via app) regardless of response status
+      // Also include anyone who explicitly accepted/tentatively accepted
+      const registeredAttendees = humanAttendees
+        .filter((a) => 
+          a.type.toLowerCase() === "optional" || 
+          a.status.response === "accepted" || 
+          a.status.response === "tentativelyAccepted"
+        )
+        .filter((a) => a.type.toLowerCase() !== "required")
         .map((a) => a.emailAddress.address);
 
       const speakerName = requiredAttendee?.emailAddress.name || 
@@ -602,7 +616,7 @@ export class MicrosoftGraphService {
         speakerName,
         speakerEmail,
         speakerPhotoUrl: speakerEmail ? `/api/users/${encodeURIComponent(speakerEmail)}/photo` : undefined,
-        attendees: acceptedAttendees,
+        attendees: registeredAttendees,
       };
     } catch (error) {
       logApiError("GET", endpoint, error, undefined, `Session not found: ${id}`);
