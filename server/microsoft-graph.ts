@@ -608,6 +608,15 @@ export class MicrosoftGraphService {
       const humanAttendees = (event.attendees || [])
         .filter((a) => a.type.toLowerCase() !== "resource");
       
+      // Debug: log attendees for troubleshooting
+      console.log(`[${new Date().toISOString()}] [DEBUG] Session ${id.slice(-10)} attendees:`, 
+        humanAttendees.map(a => ({ 
+          email: a.emailAddress.address, 
+          type: a.type, 
+          response: a.status.response 
+        }))
+      );
+      
       const requiredAttendee = humanAttendees.find((a) => a.type.toLowerCase() === "required");
       
       // Include optional attendees (registered via app) who haven't declined
