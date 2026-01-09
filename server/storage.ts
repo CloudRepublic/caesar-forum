@@ -61,6 +61,7 @@ export interface IStorage {
   registerForSession(sessionId: string, userEmail: string, userName?: string): Promise<Session | undefined>;
   unregisterFromSession(sessionId: string, userEmail: string): Promise<Session | undefined>;
   getUserPhoto(email: string): Promise<Buffer | null>;
+  getUserInfo(email: string): Promise<{ displayName: string; email: string } | null>;
 }
 
 export class MemStorage implements IStorage {
@@ -113,6 +114,10 @@ export class MemStorage implements IStorage {
 
   async getUserPhoto(_email: string): Promise<Buffer | null> {
     return null;
+  }
+
+  async getUserInfo(email: string): Promise<{ displayName: string; email: string } | null> {
+    return { displayName: email.split("@")[0], email };
   }
 }
 
@@ -244,6 +249,15 @@ export class GraphStorage implements IStorage {
       return await graphService.getUserPhoto(email);
     } catch {
       return null;
+    }
+  }
+
+  async getUserInfo(email: string): Promise<{ displayName: string; email: string } | null> {
+    try {
+      const graphService = getMicrosoftGraphService();
+      return await graphService.getUserInfo(email);
+    } catch {
+      return this.memStorage.getUserInfo(email);
     }
   }
 }

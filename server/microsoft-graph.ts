@@ -656,6 +656,41 @@ export class MicrosoftGraphService {
     }
   }
 
+  async getUserInfo(email: string): Promise<{ displayName: string; email: string } | null> {
+    const endpoint = `/users/${email}`;
+    
+    // Try original email first
+    try {
+      return await this.executeWithRetry("GET", endpoint, async () => {
+        const client = await this.getClient();
+        const user = await client.api(endpoint).select("displayName,mail,userPrincipalName").get();
+        return {
+          displayName: user.displayName || email.split("@")[0],
+          email: user.mail || user.userPrincipalName || email,
+        };
+      }, `User info: ${email}`);
+    } catch {
+      // If failed, try caesar.nl variant
+      const caesarEmail = this.normalizeEmailToCaesar(email);
+      if (caesarEmail) {
+        const altEndpoint = `/users/${caesarEmail}`;
+        try {
+          return await this.executeWithRetry("GET", altEndpoint, async () => {
+            const client = await this.getClient();
+            const user = await client.api(altEndpoint).select("displayName,mail,userPrincipalName").get();
+            return {
+              displayName: user.displayName || email.split("@")[0],
+              email: user.mail || user.userPrincipalName || email,
+            };
+          }, `User info (caesar.nl): ${caesarEmail}`);
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
+  }
+
   async registerForSession(sessionId: string, userEmail: string, userName: string): Promise<Session | undefined> {
     const endpoint = `/users/${FORUM_MAILBOX}/calendar/events/${sessionId}`;
     

@@ -11,6 +11,45 @@ import { useUser } from "@/context/UserContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Session } from "@shared/schema";
 
+interface UserInfo {
+  displayName: string;
+  email: string;
+}
+
+function AttendeeItem({ email, index }: { email: string; index: number }) {
+  const { data: userInfo, isLoading } = useQuery<UserInfo>({
+    queryKey: ["/api/users", email],
+    queryFn: async () => {
+      const res = await fetch(`/api/users/${encodeURIComponent(email)}`);
+      if (!res.ok) throw new Error("User not found");
+      return res.json();
+    },
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const displayName = userInfo?.displayName || email.split("@")[0];
+  const initials = displayName.split(/[\s,]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || email.slice(0, 2).toUpperCase();
+  const photoUrl = `/api/users/${encodeURIComponent(email)}/photo`;
+
+  return (
+    <div className="flex items-center gap-3" data-testid={`attendee-${index}`}>
+      <Avatar className="h-8 w-8 shrink-0">
+        <AvatarImage src={photoUrl} alt={displayName} />
+        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      {isLoading ? (
+        <Skeleton className="h-4 w-32" />
+      ) : (
+        <span className="text-sm truncate" data-testid={`text-attendee-name-${index}`}>
+          {displayName}
+        </span>
+      )}
+    </div>
+  );
+}
+
 const categoryColorMap: Record<string, string> = {
   talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
   workshop: "bg-[hsl(var(--category-workshop-bg))] text-[hsl(var(--category-workshop-fg))]",
@@ -295,20 +334,7 @@ export default function SessionDetail() {
                 </h3>
                 <div className="space-y-3">
                   {session.attendees.map((email, index) => (
-                    <div
-                      key={email}
-                      className="flex items-center gap-3"
-                      data-testid={`attendee-${index}`}
-                    >
-                      <Avatar className="h-8 w-8 shrink-0">
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                          {email.split("@")[0].slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm truncate" data-testid={`text-attendee-email-${index}`}>
-                        {email}
-                      </span>
-                    </div>
+                    <AttendeeItem key={email} email={email} index={index} />
                   ))}
                 </div>
               </CardContent>
