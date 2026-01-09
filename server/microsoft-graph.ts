@@ -537,7 +537,24 @@ export class MicrosoftGraphService {
       const humanAttendees = (event.attendees || [])
         .filter((a) => a.type.toLowerCase() !== "resource");
       
-      const requiredAttendee = humanAttendees.find((a) => a.type.toLowerCase() === "required");
+      // Get all required attendees as speakers
+      const requiredAttendees = humanAttendees.filter((a) => a.type.toLowerCase() === "required");
+      
+      // Build speakers array from required attendees, fallback to organizer if none
+      let speakers: { name: string; email: string; photoUrl?: string }[] = [];
+      if (requiredAttendees.length > 0) {
+        speakers = requiredAttendees.map((a) => ({
+          name: formatDisplayName(a.emailAddress.name || a.emailAddress.address.split("@")[0]),
+          email: a.emailAddress.address,
+          photoUrl: `/api/users/${encodeURIComponent(a.emailAddress.address)}/photo`,
+        }));
+      } else if (event.organizer?.emailAddress) {
+        speakers = [{
+          name: formatDisplayName(event.organizer.emailAddress.name || "Onbekende spreker"),
+          email: event.organizer.emailAddress.address,
+          photoUrl: `/api/users/${encodeURIComponent(event.organizer.emailAddress.address)}/photo`,
+        }];
+      }
       
       // Include optional attendees (registered via app) who haven't declined
       // Also include anyone who explicitly accepted/tentatively accepted
@@ -550,15 +567,6 @@ export class MicrosoftGraphService {
         .filter((a) => a.type.toLowerCase() !== "required")
         .map((a) => a.emailAddress.address);
 
-      const speakerName = formatDisplayName(
-        requiredAttendee?.emailAddress.name || 
-        event.organizer?.emailAddress.name || 
-        "Onbekende spreker"
-      );
-      const speakerEmail = requiredAttendee?.emailAddress.address || 
-                           event.organizer?.emailAddress.address || 
-                           "";
-
       return {
         id: event.id,
         slug,
@@ -569,9 +577,7 @@ export class MicrosoftGraphService {
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",
-        speakerName,
-        speakerEmail,
-        speakerPhotoUrl: speakerEmail ? `/api/users/${encodeURIComponent(speakerEmail)}/photo` : undefined,
+        speakers,
         attendees: registeredAttendees,
       };
     });
@@ -608,7 +614,24 @@ export class MicrosoftGraphService {
       const humanAttendees = (event.attendees || [])
         .filter((a) => a.type.toLowerCase() !== "resource");
       
-      const requiredAttendee = humanAttendees.find((a) => a.type.toLowerCase() === "required");
+      // Get all required attendees as speakers
+      const requiredAttendees = humanAttendees.filter((a) => a.type.toLowerCase() === "required");
+      
+      // Build speakers array from required attendees, fallback to organizer if none
+      let speakers: { name: string; email: string; photoUrl?: string }[] = [];
+      if (requiredAttendees.length > 0) {
+        speakers = requiredAttendees.map((a) => ({
+          name: formatDisplayName(a.emailAddress.name || a.emailAddress.address.split("@")[0]),
+          email: a.emailAddress.address,
+          photoUrl: `/api/users/${encodeURIComponent(a.emailAddress.address)}/photo`,
+        }));
+      } else if (event.organizer?.emailAddress) {
+        speakers = [{
+          name: formatDisplayName(event.organizer.emailAddress.name || "Onbekende spreker"),
+          email: event.organizer.emailAddress.address,
+          photoUrl: `/api/users/${encodeURIComponent(event.organizer.emailAddress.address)}/photo`,
+        }];
+      }
       
       // Include optional attendees (registered via app) who haven't declined
       // Also include anyone who explicitly accepted/tentatively accepted
@@ -621,15 +644,6 @@ export class MicrosoftGraphService {
         .filter((a) => a.type.toLowerCase() !== "required")
         .map((a) => a.emailAddress.address);
 
-      const speakerName = formatDisplayName(
-        requiredAttendee?.emailAddress.name || 
-        event.organizer?.emailAddress.name || 
-        "Onbekende spreker"
-      );
-      const speakerEmail = requiredAttendee?.emailAddress.address || 
-                           event.organizer?.emailAddress.address || 
-                           "";
-
       return {
         id: event.id,
         slug,
@@ -640,9 +654,7 @@ export class MicrosoftGraphService {
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
         room: event.location?.displayName || "Zaal nog te bepalen",
-        speakerName,
-        speakerEmail,
-        speakerPhotoUrl: speakerEmail ? `/api/users/${encodeURIComponent(speakerEmail)}/photo` : undefined,
+        speakers,
         attendees: registeredAttendees,
       };
     } catch (error) {

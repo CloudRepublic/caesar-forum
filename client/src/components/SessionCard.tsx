@@ -48,7 +48,8 @@ export function SessionCard({
     });
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined) => {
+    if (!name) return "??";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -111,17 +112,27 @@ export function SessionCard({
           </div>
 
           <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6">
-              {session.speakerPhotoUrl ? (
-                <AvatarImage src={session.speakerPhotoUrl} alt={session.speakerName} />
-              ) : null}
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {getInitials(session.speakerName)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="font-medium" data-testid={`text-speaker-${session.id}`}>
-              {session.speakerName}
-            </span>
+            {session.speakers.length > 0 ? (
+              <>
+                <div className="flex -space-x-2">
+                  {session.speakers.slice(0, 3).map((speaker, idx) => (
+                    <Avatar key={speaker.email} className="h-6 w-6 border-2 border-background">
+                      {speaker.photoUrl ? (
+                        <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                      ) : null}
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                        {getInitials(speaker.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                </div>
+                <span className="font-medium" data-testid={`text-speaker-${session.id}`}>
+                  {session.speakers.map(s => s.name).join(" & ")}
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">Geen spreker</span>
+            )}
           </div>
         </div>
 

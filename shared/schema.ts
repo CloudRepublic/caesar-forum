@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+// Speaker schema
+export const speakerSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  photoUrl: z.string().optional(),
+});
+
+export type Speaker = z.infer<typeof speakerSchema>;
+
 // Session schema - categories come directly from Outlook
 export const sessionSchema = z.object({
   id: z.string(),
@@ -11,9 +20,7 @@ export const sessionSchema = z.object({
   startTime: z.string(), // ISO datetime
   endTime: z.string(), // ISO datetime
   room: z.string(),
-  speakerName: z.string(),
-  speakerEmail: z.string(),
-  speakerPhotoUrl: z.string().optional(),
+  speakers: z.array(speakerSchema), // Array of speakers (required attendees)
   attendees: z.array(z.string()), // Array of email addresses
 });
 

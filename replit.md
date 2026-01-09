@@ -42,7 +42,7 @@ Preferred communication style: Simple, everyday language.
   - `AZURE_CLIENT_SECRET`: Application secret (expires Jan 8, 2027)
   - `AZURE_TENANT_ID`: Caesar M365 tenant ID
 - **Categories from Outlook**: Events can have multiple categories from Outlook (e.g., "Talk", "Workshop", "Demo", "Brainstorm", "Hackathon", "Promotion"). All categories are shown as-is with no mapping. Filters only appear for categories that have events.
-- **Speaker Detection**: The first "required" attendee is used as the speaker. If no required attendee exists, falls back to the event organizer. Users who register via the app are added as "optional" attendees so they don't interfere with speaker detection.
+- **Multiple Speakers**: All "required" attendees are treated as speakers. If no required attendees exist, falls back to the event organizer. Sessions can have multiple speakers, which are displayed with stacked avatars in the card view and listed individually in the detail view. Users who register via the app are added as "optional" attendees so they don't interfere with speaker detection.
 - **Speaker Photos**: Fetched automatically from Microsoft 365 via `/api/users/{email}/photo` endpoint. Uses the speaker's email to retrieve their M365 profile photo.
 - **All-day Event**: An all-day event determines the Forum date and title; only sessions on that same date are shown
 - **Session URLs**: User-friendly URLs using slugs (e.g., `/sessies/angular-signal-forms-99v7g9`). Slugs are auto-generated from title + hash suffix for uniqueness.

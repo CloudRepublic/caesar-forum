@@ -144,7 +144,8 @@ export default function SessionDetail() {
     });
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined) => {
+    if (!name) return "??";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -253,24 +254,33 @@ export default function SessionDetail() {
           <Card>
             <CardContent className="space-y-6 pt-6">
               <div>
-                <h3 className="mb-3 text-sm font-medium text-muted-foreground">Spreker</h3>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-16 w-16 shrink-0">
-                    {session.speakerPhotoUrl ? (
-                      <AvatarImage src={session.speakerPhotoUrl} alt={session.speakerName} />
-                    ) : null}
-                    <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                      {getInitials(session.speakerName)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold truncate" data-testid="text-speaker-name">
-                      {session.speakerName}
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate" data-testid="text-speaker-email">
-                      {session.speakerEmail}
-                    </p>
-                  </div>
+                <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+                  {session.speakers.length > 1 ? "Sprekers" : "Spreker"}
+                </h3>
+                <div className="space-y-3">
+                  {session.speakers.map((speaker, idx) => (
+                    <div key={speaker.email} className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12 shrink-0">
+                        {speaker.photoUrl ? (
+                          <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                        ) : null}
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                          {getInitials(speaker.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold truncate" data-testid={`text-speaker-name-${idx}`}>
+                          {speaker.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate" data-testid={`text-speaker-email-${idx}`}>
+                          {speaker.email}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {session.speakers.length === 0 && (
+                    <p className="text-muted-foreground">Geen spreker</p>
+                  )}
                 </div>
               </div>
 
