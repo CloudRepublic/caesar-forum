@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { ArrowLeft, Clock, MapPin, Users, Calendar, Check } from "lucide-react";
@@ -73,6 +74,11 @@ export default function SessionDetail() {
   const [, params] = useRoute("/sessies/:slug");
   const slug = params?.slug;
   const { user } = useUser();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
   const { toast } = useToast();
 
   const { data: session, isLoading, error } = useQuery<Session>({
