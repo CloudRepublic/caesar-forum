@@ -379,6 +379,12 @@ export class MicrosoftGraphService {
           throw new Error(`Access denied to ${endpoint}. Check mailbox permissions and application consent.`);
         }
 
+        if (statusCode === 404) {
+          logApiError(method, endpoint, error, durationMs, "404 Not Found - Resource does not exist");
+          // Don't retry 404 - resource doesn't exist, retrying won't help
+          throw new Error(`Resource not found: ${endpoint}`);
+        }
+
         if (statusCode === 429) {
           // Get Retry-After header if available
           const retryAfterHeader = (error as any)?.headers?.get?.("Retry-After");
