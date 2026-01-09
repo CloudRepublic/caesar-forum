@@ -11,6 +11,7 @@ import { useUser } from "@/context/UserContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isEmailInList } from "@/lib/email-utils";
 import { formatDisplayName } from "@/lib/name-utils";
+import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
 
 interface UserInfo {
@@ -142,16 +143,6 @@ export default function SessionDetail() {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
-
-  const getInitials = (name: string | undefined) => {
-    if (!name) return "??";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   if (isLoading) {

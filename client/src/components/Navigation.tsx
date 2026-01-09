@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
 import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { getInitials } from "@/lib/utils";
 
 export function Navigation() {
   const { user, login, logout, isLoading } = useUser();
@@ -14,15 +15,6 @@ export function Navigation() {
     { href: "/", label: "Dashboard" },
     { href: "/mijn-sessies", label: "Mijn Sessies" },
   ];
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   return (
     <nav className="sticky top-0 z-50 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

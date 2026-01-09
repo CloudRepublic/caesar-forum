@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, MapPin, Users, Check } from "lucide-react";
 import { isEmailInList } from "@/lib/email-utils";
+import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
 
 const categoryColorMap: Record<string, string> = {
@@ -46,16 +47,6 @@ export function SessionCard({
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
-
-  const getInitials = (name: string | undefined) => {
-    if (!name) return "??";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
