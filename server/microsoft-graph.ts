@@ -3,6 +3,16 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import DOMPurify from "isomorphic-dompurify";
 import type { Session, ForumEdition, ForumData } from "@shared/schema";
 
+// Extract local part from email (before @) for alias comparison
+function getEmailLocalPart(email: string): string {
+  return email.split("@")[0].toLowerCase();
+}
+
+// Check if two emails have the same local part (handles multi-domain aliases)
+function emailsMatch(email1: string, email2: string): boolean {
+  return getEmailLocalPart(email1) === getEmailLocalPart(email2);
+}
+
 // Sanitize HTML while removing inline styles and font tags, convert divs to paragraphs
 function sanitizeHtml(html: string): string {
   let sanitized = DOMPurify.sanitize(html, {
@@ -717,7 +727,7 @@ export class MicrosoftGraphService {
 
       const existingAttendees = event.attendees || [];
       const alreadyRegistered = existingAttendees.some(
-        (a) => a.emailAddress.address.toLowerCase() === userEmail.toLowerCase()
+        (a) => emailsMatch(a.emailAddress.address, userEmail)
       );
 
       if (!alreadyRegistered) {
@@ -756,7 +766,7 @@ export class MicrosoftGraphService {
 
       const existingAttendees = event.attendees || [];
       const updatedAttendees = existingAttendees.filter(
-        (a) => a.emailAddress.address.toLowerCase() !== userEmail.toLowerCase()
+        (a) => !emailsMatch(a.emailAddress.address, userEmail)
       );
 
       await this.executeWithRetry("PATCH", endpoint, async () => {
