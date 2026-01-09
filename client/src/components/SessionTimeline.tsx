@@ -45,7 +45,8 @@ export function SessionTimeline({
     });
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined) => {
+    if (!name) return "??";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -153,15 +154,27 @@ export function SessionTimeline({
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Avatar className="h-5 w-5">
-                            {session.speakerPhotoUrl ? (
-                              <AvatarImage src={session.speakerPhotoUrl} alt={session.speakerName} />
-                            ) : null}
-                            <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-                              {getInitials(session.speakerName)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm font-medium">{session.speakerName}</span>
+                          {session.speakers.length > 0 ? (
+                            <>
+                              <div className="flex -space-x-1.5">
+                                {session.speakers.slice(0, 3).map((speaker) => (
+                                  <Avatar key={speaker.email} className="h-5 w-5 border border-background">
+                                    {speaker.photoUrl ? (
+                                      <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                                    ) : null}
+                                    <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                                      {getInitials(speaker.name)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                ))}
+                              </div>
+                              <span className="text-sm font-medium">
+                                {session.speakers.map(s => s.name).join(" & ")}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Geen spreker</span>
+                          )}
                         </div>
                       </div>
 
