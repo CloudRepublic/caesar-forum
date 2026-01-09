@@ -669,44 +669,44 @@ export class MicrosoftGraphService {
     }
   }
 
-  private normalizeEmailToCaesar(email: string): string | null {
+  private normalizeEmailToCaesar(email: string): string {
     const knownDomains = ["cloudrepublic.nl", "cloudrepublic.com"];
     const parts = email.split("@");
-    if (parts.length !== 2) return null;
+    if (parts.length !== 2) return email;
     const [localPart, domain] = parts;
     if (knownDomains.includes(domain.toLowerCase())) {
       return `${localPart}@caesar.nl`;
     }
-    return null;
+    return email;
   }
 
   async getUserPhoto(email: string): Promise<Buffer | null> {
-    const endpoint = `/users/${email}/photo/$value`;
+    // Try caesar.nl normalized email first (most users are stored with @caesar.nl)
+    const caesarEmail = this.normalizeEmailToCaesar(email);
+    const caesarEndpoint = `/users/${caesarEmail}/photo/$value`;
     
-    // Try original email first
     try {
-      return await this.executeWithRetry("GET", endpoint, async () => {
+      return await this.executeWithRetry("GET", caesarEndpoint, async () => {
         const client = await this.getClient();
         const response = await client
-          .api(endpoint)
+          .api(caesarEndpoint)
           .responseType("arraybuffer" as any)
           .get();
         return Buffer.from(response);
-      }, `User photo: ${email}`);
+      }, `User photo: ${caesarEmail}`);
     } catch {
-      // If failed, try caesar.nl variant
-      const caesarEmail = this.normalizeEmailToCaesar(email);
-      if (caesarEmail) {
-        const altEndpoint = `/users/${caesarEmail}/photo/$value`;
+      // If caesar.nl failed and original email is different, try original
+      if (caesarEmail !== email) {
+        const originalEndpoint = `/users/${email}/photo/$value`;
         try {
-          return await this.executeWithRetry("GET", altEndpoint, async () => {
+          return await this.executeWithRetry("GET", originalEndpoint, async () => {
             const client = await this.getClient();
             const response = await client
-              .api(altEndpoint)
+              .api(originalEndpoint)
               .responseType("arraybuffer" as any)
               .get();
             return Buffer.from(response);
-          }, `User photo (caesar.nl): ${caesarEmail}`);
+          }, `User photo (original): ${email}`);
         } catch {
           return null;
         }
@@ -716,32 +716,32 @@ export class MicrosoftGraphService {
   }
 
   async getUserInfo(email: string): Promise<{ displayName: string; email: string } | null> {
-    const endpoint = `/users/${email}`;
+    // Try caesar.nl normalized email first (most users are stored with @caesar.nl)
+    const caesarEmail = this.normalizeEmailToCaesar(email);
+    const caesarEndpoint = `/users/${caesarEmail}`;
     
-    // Try original email first
     try {
-      return await this.executeWithRetry("GET", endpoint, async () => {
+      return await this.executeWithRetry("GET", caesarEndpoint, async () => {
         const client = await this.getClient();
-        const user = await client.api(endpoint).select("displayName,mail,userPrincipalName").get();
+        const user = await client.api(caesarEndpoint).select("displayName,mail,userPrincipalName").get();
         return {
           displayName: formatDisplayName(user.displayName || email.split("@")[0]),
           email: user.mail || user.userPrincipalName || email,
         };
-      }, `User info: ${email}`);
+      }, `User info: ${caesarEmail}`);
     } catch {
-      // If failed, try caesar.nl variant
-      const caesarEmail = this.normalizeEmailToCaesar(email);
-      if (caesarEmail) {
-        const altEndpoint = `/users/${caesarEmail}`;
+      // If caesar.nl failed and original email is different, try original
+      if (caesarEmail !== email) {
+        const originalEndpoint = `/users/${email}`;
         try {
-          return await this.executeWithRetry("GET", altEndpoint, async () => {
+          return await this.executeWithRetry("GET", originalEndpoint, async () => {
             const client = await this.getClient();
-            const user = await client.api(altEndpoint).select("displayName,mail,userPrincipalName").get();
+            const user = await client.api(originalEndpoint).select("displayName,mail,userPrincipalName").get();
             return {
               displayName: formatDisplayName(user.displayName || email.split("@")[0]),
               email: user.mail || user.userPrincipalName || email,
             };
-          }, `User info (caesar.nl): ${caesarEmail}`);
+          }, `User info (original): ${email}`);
         } catch {
           return null;
         }
