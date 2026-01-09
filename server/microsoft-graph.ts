@@ -13,6 +13,19 @@ function emailsMatch(email1: string, email2: string): boolean {
   return getEmailLocalPart(email1) === getEmailLocalPart(email2);
 }
 
+// Convert "Last, First" format to "First Last" format
+function formatDisplayName(name: string): string {
+  if (!name) return name;
+  // Check if name contains a comma (indicates "Last, First" format)
+  if (name.includes(",")) {
+    const parts = name.split(",").map(p => p.trim());
+    if (parts.length === 2 && parts[0] && parts[1]) {
+      return `${parts[1]} ${parts[0]}`;
+    }
+  }
+  return name;
+}
+
 // Sanitize HTML while removing inline styles and font tags, convert divs to paragraphs
 function sanitizeHtml(html: string): string {
   let sanitized = DOMPurify.sanitize(html, {
@@ -537,9 +550,11 @@ export class MicrosoftGraphService {
         .filter((a) => a.type.toLowerCase() !== "required")
         .map((a) => a.emailAddress.address);
 
-      const speakerName = requiredAttendee?.emailAddress.name || 
-                          event.organizer?.emailAddress.name || 
-                          "Onbekende spreker";
+      const speakerName = formatDisplayName(
+        requiredAttendee?.emailAddress.name || 
+        event.organizer?.emailAddress.name || 
+        "Onbekende spreker"
+      );
       const speakerEmail = requiredAttendee?.emailAddress.address || 
                            event.organizer?.emailAddress.address || 
                            "";
@@ -606,9 +621,11 @@ export class MicrosoftGraphService {
         .filter((a) => a.type.toLowerCase() !== "required")
         .map((a) => a.emailAddress.address);
 
-      const speakerName = requiredAttendee?.emailAddress.name || 
-                          event.organizer?.emailAddress.name || 
-                          "Onbekende spreker";
+      const speakerName = formatDisplayName(
+        requiredAttendee?.emailAddress.name || 
+        event.organizer?.emailAddress.name || 
+        "Onbekende spreker"
+      );
       const speakerEmail = requiredAttendee?.emailAddress.address || 
                            event.organizer?.emailAddress.address || 
                            "";
@@ -689,7 +706,7 @@ export class MicrosoftGraphService {
         const client = await this.getClient();
         const user = await client.api(endpoint).select("displayName,mail,userPrincipalName").get();
         return {
-          displayName: user.displayName || email.split("@")[0],
+          displayName: formatDisplayName(user.displayName || email.split("@")[0]),
           email: user.mail || user.userPrincipalName || email,
         };
       }, `User info: ${email}`);
@@ -703,7 +720,7 @@ export class MicrosoftGraphService {
             const client = await this.getClient();
             const user = await client.api(altEndpoint).select("displayName,mail,userPrincipalName").get();
             return {
-              displayName: user.displayName || email.split("@")[0],
+              displayName: formatDisplayName(user.displayName || email.split("@")[0]),
               email: user.mail || user.userPrincipalName || email,
             };
           }, `User info (caesar.nl): ${caesarEmail}`);

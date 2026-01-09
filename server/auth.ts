@@ -2,6 +2,18 @@ import { ConfidentialClientApplication, CryptoProvider } from "@azure/msal-node"
 import type { Express, Request, Response } from "express";
 import type { User } from "@shared/schema";
 
+// Convert "Last, First" format to "First Last" format
+function formatDisplayName(name: string): string {
+  if (!name) return name;
+  if (name.includes(",")) {
+    const parts = name.split(",").map(p => p.trim());
+    if (parts.length === 2 && parts[0] && parts[1]) {
+      return `${parts[1]} ${parts[0]}`;
+    }
+  }
+  return name;
+}
+
 declare module "express-session" {
   interface SessionData {
     user?: User;
@@ -98,7 +110,7 @@ export function registerAuthRoutes(app: Express): void {
 
       const user: User = {
         id: account.localAccountId || account.homeAccountId,
-        name: (idTokenClaims.name as string) || account.name || "Onbekende gebruiker",
+        name: formatDisplayName((idTokenClaims.name as string) || account.name || "Onbekende gebruiker"),
         email: (idTokenClaims.preferred_username as string) || 
                (idTokenClaims.email as string) || 
                account.username || 
