@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { SessionGridSkeleton } from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { isEmailInList } from "@/lib/email-utils";
 import { ArrowLeft, Calendar } from "lucide-react";
 import type { ForumData } from "@shared/schema";
 
@@ -43,7 +44,7 @@ export default function MySessions() {
     if (!data?.sessions || !user?.email) return [];
 
     return data.sessions
-      .filter((session) => session.attendees.includes(user.email))
+      .filter((session) => isEmailInList(user.email, session.attendees))
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   }, [data?.sessions, user?.email]);
 

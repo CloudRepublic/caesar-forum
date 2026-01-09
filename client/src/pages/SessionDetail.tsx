@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { isEmailInList } from "@/lib/email-utils";
 import type { Session } from "@shared/schema";
 
 interface UserInfo {
@@ -188,7 +189,7 @@ export default function SessionDetail() {
     );
   }
 
-  const isRegistered = user?.email ? session.attendees.includes(user.email) : false;
+  const isRegistered = user?.email ? isEmailInList(user.email, session.attendees) : false;
   const isPending = registerMutation.isPending || unregisterMutation.isPending;
 
   return (

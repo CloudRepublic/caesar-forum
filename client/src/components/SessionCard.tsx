@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, MapPin, Users, Check } from "lucide-react";
+import { isEmailInList } from "@/lib/email-utils";
 import type { Session } from "@shared/schema";
 
 const categoryColorMap: Record<string, string> = {
@@ -37,7 +38,7 @@ export function SessionCard({
   onUnregister,
   isPending = false,
 }: SessionCardProps) {
-  const isRegistered = userEmail ? session.attendees.includes(userEmail) : false;
+  const isRegistered = userEmail ? isEmailInList(userEmail, session.attendees) : false;
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);

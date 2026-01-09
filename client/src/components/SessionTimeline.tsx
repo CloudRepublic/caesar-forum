@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, MapPin, Users, Check } from "lucide-react";
+import { isEmailInList } from "@/lib/email-utils";
 import type { Session } from "@shared/schema";
 
 const categoryColorMap: Record<string, string> = {
@@ -83,7 +84,7 @@ export function SessionTimeline({
             <div className="flex-1 space-y-3 pt-1">
               {slotSessions.map((session) => {
                 const isRegistered = userEmail
-                  ? session.attendees.includes(userEmail)
+                  ? isEmailInList(userEmail, session.attendees)
                   : false;
 
                 return (
