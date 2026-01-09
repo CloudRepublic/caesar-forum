@@ -761,15 +761,24 @@ export class MicrosoftGraphService {
         existingEntry.status.response.toLowerCase() !== "declined";
 
       if (!isActivelyRegistered) {
-        // Remove any existing declined entry, then add fresh
+        // Remove any existing declined entry, then add fresh with explicit status
         const filteredAttendees = existingAttendees.filter(
           (a) => !emailsMatch(a.emailAddress.address, userEmail)
         );
+        
+        // Use the email that's already in the system if exists (to avoid duplicates)
+        const existingEmail = existingEntry?.emailAddress.address;
+        const emailToUse = existingEmail || userEmail;
+        
         const updatedAttendees = [
           ...filteredAttendees,
           {
-            emailAddress: { address: userEmail, name: userName },
+            emailAddress: { address: emailToUse, name: userName },
             type: "optional",
+            status: {
+              response: "none",
+              time: new Date().toISOString()
+            }
           },
         ];
 
