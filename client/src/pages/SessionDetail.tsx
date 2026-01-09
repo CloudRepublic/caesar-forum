@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isEmailInList } from "@/lib/email-utils";
+import { formatDisplayName } from "@/lib/name-utils";
 import type { Session } from "@shared/schema";
 
 interface UserInfo {
@@ -28,8 +29,8 @@ function AttendeeItem({ email, index }: { email: string; index: number }) {
     staleTime: 1000 * 60 * 60,
   });
 
-  const displayName = userInfo?.displayName || email.split("@")[0];
-  const initials = displayName.split(/[\s,]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || email.slice(0, 2).toUpperCase();
+  const displayName = formatDisplayName(userInfo?.displayName || email.split("@")[0]);
+  const initials = displayName.split(/[\s]+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase() || email.slice(0, 2).toUpperCase();
   const photoUrl = `/api/users/${encodeURIComponent(email)}/photo`;
 
   return (
