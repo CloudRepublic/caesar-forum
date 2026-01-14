@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
 import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -51,6 +51,9 @@ export function Navigation() {
             <div className="hidden items-center gap-4 md:flex">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
+                  {user.photoUrl && (
+                    <AvatarImage src={user.photoUrl} alt={user.name} data-testid="img-user-avatar" />
+                  )}
                   <AvatarFallback className="bg-primary/10 text-primary text-xs">
                     {getInitials(user.name)}
                   </AvatarFallback>
@@ -120,6 +123,9 @@ export function Navigation() {
                 <div className="my-2 border-t" />
                 <div className="flex items-center gap-2 px-4 py-2">
                   <Avatar className="h-8 w-8">
+                    {user.photoUrl && (
+                      <AvatarImage src={user.photoUrl} alt={user.name} data-testid="img-user-avatar-mobile" />
+                    )}
                     <AvatarFallback className="bg-primary/10 text-primary text-xs">
                       {getInitials(user.name)}
                     </AvatarFallback>

@@ -108,13 +108,16 @@ export function registerAuthRoutes(app: Express): void {
       const account = tokenResponse.account;
       const idTokenClaims = tokenResponse.idTokenClaims as Record<string, unknown>;
 
+      const userEmail = (idTokenClaims.preferred_username as string) || 
+               (idTokenClaims.email as string) || 
+               account.username || 
+               "";
+      
       const user: User = {
         id: account.localAccountId || account.homeAccountId,
         name: formatDisplayName((idTokenClaims.name as string) || account.name || "Onbekende gebruiker"),
-        email: (idTokenClaims.preferred_username as string) || 
-               (idTokenClaims.email as string) || 
-               account.username || 
-               "",
+        email: userEmail,
+        photoUrl: userEmail ? `/api/users/${encodeURIComponent(userEmail)}/photo` : undefined,
       };
 
       req.session.regenerate((err) => {
