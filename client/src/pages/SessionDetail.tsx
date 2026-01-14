@@ -250,36 +250,38 @@ export default function SessionDetail() {
         <div className="space-y-6">
           <Card>
             <CardContent className="space-y-6 pt-6">
-              <div>
-                <h3 className="mb-3 text-sm font-medium text-muted-foreground">
-                  {session.speakers.length > 1 ? "Sprekers" : "Spreker"}
-                </h3>
-                <div className="space-y-3">
-                  {session.speakers.map((speaker, idx) => (
-                    <div key={speaker.email} className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12 shrink-0">
-                        {speaker.photoUrl ? (
-                          <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
-                        ) : null}
-                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                          {getInitials(speaker.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold truncate" data-testid={`text-speaker-name-${idx}`}>
-                          {speaker.name}
-                        </p>
-                        <p className="text-sm text-muted-foreground truncate" data-testid={`text-speaker-email-${idx}`}>
-                          {speaker.email}
-                        </p>
+              {user && (
+                <div>
+                  <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+                    {session.speakers.length > 1 ? "Sprekers" : "Spreker"}
+                  </h3>
+                  <div className="space-y-3">
+                    {session.speakers.map((speaker, idx) => (
+                      <div key={speaker.email} className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12 shrink-0">
+                          {speaker.photoUrl ? (
+                            <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                          ) : null}
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                            {getInitials(speaker.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold truncate" data-testid={`text-speaker-name-${idx}`}>
+                            {speaker.name}
+                          </p>
+                          <p className="text-sm text-muted-foreground truncate" data-testid={`text-speaker-email-${idx}`}>
+                            {speaker.email}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {session.speakers.length === 0 && (
-                    <p className="text-muted-foreground">Geen spreker</p>
-                  )}
+                    ))}
+                    {session.speakers.length === 0 && (
+                      <p className="text-muted-foreground">Geen spreker</p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
@@ -335,7 +337,7 @@ export default function SessionDetail() {
             </CardContent>
           </Card>
 
-          {session.attendees.length > 0 && (
+          {user && session.attendees.length > 0 && (
             <Card>
               <CardContent className="pt-6">
                 <h3 className="mb-4 text-sm font-medium text-muted-foreground">
