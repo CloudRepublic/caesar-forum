@@ -87,12 +87,15 @@ export default function Home() {
     if (!data?.sessions) return [];
 
     return data.sessions.filter((session) => {
+      const searchLower = searchQuery.toLowerCase();
+      const speakerNames = session.speakers?.map(s => s.name.toLowerCase()).join(" ") || "";
+      
       const matchesSearch =
         searchQuery === "" ||
-        session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        session.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        session.speakerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        session.room.toLowerCase().includes(searchQuery.toLowerCase());
+        session.title.toLowerCase().includes(searchLower) ||
+        session.description.toLowerCase().includes(searchLower) ||
+        speakerNames.includes(searchLower) ||
+        session.room.toLowerCase().includes(searchLower);
 
       const matchesFilter =
         activeFilter === "all" || (session.categories || []).includes(activeFilter);
