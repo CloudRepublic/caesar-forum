@@ -250,7 +250,7 @@ export default function SessionDetail() {
         <div className="space-y-6">
           <Card>
             <CardContent className="space-y-6 pt-6">
-              {user && (
+              {user && session.speakers.length > 0 && (
                 <div>
                   <h3 className="mb-3 text-sm font-medium text-muted-foreground">
                     {session.speakers.length > 1 ? "Sprekers" : "Spreker"}
@@ -276,9 +276,6 @@ export default function SessionDetail() {
                         </div>
                       </div>
                     ))}
-                    {session.speakers.length === 0 && (
-                      <p className="text-muted-foreground">Geen spreker</p>
-                    )}
                   </div>
                 </div>
               )}

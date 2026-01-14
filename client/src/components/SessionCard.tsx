@@ -102,29 +102,23 @@ export function SessionCard({
             <span data-testid={`text-room-${session.id}`}>{session.room}</span>
           </div>
 
-          {userEmail && (
+          {userEmail && session.speakers.length > 0 && (
             <div className="flex items-center gap-2">
-              {session.speakers.length > 0 ? (
-                <>
-                  <div className="flex -space-x-2">
-                    {session.speakers.slice(0, 3).map((speaker) => (
-                      <Avatar key={speaker.email} className="h-6 w-6 border-2 border-background">
-                        {speaker.photoUrl ? (
-                          <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
-                        ) : null}
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                          {getInitials(speaker.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                  </div>
-                  <span className="font-medium" data-testid={`text-speaker-${session.id}`}>
-                    {session.speakers.map(s => s.name).join(" & ")}
-                  </span>
-                </>
-              ) : (
-                <span className="text-muted-foreground">Geen spreker</span>
-              )}
+              <div className="flex -space-x-2">
+                {session.speakers.slice(0, 3).map((speaker) => (
+                  <Avatar key={speaker.email} className="h-6 w-6 border-2 border-background">
+                    {speaker.photoUrl ? (
+                      <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                    ) : null}
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                      {getInitials(speaker.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              <span className="font-medium" data-testid={`text-speaker-${session.id}`}>
+                {session.speakers.map(s => s.name).join(" & ")}
+              </span>
             </div>
           )}
         </div>
