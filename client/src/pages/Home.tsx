@@ -185,7 +185,15 @@ export default function Home() {
 
   const handleFoodDrinkRegister = () => {
     if (foodDrinkSuggestion) {
-      registerMutation.mutate(foodDrinkSuggestion.id);
+      registerMutation.mutate(foodDrinkSuggestion.id, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/forum"] });
+          toast({
+            title: "Ingeschreven",
+            description: `Je bent ingeschreven voor ${foodDrinkSuggestion.title}`,
+          });
+        },
+      });
     }
     setShowFoodDrinkDialog(false);
     setFoodDrinkSuggestion(null);
