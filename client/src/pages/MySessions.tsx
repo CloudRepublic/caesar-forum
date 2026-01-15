@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -15,6 +15,10 @@ import type { ForumData } from "@shared/schema";
 export default function MySessions() {
   const { user } = useUser();
   const { toast } = useToast();
+
+  useEffect(() => {
+    document.title = "Caesar Forum - Mijn Sessies";
+  }, []);
 
   const { data, isLoading, error } = useQuery<ForumData>({
     queryKey: ["/api/forum"],

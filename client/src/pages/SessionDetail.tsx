@@ -91,6 +91,14 @@ export default function SessionDetail() {
     enabled: !!slug,
   });
 
+  useEffect(() => {
+    if (session?.title) {
+      document.title = `Caesar Forum - ${session.title}`;
+    } else {
+      document.title = "Caesar Forum - Sessie";
+    }
+  }, [session?.title]);
+
   const registerMutation = useMutation({
     mutationFn: async () => {
       await apiRequest("POST", "/api/sessions/register", { sessionId: session?.id });

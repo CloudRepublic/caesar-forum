@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useUser } from "@/context/UserContext";
@@ -34,6 +34,10 @@ export default function Home() {
   });
   const [foodDrinkSuggestion, setFoodDrinkSuggestion] = useState<Session | null>(null);
   const [showFoodDrinkDialog, setShowFoodDrinkDialog] = useState(false);
+
+  useEffect(() => {
+    document.title = "Caesar Forum - Dashboard";
+  }, []);
 
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
