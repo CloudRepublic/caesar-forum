@@ -1,19 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Clock, MapPin, Users, Calendar, Check } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Users, Calendar, Check, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isEmailInList } from "@/lib/email-utils";
+import { findOverlapsWithSession } from "@/lib/session-utils";
 import { formatDisplayName } from "@/lib/name-utils";
 import { getInitials } from "@/lib/utils";
-import type { Session } from "@shared/schema";
+import type { Session, ForumData } from "@shared/schema";
 
 interface UserInfo {
   displayName: string;
@@ -90,6 +92,20 @@ export default function SessionDetail() {
     },
     enabled: !!slug,
   });
+
+  const { data: forumData } = useQuery<ForumData>({
+    queryKey: ["/api/forum"],
+  });
+
+  const registeredSessions = useMemo(() => {
+    if (!forumData?.sessions || !user?.email) return [];
+    return forumData.sessions.filter((s) => isEmailInList(user.email, s.attendees));
+  }, [forumData?.sessions, user?.email]);
+
+  const overlappingSessions = useMemo(() => {
+    if (!session) return [];
+    return findOverlapsWithSession(session, registeredSessions);
+  }, [session, registeredSessions]);
 
   useEffect(() => {
     if (session?.title) {
@@ -236,6 +252,26 @@ export default function SessionDetail() {
       <h1 className="mb-8 text-3xl font-bold md:text-4xl" data-testid="text-session-title">
         {session.title}
       </h1>
+
+      {overlappingSessions.length > 0 && (
+        <Alert variant="destructive" className="mb-6 border-amber-500/50 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-500" data-testid="alert-overlap-warning">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Overlappende sessie</AlertTitle>
+          <AlertDescription className="text-amber-700 dark:text-amber-300">
+            Deze sessie overlapt met{" "}
+            {overlappingSessions.map((s, i) => (
+              <span key={s.id}>
+                {i > 0 && (i === overlappingSessions.length - 1 ? " en " : ", ")}
+                <Link href={`/sessies/${s.slug}`} className="font-medium underline hover:no-underline">
+                  {s.title}
+                </Link>
+                {" "}({new Date(s.startTime).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })} - {new Date(s.endTime).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })})
+              </span>
+            ))}
+            {" "}waarvoor je al ingeschreven bent.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">

@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Utensils } from "lucide-react";
 import { isEmailInList } from "@/lib/email-utils";
+import { findOverlappingSessions } from "@/lib/session-utils";
+import { OverlapWarningBanner } from "@/components/OverlapWarningBanner";
 import type { ForumData, Session } from "@shared/schema";
 
 export default function Home() {
@@ -208,6 +210,20 @@ export default function Home() {
     unregisterMutation.mutate(sessionId);
   };
 
+  const edition = data?.edition || null;
+  const sessions = data?.sessions || [];
+  const hasEvent = edition && edition.id !== "no-events";
+  const hasSessions = sessions.length > 0;
+
+  const registeredSessions = useMemo(() => {
+    if (!sessions || !user?.email) return [];
+    return sessions.filter((s) => isEmailInList(user.email, s.attendees));
+  }, [sessions, user?.email]);
+
+  const overlapPairs = useMemo(() => {
+    return findOverlappingSessions(registeredSessions);
+  }, [registeredSessions]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -227,11 +243,6 @@ export default function Home() {
     );
   }
 
-  const edition = data?.edition || null;
-  const sessions = data?.sessions || [];
-  const hasEvent = edition && edition.id !== "no-events";
-  const hasSessions = sessions.length > 0;
-
   return (
     <div className={`bg-background ${hasEvent && hasSessions ? "min-h-screen" : ""}`}>
       <HeroSection
@@ -243,6 +254,8 @@ export default function Home() {
       {/* Only show sessions section when there's an actual event */}
       {hasEvent && (
         <section id="sessions" className="mx-auto max-w-7xl px-4 py-12 md:px-8">
+          <OverlapWarningBanner overlaps={overlapPairs} />
+          
           {sessions.length > 0 ? (
           <>
             <div className="mb-8">

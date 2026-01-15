@@ -9,6 +9,8 @@ import { SessionGridSkeleton } from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { isEmailInList } from "@/lib/email-utils";
+import { findOverlappingSessions } from "@/lib/session-utils";
+import { OverlapWarningBanner } from "@/components/OverlapWarningBanner";
 import { ArrowLeft, Calendar } from "lucide-react";
 import type { ForumData } from "@shared/schema";
 
@@ -51,6 +53,10 @@ export default function MySessions() {
       .filter((session) => isEmailInList(user.email, session.attendees))
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   }, [data?.sessions, user?.email]);
+
+  const overlapPairs = useMemo(() => {
+    return findOverlappingSessions(mySessions);
+  }, [mySessions]);
 
   const handleUnregister = (sessionId: string) => {
     if (!user?.email) return;
@@ -100,6 +106,8 @@ export default function MySessions() {
             )}
           </div>
         </div>
+
+        <OverlapWarningBanner overlaps={overlapPairs} />
 
         {isLoading ? (
           <SessionGridSkeleton />
