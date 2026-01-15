@@ -6,6 +6,7 @@ import { Clock, MapPin, Users, Check, Utensils } from "lucide-react";
 import { isEmailInList } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
+import foodDrinkBg from "@assets/image_1768474260490.png";
 
 const categoryColorMap: Record<string, string> = {
   talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
@@ -96,9 +97,14 @@ export function SessionTimeline({
                     data-testid={`timeline-session-${session.id}`}
                   >
                     {isFoodDrink && (
-                      <div className="absolute right-2 bottom-2 w-16 h-16 opacity-[0.06] dark:opacity-[0.08] pointer-events-none">
-                        <Utensils className="w-full h-full text-foreground" />
-                      </div>
+                      <div 
+                        className="absolute right-0 bottom-0 w-32 h-24 opacity-[0.15] dark:opacity-[0.12] pointer-events-none"
+                        style={{
+                          backgroundImage: `url(${foodDrinkBg})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}
+                      />
                     )}
                     {isRegistered && (
                       <div className="absolute -left-2 top-4 flex h-4 w-4 items-center justify-center rounded-full bg-green-600">

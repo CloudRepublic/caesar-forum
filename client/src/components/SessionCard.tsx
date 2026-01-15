@@ -7,6 +7,7 @@ import { Clock, MapPin, Users, Check, Utensils } from "lucide-react";
 import { isEmailInList } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
+import foodDrinkBg from "@assets/image_1768474260490.png";
 
 const categoryColorMap: Record<string, string> = {
   talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
@@ -63,10 +64,15 @@ export function SessionCard({
       data-testid={`card-session-${session.id}`}
     >
       {isFoodDrink && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute right-0 bottom-0 w-32 h-32 opacity-[0.06] dark:opacity-[0.08]">
-            <Utensils className="w-full h-full text-foreground" />
-          </div>
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div 
+            className="absolute right-0 bottom-0 w-48 h-32 opacity-[0.15] dark:opacity-[0.12]"
+            style={{
+              backgroundImage: `url(${foodDrinkBg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
         </div>
       )}
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-4">
