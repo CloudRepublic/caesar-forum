@@ -423,6 +423,7 @@ export class MicrosoftGraphService {
       const client = await this.getClient();
       const response = await client
         .api(endpoint)
+        .header("Prefer", 'outlook.timezone="Europe/Amsterdam"')
         .select("id,subject,body,start,end,location,organizer,categories,attendees")
         .filter(`start/dateTime ge '${startDate.toISOString()}' and start/dateTime le '${endDate.toISOString()}'`)
         .orderby("start/dateTime")
@@ -590,6 +591,7 @@ export class MicrosoftGraphService {
         const client = await this.getClient();
         return await client
           .api(endpoint)
+          .header("Prefer", 'outlook.timezone="Europe/Amsterdam"')
           .select("id,subject,body,start,end,location,organizer,categories,attendees")
           .get() as CalendarEvent;
       }, `Session ID: ${id}`);
