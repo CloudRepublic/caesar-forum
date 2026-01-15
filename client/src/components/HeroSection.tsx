@@ -6,8 +6,13 @@ import type { ForumEdition, Session } from "@shared/schema";
 
 import backdrop1 from "@assets/backdrops/RL_09185.jpg";
 import backdrop2 from "@assets/backdrops/RL_09221.jpg";
+import backdrop3 from "@assets/backdrops/RL_02809.jpg";
+import backdrop4 from "@assets/backdrops/RL_04626.jpg";
+import backdrop5 from "@assets/backdrops/RL_03520.jpg";
+import backdrop6 from "@assets/backdrops/RL_03527.jpg";
+import backdrop7 from "@assets/backdrops/RL_03556.jpg";
 
-const backdropImages = [backdrop1, backdrop2];
+const backdropImages = [backdrop1, backdrop2, backdrop3, backdrop4, backdrop5, backdrop6, backdrop7];
 
 function getRandomBackdrop() {
   return backdropImages[Math.floor(Math.random() * backdropImages.length)];
