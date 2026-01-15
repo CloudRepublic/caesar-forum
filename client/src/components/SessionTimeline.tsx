@@ -89,7 +89,7 @@ export function SessionTimeline({
                 return (
                   <div
                     key={session.id}
-                    className={`relative rounded-lg border p-4 transition-all overflow-hidden ${
+                    className={`relative rounded-lg border p-4 transition-all ${
                       isRegistered
                         ? "border-green-500/50 bg-green-50/50 dark:border-green-500/30 dark:bg-green-950/20"
                         : "border-border bg-card"
@@ -98,17 +98,16 @@ export function SessionTimeline({
                   >
                     {isFoodDrink && (
                       <div 
-                        className="absolute inset-0 opacity-[0.12] dark:opacity-[0.10] pointer-events-none"
-                        style={{
-                          backgroundImage: `url(${foodDrinkBg})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                        }}
-                      />
-                    )}
-                    {isRegistered && (
-                      <div className="absolute -left-2 top-4 flex h-4 w-4 items-center justify-center rounded-full bg-green-600">
-                        <Check className="h-2.5 w-2.5 text-white" />
+                        className="absolute inset-0 opacity-[0.12] dark:opacity-[0.10] pointer-events-none rounded-lg overflow-hidden"
+                      >
+                        <div 
+                          className="absolute inset-0"
+                          style={{
+                            backgroundImage: `url(${foodDrinkBg})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                          }}
+                        />
                       </div>
                     )}
 
