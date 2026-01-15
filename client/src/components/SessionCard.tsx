@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MapPin, Users, Check } from "lucide-react";
+import { Clock, MapPin, Users, Check, Utensils } from "lucide-react";
 import { isEmailInList } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
@@ -17,6 +17,7 @@ const categoryColorMap: Record<string, string> = {
   promotion: "bg-[hsl(var(--category-promotion-bg))] text-[hsl(var(--category-promotion-fg))]",
   kennissessie: "bg-[hsl(var(--category-kennissessie-bg))] text-[hsl(var(--category-kennissessie-fg))]",
   deepdive: "bg-[hsl(var(--category-deepdive-bg))] text-[hsl(var(--category-deepdive-fg))]",
+  "eten&drinken": "bg-[hsl(var(--category-etendrinken-bg))] text-[hsl(var(--category-etendrinken-fg))]",
 };
 
 function getCategoryColors(category: string): string {
@@ -63,6 +64,9 @@ export function SessionCard({
               className={`${getCategoryColors(category)} no-default-hover-elevate no-default-active-elevate`}
               data-testid={`badge-category-${session.id}-${category.toLowerCase()}`}
             >
+              {category.toLowerCase() === "eten & drinken" && (
+                <Utensils className="mr-1 h-3 w-3" />
+              )}
               {category}
             </Badge>
           ))}

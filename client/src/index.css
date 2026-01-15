@@ -103,6 +103,8 @@
   --category-kennissessie-fg: 200 60% 32%;
   --category-deepdive-bg: 250 60% 94%;
   --category-deepdive-fg: 250 55% 38%;
+  --category-etendrinken-bg: 25 85% 92%;
+  --category-etendrinken-fg: 25 80% 30%;
   --category-default-bg: 215 20% 94%;
   --category-default-fg: 215 15% 35%;
 }
@@ -201,6 +203,8 @@
   --category-kennissessie-fg: 200 60% 78%;
   --category-deepdive-bg: 250 40% 22%;
   --category-deepdive-fg: 250 55% 82%;
+  --category-etendrinken-bg: 25 55% 20%;
+  --category-etendrinken-fg: 25 75% 78%;
   --category-default-bg: 215 15% 22%;
   --category-default-fg: 215 10% 78%;
 }

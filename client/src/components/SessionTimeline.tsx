@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MapPin, Users, Check } from "lucide-react";
+import { Clock, MapPin, Users, Check, Utensils } from "lucide-react";
 import { isEmailInList } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
@@ -16,6 +16,7 @@ const categoryColorMap: Record<string, string> = {
   promotion: "bg-[hsl(var(--category-promotion-bg))] text-[hsl(var(--category-promotion-fg))]",
   kennissessie: "bg-[hsl(var(--category-kennissessie-bg))] text-[hsl(var(--category-kennissessie-fg))]",
   deepdive: "bg-[hsl(var(--category-deepdive-bg))] text-[hsl(var(--category-deepdive-fg))]",
+  "eten&drinken": "bg-[hsl(var(--category-etendrinken-bg))] text-[hsl(var(--category-etendrinken-fg))]",
 };
 
 function getCategoryColors(category: string): string {
@@ -104,6 +105,9 @@ export function SessionTimeline({
                               variant="secondary"
                               className={`${getCategoryColors(category)} no-default-hover-elevate no-default-active-elevate text-xs`}
                             >
+                              {category.toLowerCase() === "eten & drinken" && (
+                                <Utensils className="mr-1 h-2.5 w-2.5" />
+                              )}
                               {category}
                             </Badge>
                           ))}
