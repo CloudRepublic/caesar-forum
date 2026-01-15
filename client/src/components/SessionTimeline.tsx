@@ -159,7 +159,15 @@ export function SessionTimeline({
                           </div>
                           <div className="flex items-center gap-1.5">
                             <Users className="h-3.5 w-3.5" />
-                            <span>{session.attendees.length} deelnemer{session.attendees.length !== 1 ? "s" : ""}</span>
+                            <span>
+                              {session.capacity 
+                                ? `${session.attendees.length} van ${session.capacity}`
+                                : `${session.attendees.length} deelnemer${session.attendees.length !== 1 ? "s" : ""}`
+                              }
+                            </span>
+                            {session.capacity && session.attendees.length >= session.capacity && (
+                              <Badge variant="destructive" className="text-xs ml-1">Vol</Badge>
+                            )}
                           </div>
                         </div>
 

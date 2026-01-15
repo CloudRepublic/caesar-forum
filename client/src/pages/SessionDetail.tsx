@@ -342,8 +342,14 @@ export default function SessionDetail() {
                 <div className="flex items-center gap-3 text-sm">
                   <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span data-testid="text-session-attendees">
-                    {session.attendees.length} deelnemer{session.attendees.length !== 1 ? "s" : ""}
+                    {session.capacity 
+                      ? `${session.attendees.length} van ${session.capacity} deelnemers`
+                      : `${session.attendees.length} deelnemer${session.attendees.length !== 1 ? "s" : ""}`
+                    }
                   </span>
+                  {session.capacity && session.attendees.length >= session.capacity && (
+                    <Badge variant="destructive" className="text-xs">Vol</Badge>
+                  )}
                 </div>
               </div>
 
@@ -382,7 +388,7 @@ export default function SessionDetail() {
             <Card>
               <CardContent className="pt-6">
                 <h3 className="mb-4 text-sm font-medium text-muted-foreground">
-                  Deelnemers ({session.attendees.length})
+                  Deelnemers ({session.capacity ? `${session.attendees.length}/${session.capacity}` : session.attendees.length})
                 </h3>
                 <div className="space-y-3">
                   {session.attendees.map((email, index) => (

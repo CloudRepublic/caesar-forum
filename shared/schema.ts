@@ -22,6 +22,7 @@ export const sessionSchema = z.object({
   room: z.string(),
   speakers: z.array(speakerSchema), // Array of speakers (required attendees)
   attendees: z.array(z.string()), // Array of email addresses
+  capacity: z.number().optional(), // Maximum number of attendees (from back-matter)
 });
 
 export type Session = z.infer<typeof sessionSchema>;

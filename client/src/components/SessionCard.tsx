@@ -155,8 +155,20 @@ export function SessionCard({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="h-4 w-4" />
           <span data-testid={`text-attendees-${session.id}`}>
-            {session.attendees.length} deelnemer{session.attendees.length !== 1 ? "s" : ""}
+            {session.capacity 
+              ? `${session.attendees.length} van ${session.capacity} deelnemers`
+              : `${session.attendees.length} deelnemer${session.attendees.length !== 1 ? "s" : ""}`
+            }
           </span>
+          {session.capacity && session.attendees.length >= session.capacity && (
+            <Badge 
+              variant="destructive" 
+              className="text-xs"
+              data-testid={`badge-full-${session.id}`}
+            >
+              Vol
+            </Badge>
+          )}
         </div>
       </CardContent>
 

@@ -538,6 +538,11 @@ export class MicrosoftGraphService {
       const customSlug = metadata["slug"];
       const slug = customSlug || generateSlug(event.subject, event.id);
       
+      // Parse capacity from back-matter if provided
+      const capacityValue = metadata["capacity"];
+      const capacity = capacityValue ? parseInt(capacityValue, 10) : undefined;
+      const validCapacity = capacity && !isNaN(capacity) && capacity > 0 ? capacity : undefined;
+      
       // Strip back-matter from HTML for display
       const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
       
@@ -577,6 +582,7 @@ export class MicrosoftGraphService {
         room: event.location?.displayName || "Zaal nog te bepalen",
         speakers,
         attendees: registeredAttendees,
+        capacity: validCapacity,
       };
     });
 
@@ -607,6 +613,11 @@ export class MicrosoftGraphService {
       const customSlug = metadata["slug"];
       const slug = customSlug || generateSlug(event.subject, event.id);
       
+      // Parse capacity from back-matter if provided
+      const capacityValue = metadata["capacity"];
+      const capacity = capacityValue ? parseInt(capacityValue, 10) : undefined;
+      const validCapacity = capacity && !isNaN(capacity) && capacity > 0 ? capacity : undefined;
+      
       // Strip back-matter from HTML for display
       const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
 
@@ -646,6 +657,7 @@ export class MicrosoftGraphService {
         room: event.location?.displayName || "Zaal nog te bepalen",
         speakers,
         attendees: registeredAttendees,
+        capacity: validCapacity,
       };
     } catch (error) {
       logApiError("GET", endpoint, error, undefined, `Session not found: ${id}`);
