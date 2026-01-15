@@ -50,7 +50,7 @@ export default function Home() {
   const testMode = new URLSearchParams(window.location.search).get("test");
   const apiUrl = testMode ? `/api/forum?test=${testMode}` : "/api/forum";
 
-  const { data, isLoading, error } = useQuery<ForumData>({
+  const { data, isLoading, error, refetch } = useQuery<ForumData>({
     queryKey: [apiUrl],
   });
 
@@ -58,10 +58,10 @@ export default function Home() {
     mutationFn: async (sessionId: string) => {
       return apiRequest("POST", "/api/sessions/register", { sessionId });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Fout",
-        description: "Er is iets misgegaan bij het inschrijven.",
+        description: error.message || "Er is iets misgegaan bij het inschrijven.",
         variant: "destructive",
       });
     },
@@ -78,10 +78,10 @@ export default function Home() {
         description: "Je bent uitgeschreven voor deze sessie.",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Fout",
-        description: "Er is iets misgegaan bij het uitschrijven.",
+        description: error.message || "Er is iets misgegaan bij het uitschrijven.",
         variant: "destructive",
       });
     },
@@ -238,7 +238,10 @@ export default function Home() {
   if (error) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <EmptyState type="no-events" />
+        <EmptyState 
+          type="error" 
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }

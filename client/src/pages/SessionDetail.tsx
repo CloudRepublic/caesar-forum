@@ -83,11 +83,21 @@ export default function SessionDetail() {
 
   const { toast } = useToast();
 
-  const { data: session, isLoading, error } = useQuery<Session>({
+  const { data: session, isLoading, error, refetch } = useQuery<Session>({
     queryKey: ["/api/sessions/slug", slug],
     queryFn: async () => {
       const res = await fetch(`/api/sessions/slug/${slug}`);
-      if (!res.ok) throw new Error("Session not found");
+      if (!res.ok) {
+        const text = await res.text();
+        let errorMessage = "Sessie niet gevonden";
+        try {
+          const json = JSON.parse(text);
+          errorMessage = json.error || errorMessage;
+        } catch {
+          // Keep default message
+        }
+        throw new Error(errorMessage);
+      }
       return res.json();
     },
     enabled: !!slug,
@@ -127,10 +137,10 @@ export default function SessionDetail() {
         description: `Je bent ingeschreven voor ${session?.title}`,
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Fout",
-        description: "Er is iets misgegaan bij het inschrijven",
+        description: error.message || "Er is iets misgegaan bij het inschrijven",
         variant: "destructive",
       });
     },
@@ -148,10 +158,10 @@ export default function SessionDetail() {
         description: `Je bent uitgeschreven voor ${session?.title}`,
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Fout",
-        description: "Er is iets misgegaan bij het uitschrijven",
+        description: error.message || "Er is iets misgegaan bij het uitschrijven",
         variant: "destructive",
       });
     },

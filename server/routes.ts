@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, GraphApiUnavailableError } from "./storage";
 import { z } from "zod";
 
 const sessionIdSchema = z.object({
@@ -45,7 +45,10 @@ export async function registerRoutes(
       res.json(data);
     } catch (error) {
       console.error("Error fetching forum data:", error);
-      res.status(500).json({ error: "Failed to fetch forum data" });
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een onverwachte fout opgetreden." });
     }
   });
 
@@ -54,12 +57,15 @@ export async function registerRoutes(
     try {
       const session = await storage.getSessionBySlug(req.params.slug);
       if (!session) {
-        return res.status(404).json({ error: "Session not found" });
+        return res.status(404).json({ error: "Sessie niet gevonden" });
       }
       res.json(session);
     } catch (error) {
       console.error("Error fetching session by slug:", error);
-      res.status(500).json({ error: "Failed to fetch session" });
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een onverwachte fout opgetreden." });
     }
   });
 
@@ -68,12 +74,15 @@ export async function registerRoutes(
     try {
       const session = await storage.getSession(req.params.id);
       if (!session) {
-        return res.status(404).json({ error: "Session not found" });
+        return res.status(404).json({ error: "Sessie niet gevonden" });
       }
       res.json(session);
     } catch (error) {
       console.error("Error fetching session:", error);
-      res.status(500).json({ error: "Failed to fetch session" });
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een onverwachte fout opgetreden." });
     }
   });
 
@@ -94,13 +103,16 @@ export async function registerRoutes(
       const session = await storage.registerForSession(sessionId, user.email, user.name);
       
       if (!session) {
-        return res.status(404).json({ error: "Session not found" });
+        return res.status(404).json({ error: "Sessie niet gevonden" });
       }
 
       res.json({ success: true, session });
     } catch (error) {
       console.error("Error registering for session:", error);
-      res.status(500).json({ error: "Failed to register for session" });
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een onverwachte fout opgetreden bij het inschrijven." });
     }
   });
 
@@ -121,13 +133,16 @@ export async function registerRoutes(
       const session = await storage.unregisterFromSession(sessionId, user.email);
       
       if (!session) {
-        return res.status(404).json({ error: "Session not found" });
+        return res.status(404).json({ error: "Sessie niet gevonden" });
       }
 
       res.json({ success: true, session });
     } catch (error) {
       console.error("Error unregistering from session:", error);
-      res.status(500).json({ error: "Failed to unregister from session" });
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een onverwachte fout opgetreden bij het uitschrijven." });
     }
   });
 

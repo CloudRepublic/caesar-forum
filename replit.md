@@ -29,7 +29,7 @@ Preferred communication style: Simple, everyday language.
 - **ORM**: Drizzle ORM with PostgreSQL dialect
 - **Schema Validation**: Zod with drizzle-zod integration
 - **Primary Storage**: Microsoft Graph API (forum@caesar.nl calendar)
-- **Fallback Storage**: In-memory mock data when Graph API unavailable
+- **Error Handling**: User-friendly Dutch error messages when Graph API unavailable (no fallback to mock data)
 - **Schema Location**: `shared/schema.ts` contains all type definitions
 
 ### Microsoft Graph Integration
