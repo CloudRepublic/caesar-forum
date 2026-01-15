@@ -160,15 +160,6 @@ export function SessionCard({
               : `${session.attendees.length} deelnemer${session.attendees.length !== 1 ? "s" : ""}`
             }
           </span>
-          {session.capacity && session.attendees.length >= session.capacity && (
-            <Badge 
-              variant="destructive" 
-              className="text-xs"
-              data-testid={`badge-full-${session.id}`}
-            >
-              Vol
-            </Badge>
-          )}
         </div>
       </CardContent>
 

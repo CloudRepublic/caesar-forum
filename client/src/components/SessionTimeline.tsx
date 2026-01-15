@@ -165,9 +165,6 @@ export function SessionTimeline({
                                 : `${session.attendees.length} deelnemer${session.attendees.length !== 1 ? "s" : ""}`
                               }
                             </span>
-                            {session.capacity && session.attendees.length >= session.capacity && (
-                              <Badge variant="destructive" className="text-xs ml-1">Vol</Badge>
-                            )}
                           </div>
                         </div>
 
