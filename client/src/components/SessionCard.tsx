@@ -64,16 +64,14 @@ export function SessionCard({
       data-testid={`card-session-${session.id}`}
     >
       {isFoodDrink && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div 
-            className="absolute right-0 bottom-0 w-48 h-32 opacity-[0.15] dark:opacity-[0.12]"
-            style={{
-              backgroundImage: `url(${foodDrinkBg})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          />
-        </div>
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.12] dark:opacity-[0.10]"
+          style={{
+            backgroundImage: `url(${foodDrinkBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
       )}
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-4">
         <div className="flex flex-wrap gap-1">

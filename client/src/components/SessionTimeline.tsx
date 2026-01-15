@@ -98,7 +98,7 @@ export function SessionTimeline({
                   >
                     {isFoodDrink && (
                       <div 
-                        className="absolute right-0 bottom-0 w-32 h-24 opacity-[0.15] dark:opacity-[0.12] pointer-events-none"
+                        className="absolute inset-0 opacity-[0.12] dark:opacity-[0.10] pointer-events-none"
                         style={{
                           backgroundImage: `url(${foodDrinkBg})`,
                           backgroundSize: 'cover',
