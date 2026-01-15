@@ -16,8 +16,11 @@ const categoryColorMap: Record<string, string> = {
   promotion: "bg-[hsl(var(--category-promotion-bg))] text-[hsl(var(--category-promotion-fg))]",
   kennissessie: "bg-[hsl(var(--category-kennissessie-bg))] text-[hsl(var(--category-kennissessie-fg))]",
   deepdive: "bg-[hsl(var(--category-deepdive-bg))] text-[hsl(var(--category-deepdive-fg))]",
-  "eten&drinken": "bg-[hsl(var(--category-etendrinken-bg))] text-[hsl(var(--category-etendrinken-fg))]",
 };
+
+function isFoodDrinkSession(categories: string[]): boolean {
+  return categories.some(c => c.toLowerCase() === "eten & drinken");
+}
 
 function getCategoryColors(category: string): string {
   const key = category.toLowerCase().replace(/\s+/g, "");
@@ -80,16 +83,23 @@ export function SessionTimeline({
                   ? isEmailInList(userEmail, session.attendees)
                   : false;
 
+                const isFoodDrink = isFoodDrinkSession(session.categories || []);
+
                 return (
                   <div
                     key={session.id}
-                    className={`relative rounded-lg border p-4 transition-all ${
+                    className={`relative rounded-lg border p-4 transition-all overflow-hidden ${
                       isRegistered
                         ? "border-green-500/50 bg-green-50/50 dark:border-green-500/30 dark:bg-green-950/20"
                         : "border-border bg-card"
                     }`}
                     data-testid={`timeline-session-${session.id}`}
                   >
+                    {isFoodDrink && (
+                      <div className="absolute right-2 bottom-2 w-16 h-16 opacity-[0.06] dark:opacity-[0.08] pointer-events-none">
+                        <Utensils className="w-full h-full text-foreground" />
+                      </div>
+                    )}
                     {isRegistered && (
                       <div className="absolute -left-2 top-4 flex h-4 w-4 items-center justify-center rounded-full bg-green-600">
                         <Check className="h-2.5 w-2.5 text-white" />

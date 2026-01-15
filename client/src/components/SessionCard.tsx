@@ -17,8 +17,11 @@ const categoryColorMap: Record<string, string> = {
   promotion: "bg-[hsl(var(--category-promotion-bg))] text-[hsl(var(--category-promotion-fg))]",
   kennissessie: "bg-[hsl(var(--category-kennissessie-bg))] text-[hsl(var(--category-kennissessie-fg))]",
   deepdive: "bg-[hsl(var(--category-deepdive-bg))] text-[hsl(var(--category-deepdive-fg))]",
-  "eten&drinken": "bg-[hsl(var(--category-etendrinken-bg))] text-[hsl(var(--category-etendrinken-fg))]",
 };
+
+function isFoodDrinkSession(categories: string[]): boolean {
+  return categories.some(c => c.toLowerCase() === "eten & drinken");
+}
 
 function getCategoryColors(category: string): string {
   const key = category.toLowerCase().replace(/\s+/g, "");
@@ -50,11 +53,22 @@ export function SessionCard({
     });
   };
 
+  const isFoodDrink = isFoodDrinkSession(session.categories || []);
+
   return (
     <Card
-      className="flex h-full flex-col transition-shadow duration-200 hover:shadow-md"
+      className={`flex h-full flex-col transition-shadow duration-200 hover:shadow-md ${
+        isFoodDrink ? "relative overflow-hidden" : ""
+      }`}
       data-testid={`card-session-${session.id}`}
     >
+      {isFoodDrink && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute right-0 bottom-0 w-32 h-32 opacity-[0.06] dark:opacity-[0.08]">
+            <Utensils className="w-full h-full text-foreground" />
+          </div>
+        </div>
+      )}
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-4">
         <div className="flex flex-wrap gap-1">
           {(session.categories || []).map((category) => (
