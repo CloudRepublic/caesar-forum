@@ -9,7 +9,19 @@ import { SessionFilters, type ViewMode } from "@/components/SessionFilters";
 import { EmptyState } from "@/components/EmptyState";
 import { HeroSkeleton, SessionGridSkeleton, SessionTimelineSkeleton } from "@/components/LoadingState";
 import { useToast } from "@/hooks/use-toast";
-import type { ForumData } from "@shared/schema";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Utensils } from "lucide-react";
+import { isEmailInList } from "@/lib/email-utils";
+import type { ForumData, Session } from "@shared/schema";
 
 export default function Home() {
   const { user } = useUser();
@@ -20,6 +32,8 @@ export default function Home() {
     const saved = localStorage.getItem("forum-view-mode");
     return (saved === "grid" || saved === "timeline") ? saved : "grid";
   });
+  const [foodDrinkSuggestion, setFoodDrinkSuggestion] = useState<Session | null>(null);
+  const [showFoodDrinkDialog, setShowFoodDrinkDialog] = useState(false);
 
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
@@ -37,13 +51,6 @@ export default function Home() {
   const registerMutation = useMutation({
     mutationFn: async (sessionId: string) => {
       return apiRequest("POST", "/api/sessions/register", { sessionId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/forum"] });
-      toast({
-        title: "Ingeschreven",
-        description: "Je bent succesvol ingeschreven voor deze sessie.",
-      });
     },
     onError: () => {
       toast({
@@ -104,9 +111,84 @@ export default function Home() {
     });
   }, [data?.sessions, searchQuery, activeFilter]);
 
+  const findFoodDrinkSessionBetween = (
+    newSessionId: string,
+    allSessions: Session[],
+    userEmail: string
+  ): Session | null => {
+    const newSession = allSessions.find(s => s.id === newSessionId);
+    if (!newSession) return null;
+
+    const userRegisteredSessions = allSessions.filter(
+      s => s.id !== newSessionId && isEmailInList(userEmail, s.attendees)
+    );
+
+    if (userRegisteredSessions.length === 0) return null;
+
+    const newStart = new Date(newSession.startTime).getTime();
+    const newEnd = new Date(newSession.endTime).getTime();
+
+    const foodDrinkSessions = allSessions.filter(s => 
+      (s.categories || []).some(c => c.toLowerCase() === "eten & drinken") &&
+      !isEmailInList(userEmail, s.attendees) &&
+      s.id !== newSessionId
+    );
+
+    for (const foodSession of foodDrinkSessions) {
+      const foodStart = new Date(foodSession.startTime).getTime();
+      const foodEnd = new Date(foodSession.endTime).getTime();
+
+      for (const regSession of userRegisteredSessions) {
+        const regStart = new Date(regSession.startTime).getTime();
+        const regEnd = new Date(regSession.endTime).getTime();
+
+        const earlierEnd = Math.min(newEnd, regEnd);
+        const laterStart = Math.max(newStart, regStart);
+
+        if (foodStart >= earlierEnd && foodEnd <= laterStart) {
+          return foodSession;
+        }
+        if (foodStart >= laterStart && foodEnd <= earlierEnd) {
+          return null;
+        }
+        const gap1Start = Math.min(newEnd, regEnd);
+        const gap1End = Math.max(newStart, regStart);
+        
+        if (gap1Start < gap1End && foodStart >= gap1Start && foodStart < gap1End) {
+          return foodSession;
+        }
+      }
+    }
+
+    return null;
+  };
+
   const handleRegister = (sessionId: string) => {
     if (!user?.email) return;
-    registerMutation.mutate(sessionId);
+    
+    registerMutation.mutate(sessionId, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["/api/forum"] });
+        toast({
+          title: "Ingeschreven",
+          description: "Je bent succesvol ingeschreven voor deze sessie.",
+        });
+
+        const foodDrink = findFoodDrinkSessionBetween(sessionId, data?.sessions || [], user.email);
+        if (foodDrink) {
+          setFoodDrinkSuggestion(foodDrink);
+          setShowFoodDrinkDialog(true);
+        }
+      },
+    });
+  };
+
+  const handleFoodDrinkRegister = () => {
+    if (foodDrinkSuggestion) {
+      registerMutation.mutate(foodDrinkSuggestion.id);
+    }
+    setShowFoodDrinkDialog(false);
+    setFoodDrinkSuggestion(null);
   };
 
   const handleUnregister = (sessionId: string) => {
@@ -197,6 +279,42 @@ export default function Home() {
         )}
         </section>
       )}
+
+      <AlertDialog open={showFoodDrinkDialog} onOpenChange={setShowFoodDrinkDialog}>
+        <AlertDialogContent data-testid="dialog-food-drink-suggestion">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Utensils className="h-5 w-5" />
+              Eten & Drinken
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {foodDrinkSuggestion && (
+                <>
+                  Er is een <strong>{foodDrinkSuggestion.title}</strong> gepland tussen je ingeschreven sessies. 
+                  Wil je je hier ook voor inschrijven?
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                setShowFoodDrinkDialog(false);
+                setFoodDrinkSuggestion(null);
+              }}
+              data-testid="button-decline-food-drink"
+            >
+              Nee, bedankt
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleFoodDrinkRegister}
+              data-testid="button-accept-food-drink"
+            >
+              Ja, schrijf me in
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
