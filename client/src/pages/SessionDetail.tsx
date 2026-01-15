@@ -365,6 +365,14 @@ export default function SessionDetail() {
                     >
                       Uitschrijven
                     </Button>
+                  ) : session.capacity && session.attendees.length >= session.capacity ? (
+                    <Button
+                      className="w-full"
+                      disabled
+                      data-testid="button-register"
+                    >
+                      Sessie is vol
+                    </Button>
                   ) : (
                     <Button
                       className="w-full"

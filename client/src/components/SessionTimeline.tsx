@@ -204,6 +204,14 @@ export function SessionTimeline({
                             >
                               Uitschrijven
                             </Button>
+                          ) : session.capacity && session.attendees.length >= session.capacity ? (
+                            <Button
+                              size="sm"
+                              disabled
+                              data-testid={`timeline-register-${session.id}`}
+                            >
+                              Vol
+                            </Button>
                           ) : (
                             <Button
                               size="sm"
