@@ -52,7 +52,27 @@ Preferred communication style: Simple, everyday language.
   slug: mijn-custom-slug
   ---
   ```
-  The back-matter block is stripped from the displayed description. This can be extended with additional metadata fields in the future.
+  The back-matter block is stripped from the displayed description.
+
+- **Session Capacity**: Organizers can set a maximum number of attendees by adding `capacity` to the back-matter:
+  ```
+  ---
+  capacity: 12
+  ---
+  ```
+  When capacity is set:
+  - The attendee count displays as "X van Y deelnemers" (e.g., "3 van 12 deelnemers")
+  - When full (attendees >= capacity), the registration button is disabled with text "Sessie is vol"
+  - Users already registered can still unregister
+
+- **"Eten & Drinken" Category**: Sessions with the "Eten & Drinken" (Food & Drinks) category receive special visual treatment:
+  - Distinctive food-themed background pattern on session cards
+  - Utensils icon displayed next to the category badge
+  - Category colors follow Outlook's category color scheme
+
+- **Overlap Warnings**: When a user tries to register for a session that overlaps with another session they're already registered for, an amber warning is displayed with the conflicting session details. Users can still proceed with registration if desired.
+
+- **Auto-suggest Food & Drinks**: The system automatically suggests "Eten & Drinken" sessions that fall between sessions a user is already registered for, making it easier to plan meals during the forum day.
 
 ### Error Handling & Resilience
 - **Retry Mechanism**: All Graph API calls use exponential backoff with jitter (max 3 retries, 1-30 second delays)
@@ -86,6 +106,13 @@ Preferred communication style: Simple, everyday language.
 3. **Component Library**: shadcn/ui provides accessible, customizable components without external dependencies - components are copied into the codebase rather than imported from npm
 
 4. **Outlook is Leading**: All session categories come directly from Outlook calendar events. The app only shows filters for categories that have events. No hardcoded category mappings.
+
+5. **Hero Section**: The home page features a hero section with:
+   - Random cover photo from a pool of 5 compressed images (~300KB each for performance)
+   - Forum title and date from the all-day calendar event
+   - Session and attendee statistics
+   - Located in `client/src/components/HeroSection.tsx`
+   - Cover images stored in `attached_assets/` directory
 
 ## External Dependencies
 
