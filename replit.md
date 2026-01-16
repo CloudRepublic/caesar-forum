@@ -135,3 +135,22 @@ Preferred communication style: Simple, everyday language.
 - `wouter`: Client-side routing
 - `date-fns`: Date formatting utilities
 - `lucide-react`: Icon library
+
+## Docker Deployment
+
+Build and run the application in a container:
+
+```bash
+# Build the container
+docker build -t caesar-forum .
+
+# Run the container (set environment variables)
+docker run -p 5000:5000 \
+  -e AZURE_CLIENT_ID=your-client-id \
+  -e AZURE_CLIENT_SECRET=your-client-secret \
+  -e AZURE_TENANT_ID=your-tenant-id \
+  -e DATABASE_URL=your-database-url \
+  caesar-forum
+```
+
+The container exposes port 5000 and runs the production build.
