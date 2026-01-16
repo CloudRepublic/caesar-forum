@@ -4,10 +4,6 @@
 
 Caesar Forum is an internal session registration platform for Caesar.nl, designed for monthly internal events (talks, workshops, discussions). The application allows employees to browse upcoming forum sessions, register/unregister for sessions, and view their registered sessions. The interface is in Dutch and follows a professional corporate aesthetic with Fluent Design principles.
 
-## User Preferences
-
-Preferred communication style: Simple, everyday language.
-
 ## System Architecture
 
 ### Frontend Architecture
@@ -28,19 +24,19 @@ Preferred communication style: Simple, everyday language.
 ### Data Layer
 - **ORM**: Drizzle ORM with PostgreSQL dialect
 - **Schema Validation**: Zod with drizzle-zod integration
-- **Primary Storage**: Microsoft Graph API (forum@caesar.nl calendar)
+- **Primary Storage**: Microsoft Graph API (shared calendar)
 - **Error Handling**: User-friendly Dutch error messages when Graph API unavailable (no fallback to mock data)
 - **Schema Location**: `shared/schema.ts` contains all type definitions
 
 ### Microsoft Graph Integration
 - **Authentication**: Azure AD application with client credentials flow
 - **Library**: @azure/msal-node for token acquisition, @microsoft/microsoft-graph-client for API calls
-- **Scope**: Calendars.ReadWrite on forum@caesar.nl mailbox only
+- **Scope**: Calendars.ReadWrite on shared mailbox
 - **Service Location**: `server/microsoft-graph.ts`
 - **Environment Variables Required**:
   - `AZURE_CLIENT_ID`: Azure AD application client ID
-  - `AZURE_CLIENT_SECRET`: Application secret (expires Jan 8, 2027)
-  - `AZURE_TENANT_ID`: Caesar M365 tenant ID
+  - `AZURE_CLIENT_SECRET`: Application secret
+  - `AZURE_TENANT_ID`: Azure AD tenant ID
 - **Categories from Outlook**: Events can have multiple categories from Outlook (e.g., "Talk", "Workshop", "Demo", "Brainstorm", "Hackathon", "Promotion"). All categories are shown as-is with no mapping. Filters only appear for categories that have events.
 - **Multiple Speakers**: All "required" attendees are treated as speakers. If no required attendees exist, falls back to the event organizer. Sessions can have multiple speakers, which are displayed with stacked avatars in the card view and listed individually in the detail view. Users who register via the app are added as "optional" attendees so they don't interfere with speaker detection.
 - **Speaker Photos**: Fetched automatically from Microsoft 365 via `/api/users/{email}/photo` endpoint. Uses the speaker's email to retrieve their M365 profile photo.
@@ -121,7 +117,7 @@ Preferred communication style: Simple, everyday language.
 - **Drizzle Kit**: Database migrations and schema push (`db:push` script)
 
 ### Third-Party Services
-- **Microsoft Graph API**: Calendar integration with forum@caesar.nl shared mailbox
+- **Microsoft Graph API**: Calendar integration with shared mailbox
 - **Google Fonts**: Inter font family loaded via CDN
 - **connect-pg-simple**: PostgreSQL session store (available but not currently active)
 
