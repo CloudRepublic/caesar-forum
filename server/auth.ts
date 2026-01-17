@@ -22,13 +22,14 @@ declare module "express-session" {
   }
 }
 
-const REDIRECT_URI = process.env.REPLIT_DEV_DOMAIN
-  ? `https://${process.env.REPLIT_DEV_DOMAIN}/auth/redirect`
-  : "http://localhost:5000/auth/redirect";
+const getBaseUrl = () => {
+  if (process.env.APP_URL) return process.env.APP_URL;
+  if (process.env.REPLIT_DEV_DOMAIN) return `https://${process.env.REPLIT_DEV_DOMAIN}`;
+  return "http://localhost:5000";
+};
 
-const POST_LOGOUT_REDIRECT_URI = process.env.REPLIT_DEV_DOMAIN
-  ? `https://${process.env.REPLIT_DEV_DOMAIN}/`
-  : "http://localhost:5000/";
+const REDIRECT_URI = `${getBaseUrl()}/auth/redirect`;
+const POST_LOGOUT_REDIRECT_URI = `${getBaseUrl()}/`;
 
 const msalConfig = {
   auth: {

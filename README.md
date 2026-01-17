@@ -146,6 +146,8 @@ docker run -p 5000:5000 \
   -e AZURE_CLIENT_SECRET=your-client-secret \
   -e AZURE_TENANT_ID=your-tenant-id \
   -e DATABASE_URL=your-database-url \
+  -e SESSION_SECRET=your-session-secret \
+  -e APP_URL=https://your-domain.com \
   caesar-forum
 ```
 
