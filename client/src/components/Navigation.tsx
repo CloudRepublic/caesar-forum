@@ -2,14 +2,12 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
-import { useAprilFools } from "@/context/AprilFoolsContext";
 import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { getInitials } from "@/lib/utils";
 
 export function Navigation() {
   const { user, login, logout, isLoading } = useUser();
-  const { isAprilFools } = useAprilFools();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -19,7 +17,7 @@ export function Navigation() {
   ];
 
   return (
-    <nav className={`z-50 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${isAprilFools ? "fixed bottom-0 left-0 right-0" : "sticky top-0"}`}>
+    <nav className="sticky top-0 z-50 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center" data-testid="link-home">

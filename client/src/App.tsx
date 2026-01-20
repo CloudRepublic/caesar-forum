@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/context/UserContext";
-import { AprilFoolsProvider } from "@/context/AprilFoolsContext";
+import { AprilFoolsProvider, useAprilFools } from "@/context/AprilFoolsContext";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import Home from "@/pages/Home";
@@ -23,19 +23,27 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const { isAprilFools } = useAprilFools();
+
+  return (
+    <div className={`flex min-h-screen flex-col ${isAprilFools ? "rotate-180" : ""}`}>
+      <Navigation />
+      <main className="flex-1">
+        <Router />
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <UserProvider>
           <AprilFoolsProvider>
-            <div className="flex min-h-screen flex-col">
-              <Navigation />
-              <main className="flex-1">
-                <Router />
-              </main>
-              <Footer />
-            </div>
+            <AppContent />
             <Toaster />
           </AprilFoolsProvider>
         </UserProvider>

@@ -54,20 +54,9 @@ export function AprilFoolsProvider({ children }: { children: React.ReactNode }) 
     setIsActive((prev) => !prev);
   }, []);
 
-  // Apply the upside-down effect
-  useEffect(() => {
-    if (isActive) {
-      document.body.style.transform = "rotate(180deg)";
-      document.body.style.transformOrigin = "center center";
-    } else {
-      document.body.style.transform = "";
-      document.body.style.transformOrigin = "";
-    }
-    return () => {
-      document.body.style.transform = "";
-      document.body.style.transformOrigin = "";
-    };
-  }, [isActive]);
+  // Note: We no longer apply transform to body here
+  // The transform is now applied to individual components via the isAprilFools flag
+  // This allows sticky positioning to continue working
 
   return (
     <AprilFoolsContext.Provider
