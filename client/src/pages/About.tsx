@@ -178,8 +178,8 @@ export default function About() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground/50 select-none">
-          ↑↑↓↓←→←→BA
+        <p className="text-center text-xs text-muted-foreground/40 select-none">
+          コナミコマンド
         </p>
       </div>
     </div>
