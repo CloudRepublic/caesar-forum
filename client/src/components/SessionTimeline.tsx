@@ -93,7 +93,7 @@ export function SessionTimeline({
                   <div
                     key={session.id}
                     className={`relative rounded-lg border p-4 transition-all ${
-                      isRegistered
+                      isRegistered || isUserSpeaker
                         ? "border-green-500/50 bg-green-50/50 dark:border-green-500/30 dark:bg-green-950/20"
                         : "border-border bg-card"
                     }`}
@@ -129,7 +129,16 @@ export function SessionTimeline({
                               {category}
                             </Badge>
                           ))}
-                          {isRegistered && (
+                          {isUserSpeaker && (
+                            <Badge
+                              variant="default"
+                              className="bg-green-600 text-white dark:bg-green-700 text-xs"
+                            >
+                              <Check className="mr-1 h-2.5 w-2.5" />
+                              Spreker
+                            </Badge>
+                          )}
+                          {isRegistered && !isUserSpeaker && (
                             <Badge
                               variant="default"
                               className="bg-green-600 text-white dark:bg-green-700 text-xs"

@@ -90,7 +90,17 @@ export function SessionCard({
             </Badge>
           ))}
         </div>
-        {isRegistered && (
+        {isUserSpeaker && (
+          <Badge
+            variant="default"
+            className="bg-green-600 text-white dark:bg-green-700"
+            data-testid={`badge-speaker-${session.id}`}
+          >
+            <Check className="mr-1 h-3 w-3" />
+            Spreker
+          </Badge>
+        )}
+        {isRegistered && !isUserSpeaker && (
           <Badge
             variant="default"
             className="bg-green-600 text-white dark:bg-green-700"
