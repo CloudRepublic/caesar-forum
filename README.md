@@ -4,6 +4,11 @@
 
 Caesar Forum is an internal session registration platform for Caesar.nl, designed for monthly internal events (talks, workshops, discussions). The application allows employees to browse upcoming forum sessions, register/unregister for sessions, and view their registered sessions. The interface is in Dutch and follows a professional corporate aesthetic with Fluent Design principles.
 
+## User Preferences
+
+- **Communication style**: Simple, everyday language (Dutch UI)
+- **Documentation file**: Use README.md only (not replit.md)
+
 ## System Architecture
 
 ### Frontend Architecture
