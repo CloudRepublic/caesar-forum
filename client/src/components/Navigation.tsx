@@ -6,7 +6,11 @@ import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { getInitials } from "@/lib/utils";
 
-export function Navigation() {
+interface NavigationProps {
+  isAprilFools?: boolean;
+}
+
+export function Navigation({ isAprilFools = false }: NavigationProps) {
   const { user, login, logout, isLoading } = useUser();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -16,8 +20,12 @@ export function Navigation() {
     { href: "/mijn-sessies", label: "Mijn Sessies" },
   ];
 
+  const navClassName = isAprilFools
+    ? "fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rotate-180"
+    : "sticky top-0 z-50 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60";
+
   return (
-    <nav className="sticky top-0 z-50 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className={navClassName}>
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center" data-testid="link-home">

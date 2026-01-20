@@ -26,8 +26,22 @@ function Router() {
 function AppContent() {
   const { isAprilFools } = useAprilFools();
 
+  if (isAprilFools) {
+    return (
+      <>
+        <div className="flex min-h-screen flex-col rotate-180 pt-16">
+          <main className="flex-1">
+            <Router />
+          </main>
+          <Footer />
+        </div>
+        <Navigation isAprilFools />
+      </>
+    );
+  }
+
   return (
-    <div className={`flex min-h-screen flex-col ${isAprilFools ? "rotate-180" : ""}`}>
+    <div className="flex min-h-screen flex-col">
       <Navigation />
       <main className="flex-1">
         <Router />
