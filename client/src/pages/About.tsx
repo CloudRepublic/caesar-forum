@@ -178,7 +178,7 @@ export default function About() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground/40 select-none">
+        <p className="text-center text-xs text-muted-foreground/40">
           コナミコマンド
         </p>
       </div>
