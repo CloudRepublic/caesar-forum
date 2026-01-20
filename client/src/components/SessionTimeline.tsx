@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, MapPin, Users, Check, Utensils } from "lucide-react";
-import { isEmailInList } from "@/lib/email-utils";
+import { isEmailInList, isSpeaker } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
 import foodDrinkBg from "@assets/image_1768474260490.png";
@@ -82,6 +82,9 @@ export function SessionTimeline({
               {slotSessions.map((session) => {
                 const isRegistered = userEmail
                   ? isEmailInList(userEmail, session.attendees)
+                  : false;
+                const isUserSpeaker = userEmail
+                  ? isSpeaker(userEmail, session.speakers)
                   : false;
 
                 const isFoodDrink = isFoodDrinkSession(session.categories || []);
@@ -191,7 +194,16 @@ export function SessionTimeline({
 
                       <div className="flex shrink-0 items-center gap-2 md:flex-col md:items-end">
                         {userEmail ? (
-                          isRegistered ? (
+                          isUserSpeaker ? (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              disabled
+                              data-testid={`timeline-speaker-${session.id}`}
+                            >
+                              Spreker
+                            </Button>
+                          ) : isRegistered ? (
                             <Button
                               variant="outline"
                               size="sm"

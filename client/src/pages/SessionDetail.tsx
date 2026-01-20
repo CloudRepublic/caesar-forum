@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { isEmailInList } from "@/lib/email-utils";
+import { isEmailInList, isSpeaker } from "@/lib/email-utils";
 import { findOverlapsWithSession } from "@/lib/session-utils";
 import { formatDisplayName } from "@/lib/name-utils";
 import { getInitials } from "@/lib/utils";
@@ -223,6 +223,7 @@ export default function SessionDetail() {
   }
 
   const isRegistered = user?.email ? isEmailInList(user.email, session.attendees) : false;
+  const isUserSpeaker = user?.email ? isSpeaker(user.email, session.speakers) : false;
   const isPending = registerMutation.isPending || unregisterMutation.isPending;
 
   return (
@@ -362,7 +363,16 @@ export default function SessionDetail() {
 
               <div className="border-t pt-4">
                 {user?.email ? (
-                  isRegistered ? (
+                  isUserSpeaker ? (
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      disabled
+                      data-testid="button-speaker"
+                    >
+                      Je bent spreker
+                    </Button>
+                  ) : isRegistered ? (
                     <Button
                       variant="outline"
                       className="w-full"

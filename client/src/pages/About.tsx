@@ -9,8 +9,8 @@ import {
   ExternalLink,
   BookOpen,
   Wrench,
-  MessageSquare,
   Layers,
+  Brain,
 } from "lucide-react";
 
 const sessionTypes = [
@@ -25,7 +25,7 @@ const sessionTypes = [
     description: "Hands-on sessies waar deelnemers actief meedoen",
   },
   {
-    icon: MessageSquare,
+    icon: Brain,
     name: "Brainstorm",
     description: "Samen nieuwe ideeën ontwikkelen",
   },
@@ -167,7 +167,7 @@ export default function About() {
             </p>
             <Button asChild data-testid="link-submit-session">
               <a
-                href="https://mijncaesar.welder.nl/v2/events/86473"
+                href="https://mijncaesar.welder.nl/v2/scan/263915"
                 target="_blank"
                 rel="noopener noreferrer"
               >

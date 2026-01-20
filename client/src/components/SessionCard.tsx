@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, MapPin, Users, Check, Utensils } from "lucide-react";
-import { isEmailInList } from "@/lib/email-utils";
+import { isEmailInList, isSpeaker } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
 import foodDrinkBg from "@assets/image_1768474260490.png";
@@ -45,6 +45,7 @@ export function SessionCard({
   isPending = false,
 }: SessionCardProps) {
   const isRegistered = userEmail ? isEmailInList(userEmail, session.attendees) : false;
+  const isUserSpeaker = userEmail ? isSpeaker(userEmail, session.speakers) : false;
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -165,7 +166,16 @@ export function SessionCard({
 
       <CardFooter className="pt-4">
         {userEmail ? (
-          isRegistered ? (
+          isUserSpeaker ? (
+            <Button
+              variant="secondary"
+              className="w-full"
+              disabled
+              data-testid={`button-speaker-${session.id}`}
+            >
+              Je bent spreker
+            </Button>
+          ) : isRegistered ? (
             <Button
               variant="outline"
               className="w-full"
