@@ -380,15 +380,6 @@
   filter: contrast(1.2) saturate(1.5);
 }
 
-@keyframes retro-blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0.7; }
-}
-
-.retro-mode nav {
-  animation: retro-blink 1s infinite;
-}
-
 .retro-mode::before {
   content: "";
   position: fixed;

@@ -177,6 +177,10 @@ export default function About() {
             </Button>
           </CardContent>
         </Card>
+
+        <p className="text-center text-xs text-muted-foreground/50 select-none">
+          ↑↑↓↓←→←→BA
+        </p>
       </div>
     </div>
   );
