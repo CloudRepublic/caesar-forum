@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/context/UserContext";
 import { AprilFoolsProvider, useAprilFools } from "@/context/AprilFoolsContext";
+import { KonamiCodeProvider } from "@/context/KonamiCodeContext";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import Home from "@/pages/Home";
@@ -57,8 +58,10 @@ function App() {
       <TooltipProvider>
         <UserProvider>
           <AprilFoolsProvider>
-            <AppContent />
-            <Toaster />
+            <KonamiCodeProvider>
+              <AppContent />
+              <Toaster />
+            </KonamiCodeProvider>
           </AprilFoolsProvider>
         </UserProvider>
       </TooltipProvider>
