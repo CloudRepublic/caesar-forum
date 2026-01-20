@@ -19,7 +19,7 @@ export function Navigation() {
   ];
 
   return (
-    <nav className={`sticky z-50 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${isAprilFools ? "bottom-0 rotate-180" : "top-0"}`}>
+    <nav className={`sticky top-0 z-50 h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${isAprilFools ? "rotate-180" : ""}`}>
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center" data-testid="link-home">
