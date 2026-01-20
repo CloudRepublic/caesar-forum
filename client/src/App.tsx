@@ -11,6 +11,7 @@ import { Footer } from "@/components/Footer";
 import Home from "@/pages/Home";
 import MySessions from "@/pages/MySessions";
 import SessionDetail from "@/pages/SessionDetail";
+import About from "@/pages/About";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/sessies/:slug" component={SessionDetail} />
       <Route path="/mijn-sessies" component={MySessions} />
+      <Route path="/over" component={About} />
       <Route component={NotFound} />
     </Switch>
   );

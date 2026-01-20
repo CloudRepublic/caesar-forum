@@ -18,6 +18,7 @@ export function Navigation({ isAprilFools = false }: NavigationProps) {
   const navItems = [
     { href: "/", label: "Dashboard" },
     { href: "/mijn-sessies", label: "Mijn Sessies" },
+    { href: "/over", label: "Over" },
   ];
 
   const navClassName = isAprilFools
