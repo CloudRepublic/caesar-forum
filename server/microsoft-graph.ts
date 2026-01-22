@@ -86,8 +86,16 @@ function parseBackMatter(text: string): BackMatter {
     return { metadata: {}, content: text };
   }
   
-  // Remove the back-matter block from content
-  const content = text.replace(backMatterRegex, "").trim();
+  // Remove the back-matter block from content using the same regex on normalized text
+  // Then clean up excessive whitespace
+  let content = normalizedText.replace(backMatterRegex, "").trim();
+  
+  // Clean up excessive whitespace that might remain
+  content = content
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")  // Max 2 consecutive newlines
+    .trim();
   
   return { metadata, content };
 }
@@ -109,23 +117,42 @@ function stripBackMatterFromHtml(html: string): string {
   }
   
   // Remove the back-matter block from HTML
-  // Handle various Outlook patterns:
-  // - <p>---</p><p>slug: value</p><p>---</p>
-  // - <div>---</div><div>slug: value</div><div>---</div>
-  // - ---<br>slug: value<br>---
+  // Handle various Outlook patterns including those with newlines inside tags
   let result = html;
   
-  // Pattern 1: Block elements (p/div) wrapping each line
-  const blockPattern = /(\s*<(p|div)[^>]*>\s*---\s*<\/(p|div)>\s*)(<(p|div)[^>]*>[^<]*:[^<]*<\/(p|div)>\s*)*(\s*<(p|div)[^>]*>\s*---\s*<\/(p|div)>\s*)$/i;
-  result = result.replace(blockPattern, "");
+  // Pattern: Find --- followed by key:value pairs followed by --- (with any HTML/whitespace between)
+  // This is a more aggressive pattern that handles Outlook's various formatting quirks
+  const generalPattern = /<(p|div|span)[^>]*>[\s\n]*---[\s\S]*?---[\s\n]*(<br\s*\/?>)?[\s\n]*<\/(p|div|span)>/gi;
+  result = result.replace(generalPattern, "");
   
-  // Pattern 2: BR-separated content
-  const brPattern = /(\s*---\s*(<br\s*\/?>)\s*)([^<]*:[^<]*(<br\s*\/?>)\s*)*(\s*---\s*(<br\s*\/?>)?\s*)$/i;
-  result = result.replace(brPattern, "");
+  // Pattern for back-matter spread across multiple block elements
+  // Match from first --- block to last --- block including everything between
+  const multiBlockPattern = /<(p|div)[^>]*>[\s\n]*---[\s\n]*<\/(p|div)>[\s\S]*?<(p|div)[^>]*>[\s\n]*---[\s\n]*(<br\s*\/?>)?[\s\n]*<\/(p|div)>/gi;
+  result = result.replace(multiBlockPattern, "");
   
-  // Pattern 3: Mixed - opening/closing dashes in blocks, content with BRs
-  const mixedPattern = /(\s*<(p|div)[^>]*>\s*---[\s\S]*?---\s*<\/(p|div)>\s*)$/i;
-  result = result.replace(mixedPattern, "");
+  // Clean up empty paragraphs and trailing whitespace elements
+  result = result.replace(/<(p|div|span)[^>]*>[\s\n]*(<br\s*\/?>)?[\s\n]*<\/(p|div|span)>\s*$/gi, "");
+  result = result.replace(/<(p|div|span)[^>]*>[\s\n]*(<br\s*\/?>)?[\s\n]*<\/(p|div|span)>\s*(<span><\/span>)?\s*$/gi, "");
+  
+  // Remove trailing empty spans
+  result = result.replace(/\s*<span>\s*<\/span>\s*$/gi, "");
+  
+  // Remove leading empty spans
+  result = result.replace(/^\s*<span>\s*<\/span>\s*/gi, "");
+  
+  // Clean up multiple trailing empty paragraphs
+  while (/<(p|div)[^>]*>\s*(<br\s*\/?>)?\s*<\/(p|div)>\s*$/i.test(result)) {
+    result = result.replace(/<(p|div)[^>]*>\s*(<br\s*\/?>)?\s*<\/(p|div)>\s*$/i, "");
+  }
+  
+  // Remove trailing <br> tags
+  result = result.replace(/(<br\s*\/?>[\s\n]*)+$/gi, "");
+  
+  // Remove trailing </p> with only <br> before it
+  result = result.replace(/<br\s*\/?>\s*\n*<\/p>\s*$/gi, "</p>");
+  
+  // Remove empty paragraphs that only contain <br> (these create excessive whitespace)
+  result = result.replace(/<p[^>]*>[\s\n]*<br\s*\/?>[\s\n]*<\/p>/gi, "");
   
   return result.trim();
 }
