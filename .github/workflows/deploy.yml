@@ -1,0 +1,62 @@
+name: Build & Deploy (ACR -> Web App)
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+  WEBAPP_NAME: ${{ vars.WEBAPP_NAME }}
+  ACR_NAME: ${{ vars.ACR_NAME }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+
+jobs:
+  build_push_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Resolve ACR login server
+        id: acr
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            ACR_LOGIN_SERVER=$(az acr show -n "$ACR_NAME" --query loginServer -o tsv)
+            echo "loginServer=$ACR_LOGIN_SERVER" >> $GITHUB_OUTPUT
+
+      - name: Build & Push image to ACR
+        run: |
+          TAG=${{ github.sha }}
+          ACR_LOGIN_SERVER=${{ steps.acr.outputs.loginServer }}
+
+          az acr login --name "$ACR_NAME"
+
+          docker build -t "$ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG" .
+          docker push "$ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG"
+
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "ACR_LOGIN_SERVER=$ACR_LOGIN_SERVER" >> $GITHUB_ENV
+
+      - name: Update Web App to new image
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az webapp config container set \
+              --resource-group "$RESOURCE_GROUP" \
+              --name "$WEBAPP_NAME" \
+              --docker-custom-image-name "$ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG" \
+              --docker-registry-server-url "https://$ACR_LOGIN_SERVER"
