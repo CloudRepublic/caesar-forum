@@ -71,7 +71,15 @@ export function registerAuthRoutes(app: Express): void {
         prompt: "select_account",
       });
 
-      res.redirect(authCodeUrl);
+      // Explicitly save session before redirect to prevent race condition
+      // with PostgreSQL session store
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error("Error saving session before login redirect:", saveErr);
+          return res.redirect("/?error=session_error");
+        }
+        res.redirect(authCodeUrl);
+      });
     } catch (error) {
       console.error("Error initiating login:", error);
       res.redirect("/?error=login_failed");
