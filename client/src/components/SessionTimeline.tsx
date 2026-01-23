@@ -78,7 +78,7 @@ export function SessionTimeline({
               <div className="mt-2 h-3 w-3 rounded-full bg-primary" />
             </div>
 
-            <div className="flex-1 space-y-3 pt-1">
+            <div className="flex-1 pt-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {slotSessions.map((session) => {
                 const isRegistered = userEmail
                   ? isEmailInList(userEmail, session.attendees)
