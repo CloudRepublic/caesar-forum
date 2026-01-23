@@ -2,7 +2,7 @@
 
 ## Overview
 
-Caesar Forum is an internal session registration platform for Caesar.nl, designed for monthly internal events (talks, workshops, discussions). Employees can browse upcoming forum sessions, register for sessions, and manage their registrations. The application integrates with Microsoft Outlook via the Graph API to fetch events from a shared calendar, with sessions displayed in Dutch throughout.
+Caesar Forum is an internal session registration platform for Caesar.nl, designed for monthly internal events (talks, workshops, discussions). The application allows employees to browse upcoming forum sessions, register/unregister for sessions, and view their registered sessions. The platform integrates with Microsoft Outlook calendar as the primary data source and uses Azure AD for authentication.
 
 ## User Preferences
 
@@ -12,55 +12,57 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 - **Framework**: React 18 with TypeScript
-- **Routing**: Wouter for lightweight client-side routing
-- **State Management**: TanStack React Query for server state caching, React Context for user authentication state
+- **Routing**: Wouter (lightweight client-side routing)
+- **State Management**: TanStack React Query for server state, React Context for user state
 - **UI Components**: shadcn/ui component library built on Radix UI primitives
 - **Styling**: Tailwind CSS with CSS variables for theming (light/dark mode support)
 - **Build Tool**: Vite with HMR support
+- **Design System**: Fluent Design + Linear aesthetics with Inter font family
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express
-- **Language**: TypeScript using ESM modules
+- **Language**: TypeScript (ESM modules)
 - **API Pattern**: RESTful JSON API at `/api/*` endpoints
-- **Session Storage**: PostgreSQL-backed sessions via connect-pg-simple
-- **Authentication**: Azure AD OAuth with MSAL for user login; client credentials flow for calendar access
+- **Session Management**: express-session with connect-pg-simple for PostgreSQL session storage
+- **Authentication**: Azure AD with MSAL (client credentials flow for Graph API, authorization code flow for user auth)
 
 ### Data Layer
-- **ORM**: Drizzle ORM configured for PostgreSQL dialect
+- **ORM**: Drizzle ORM with PostgreSQL dialect (configured but primary storage is Graph API)
 - **Schema Validation**: Zod with drizzle-zod integration
 - **Primary Data Source**: Microsoft Graph API (shared Outlook calendar)
-- **Schema Location**: `shared/schema.ts` contains all type definitions shared between client and server
+- **Session Storage**: PostgreSQL for express-session
+- **Schema Location**: `shared/schema.ts` contains all type definitions
 
 ### Key Design Decisions
 
-1. **Microsoft Graph as Primary Data Source**: Sessions are fetched live from a shared Outlook calendar rather than stored in a local database. This ensures the calendar remains the single source of truth.
+1. **Microsoft Graph as Primary Storage**: Forum sessions are calendar events in a shared Outlook mailbox. This eliminates data duplication and allows organizers to manage sessions directly in Outlook.
 
-2. **Session Slugs**: User-friendly URLs using auto-generated slugs (title + hash suffix). Custom slugs can be set via YAML-style back-matter in Outlook event descriptions.
+2. **Slug-based URLs**: Sessions use URL-friendly slugs (e.g., `/sessies/angular-signal-forms-99v7g9`) auto-generated from title + hash. Custom slugs can be set via YAML back-matter in Outlook descriptions.
 
-3. **Speaker Detection**: Required attendees on calendar events are treated as speakers. Falls back to organizer if no required attendees exist.
+3. **Speaker Detection**: All "required" attendees on calendar events are treated as speakers. Falls back to event organizer if no required attendees exist.
 
-4. **Dutch Language UI**: All user-facing text is in Dutch to match the internal corporate audience.
+4. **Category System**: Session categories (Talk, Workshop, Demo, Brainstorm, Hackathon, etc.) come directly from Outlook categories with no mapping - shown as-is.
 
-5. **Graceful Degradation**: When Graph API is unavailable, displays user-friendly Dutch error messages rather than fallback mock data.
+5. **Dutch UI**: All user-facing text is in Dutch to match Caesar.nl's internal audience.
+
+6. **Error Handling**: User-friendly Dutch error messages when Graph API is unavailable. No fallback to mock data in production.
 
 ## External Dependencies
 
-### Microsoft Graph API
-- **Purpose**: Primary data source for forum sessions (shared calendar events)
-- **Authentication**: Azure AD application with client credentials flow
-- **Library**: @azure/msal-node for token acquisition, @microsoft/microsoft-graph-client for API calls
-- **Required Environment Variables**:
+### Microsoft Azure Services
+- **Azure AD**: Authentication for both user login (authorization code flow) and Graph API access (client credentials)
+- **Microsoft Graph API**: Primary data source for calendar events, user photos, and user info
+- **Environment Variables**:
   - `AZURE_CLIENT_ID`: Azure AD application client ID
   - `AZURE_CLIENT_SECRET`: Application secret
   - `AZURE_TENANT_ID`: Azure AD tenant ID
 
-### PostgreSQL Database
-- **Purpose**: Session storage for user authentication, not primary data storage
-- **ORM**: Drizzle ORM
-- **Required Environment Variables**:
-  - `DATABASE_URL`: PostgreSQL connection string
-  - `SESSION_SECRET`: Secret for express-session
+### Database
+- **PostgreSQL**: Session storage for express-session (configured via `DATABASE_URL`)
+- **Drizzle ORM**: Database toolkit (schema in `shared/schema.ts`, migrations in `/migrations`)
 
-### Azure Active Directory
-- **Purpose**: User authentication via OAuth 2.0 PKCE flow
-- **Scope**: User login and profile photo retrieval from Microsoft 365
+### Key NPM Packages
+- `@azure/msal-node`: Microsoft authentication library
+- `@microsoft/microsoft-graph-client`: Graph API client
+- `express-session` + `connect-pg-simple`: Session management
+- `isomorphic-dompurify`: HTML sanitization for Outlook content
