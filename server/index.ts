@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
+import pg from "pg";
 import { registerRoutes } from "./routes";
 import { registerAuthRoutes } from "./auth";
 import { serveStatic } from "./static";
@@ -27,40 +28,57 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
 }
 
-app.use(
-  session({
-    store: new PgStore({
-      conString: process.env.DATABASE_URL,
-      // Note: Session table must be created manually in production.
-      // Run this SQL: CREATE TABLE IF NOT EXISTS "session" (
-      //   "sid" varchar NOT NULL PRIMARY KEY,
-      //   "sess" json NOT NULL,
-      //   "expire" timestamp(6) NOT NULL
-      // ); CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+// Create session table if it doesn't exist (replaces createTableIfMissing which doesn't work in bundled builds)
+async function ensureSessionTable() {
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "session" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+      )
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire")
+    `);
+  } finally {
+    await pool.end();
+  }
+}
+
+// Setup session middleware (called after ensureSessionTable in the async IIFE)
+function setupSessionMiddleware() {
+  app.use(
+    session({
+      store: new PgStore({
+        conString: process.env.DATABASE_URL,
+      }),
+      secret: process.env.SESSION_SECRET!,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      },
     }),
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    },
-  }),
-);
+  );
 
-app.use(
-  express.json({
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
-    },
-  }),
-);
+  app.use(
+    express.json({
+      verify: (req, _res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
 
-app.use(express.urlencoded({ extended: false }));
+  app.use(express.urlencoded({ extended: false }));
 
-registerAuthRoutes(app);
+  registerAuthRoutes(app);
+}
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -100,6 +118,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Ensure session table exists before setting up session middleware
+  await ensureSessionTable();
+  
+  // Now register session middleware after table is guaranteed to exist
+  setupSessionMiddleware();
+  
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
