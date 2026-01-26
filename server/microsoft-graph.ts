@@ -693,7 +693,7 @@ export class MicrosoftGraphService {
   }
 
   private normalizeEmailToCaesar(email: string): string {
-    const knownDomains = ["cloudrepublic.nl", "cloudrepublic.com"];
+    const knownDomains = ["cloudrepublic.nl", "cloudrepublic.com", "garansys.nl"];
     const parts = email.split("@");
     if (parts.length !== 2) return email;
     const [localPart, domain] = parts;
