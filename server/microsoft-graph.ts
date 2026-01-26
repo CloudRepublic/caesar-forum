@@ -693,11 +693,11 @@ export class MicrosoftGraphService {
   }
 
   private normalizeEmailToCaesar(email: string): string {
-    const knownDomains = ["cloudrepublic.nl", "cloudrepublic.com", "garansys.nl"];
     const parts = email.split("@");
     if (parts.length !== 2) return email;
     const [localPart, domain] = parts;
-    if (knownDomains.includes(domain.toLowerCase())) {
+    // Always try caesar.nl first for any domain alias
+    if (domain.toLowerCase() !== "caesar.nl") {
       return `${localPart}@caesar.nl`;
     }
     return email;
