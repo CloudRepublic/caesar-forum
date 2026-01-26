@@ -9,6 +9,15 @@ export const speakerSchema = z.object({
 
 export type Speaker = z.infer<typeof speakerSchema>;
 
+// Attendee schema - includes name from Outlook invitation
+export const attendeeSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  photoUrl: z.string().optional(),
+});
+
+export type Attendee = z.infer<typeof attendeeSchema>;
+
 // Session schema - categories come directly from Outlook
 export const sessionSchema = z.object({
   id: z.string(),
@@ -21,7 +30,7 @@ export const sessionSchema = z.object({
   endTime: z.string(), // ISO datetime
   room: z.string(),
   speakers: z.array(speakerSchema), // Array of speakers (required attendees)
-  attendees: z.array(z.string()), // Array of email addresses
+  attendees: z.array(attendeeSchema), // Array of attendees with name and email
   capacity: z.number().optional(), // Maximum number of attendees (from back-matter)
 });
 

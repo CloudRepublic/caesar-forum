@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Utensils } from "lucide-react";
-import { isEmailInList } from "@/lib/email-utils";
+import { isEmailInAttendees } from "@/lib/email-utils";
 import { findOverlappingSessions } from "@/lib/session-utils";
 import { OverlapWarningBanner } from "@/components/OverlapWarningBanner";
 import type { ForumData, Session } from "@shared/schema";
@@ -126,7 +126,7 @@ export default function Home() {
     if (!newSession) return null;
 
     const userRegisteredSessions = allSessions.filter(
-      s => s.id !== newSessionId && isEmailInList(userEmail, s.attendees)
+      s => s.id !== newSessionId && isEmailInAttendees(userEmail, s.attendees)
     );
 
     if (userRegisteredSessions.length === 0) return null;
@@ -136,7 +136,7 @@ export default function Home() {
 
     const foodDrinkSessions = allSessions.filter(s => 
       (s.categories || []).some(c => c.toLowerCase() === "eten & drinken") &&
-      !isEmailInList(userEmail, s.attendees) &&
+      !isEmailInAttendees(userEmail, s.attendees) &&
       s.id !== newSessionId
     );
 
@@ -217,7 +217,7 @@ export default function Home() {
 
   const registeredSessions = useMemo(() => {
     if (!sessions || !user?.email) return [];
-    return sessions.filter((s) => isEmailInList(user.email, s.attendees));
+    return sessions.filter((s) => isEmailInAttendees(user.email, s.attendees));
   }, [sessions, user?.email]);
 
   const overlapPairs = useMemo(() => {

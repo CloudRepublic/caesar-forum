@@ -595,7 +595,11 @@ export class MicrosoftGraphService {
           a.status.response === "tentativelyAccepted"
         )
         .filter((a) => a.type.toLowerCase() !== "required")
-        .map((a) => a.emailAddress.address);
+        .map((a) => ({
+          name: formatDisplayName(a.emailAddress.name || a.emailAddress.address.split("@")[0]),
+          email: a.emailAddress.address,
+          photoUrl: `/api/users/${encodeURIComponent(a.emailAddress.address)}/photo`,
+        }));
 
       return {
         id: event.id,
@@ -670,7 +674,11 @@ export class MicrosoftGraphService {
           a.status.response === "tentativelyAccepted"
         )
         .filter((a) => a.type.toLowerCase() !== "required")
-        .map((a) => a.emailAddress.address);
+        .map((a) => ({
+          name: formatDisplayName(a.emailAddress.name || a.emailAddress.address.split("@")[0]),
+          email: a.emailAddress.address,
+          photoUrl: `/api/users/${encodeURIComponent(a.emailAddress.address)}/photo`,
+        }));
 
       return {
         id: event.id,

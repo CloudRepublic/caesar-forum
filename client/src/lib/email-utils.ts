@@ -1,13 +1,13 @@
-import type { Speaker } from "@shared/schema";
+import type { Speaker, Attendee } from "@shared/schema";
 
 function getLocalPart(email: string): string {
   const parts = email.toLowerCase().split("@");
   return parts.length === 2 ? parts[0] : email.toLowerCase();
 }
 
-export function isEmailInList(email: string, list: string[]): boolean {
+export function isEmailInAttendees(email: string, attendees: Attendee[]): boolean {
   const userLocalPart = getLocalPart(email);
-  return list.some((listEmail) => getLocalPart(listEmail) === userLocalPart);
+  return attendees.some((attendee) => getLocalPart(attendee.email) === userLocalPart);
 }
 
 export function isSpeaker(email: string, speakers: Speaker[]): boolean {

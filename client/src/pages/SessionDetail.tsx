@@ -11,31 +11,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { isEmailInList, isSpeaker } from "@/lib/email-utils";
+import { isEmailInAttendees, isSpeaker } from "@/lib/email-utils";
 import { findOverlapsWithSession } from "@/lib/session-utils";
 import { formatDisplayName } from "@/lib/name-utils";
 import { getInitials } from "@/lib/utils";
-import type { Session, ForumData } from "@shared/schema";
+import type { Session, ForumData, Attendee } from "@shared/schema";
 
-interface UserInfo {
-  displayName: string;
-  email: string;
-}
-
-function AttendeeItem({ email, index }: { email: string; index: number }) {
-  const { data: userInfo, isLoading } = useQuery<UserInfo>({
-    queryKey: ["/api/users", email],
-    queryFn: async () => {
-      const res = await fetch(`/api/users/${encodeURIComponent(email)}`);
-      if (!res.ok) throw new Error("User not found");
-      return res.json();
-    },
-    staleTime: 1000 * 60 * 60,
-  });
-
-  const displayName = formatDisplayName(userInfo?.displayName || email.split("@")[0]);
-  const initials = displayName.split(/[\s]+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase() || email.slice(0, 2).toUpperCase();
-  const photoUrl = `/api/users/${encodeURIComponent(email)}/photo`;
+function AttendeeItem({ attendee, index }: { attendee: Attendee; index: number }) {
+  const displayName = formatDisplayName(attendee.name);
+  const initials = displayName.split(/[\s]+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase() || attendee.email.slice(0, 2).toUpperCase();
+  const photoUrl = attendee.photoUrl || `/api/users/${encodeURIComponent(attendee.email)}/photo`;
 
   return (
     <div className="flex items-center gap-3" data-testid={`attendee-${index}`}>
@@ -45,13 +30,9 @@ function AttendeeItem({ email, index }: { email: string; index: number }) {
           {initials}
         </AvatarFallback>
       </Avatar>
-      {isLoading ? (
-        <Skeleton className="h-4 w-32" />
-      ) : (
-        <span className="text-sm truncate" data-testid={`text-attendee-name-${index}`}>
-          {displayName}
-        </span>
-      )}
+      <span className="text-sm truncate" data-testid={`text-attendee-name-${index}`}>
+        {displayName}
+      </span>
     </div>
   );
 }
@@ -109,7 +90,7 @@ export default function SessionDetail() {
 
   const registeredSessions = useMemo(() => {
     if (!forumData?.sessions || !user?.email) return [];
-    return forumData.sessions.filter((s) => isEmailInList(user.email, s.attendees));
+    return forumData.sessions.filter((s) => isEmailInAttendees(user.email, s.attendees));
   }, [forumData?.sessions, user?.email]);
 
   const overlappingSessions = useMemo(() => {
@@ -222,7 +203,7 @@ export default function SessionDetail() {
     );
   }
 
-  const isRegistered = user?.email ? isEmailInList(user.email, session.attendees) : false;
+  const isRegistered = user?.email ? isEmailInAttendees(user.email, session.attendees) : false;
   const isUserSpeaker = user?.email ? isSpeaker(user.email, session.speakers) : false;
   const isPending = registerMutation.isPending || unregisterMutation.isPending;
 
@@ -416,8 +397,8 @@ export default function SessionDetail() {
                   Deelnemers ({session.capacity ? `${session.attendees.length}/${session.capacity}` : session.attendees.length})
                 </h3>
                 <div className="space-y-3">
-                  {session.attendees.map((email, index) => (
-                    <AttendeeItem key={email} email={email} index={index} />
+                  {session.attendees.map((attendee, index) => (
+                    <AttendeeItem key={attendee.email} attendee={attendee} index={index} />
                   ))}
                 </div>
               </CardContent>

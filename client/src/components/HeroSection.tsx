@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Calendar, Users } from "lucide-react";
 import { useMemo } from "react";
-import { isEmailInList } from "@/lib/email-utils";
+import { isEmailInAttendees } from "@/lib/email-utils";
 import type { ForumEdition, Session } from "@shared/schema";
 
 import backdrop1 from "@assets/backdrops/RL_09185.jpg";
@@ -33,7 +33,7 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
   );
   
   const userRegistrations = userEmail
-    ? sessions.filter((s) => isEmailInList(userEmail, s.attendees)).length
+    ? sessions.filter((s) => isEmailInAttendees(userEmail, s.attendees)).length
     : 0;
 
   const formatDate = (dateStr: string) => {
