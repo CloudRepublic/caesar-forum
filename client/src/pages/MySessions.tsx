@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { SessionGridSkeleton } from "@/components/LoadingState";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { isEmailInAttendees } from "@/lib/email-utils";
+import { isEmailInAttendees, isSpeaker } from "@/lib/email-utils";
 import { findOverlappingSessions } from "@/lib/session-utils";
 import { OverlapWarningBanner } from "@/components/OverlapWarningBanner";
 import { ArrowLeft, Calendar } from "lucide-react";
@@ -50,7 +50,10 @@ export default function MySessions() {
     if (!data?.sessions || !user?.email) return [];
 
     return data.sessions
-      .filter((session) => isEmailInAttendees(user.email, session.attendees))
+      .filter((session) => 
+        isEmailInAttendees(user.email, session.attendees) || 
+        isSpeaker(user.email, session.speakers)
+      )
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   }, [data?.sessions, user?.email]);
 
