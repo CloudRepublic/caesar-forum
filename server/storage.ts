@@ -1,4 +1,4 @@
-import type { Session, ForumEdition, ForumData } from "@shared/schema";
+import type { Session, ForumEdition, ForumData, DietaryPreference } from "@shared/schema";
 import { getMicrosoftGraphService } from "./microsoft-graph";
 
 export interface IStorage {
@@ -9,6 +9,11 @@ export interface IStorage {
   unregisterFromSession(sessionId: string, userEmail: string): Promise<Session | undefined>;
   getUserPhoto(email: string): Promise<Buffer | null>;
   getUserInfo(email: string): Promise<{ displayName: string; email: string } | null>;
+  // Dietary preferences
+  setDietaryPreference(sessionId: string, email: string, name: string, preference: string): Promise<void>;
+  getDietaryPreference(sessionId: string, email: string): Promise<DietaryPreference | undefined>;
+  getDietaryPreferencesForSession(sessionId: string): Promise<DietaryPreference[]>;
+  getAllDietaryPreferences(): Promise<Map<string, DietaryPreference[]>>;
 }
 
 export class GraphApiUnavailableError extends Error {
@@ -23,6 +28,9 @@ export class GraphStorage implements IStorage {
   private lastGraphAttempt: Date | null = null;
   private readonly MAX_FAILURES = 3;
   private readonly RETRY_DELAY_MS = 60000;
+  
+  // In-memory storage for dietary preferences (sessionId -> email -> preference)
+  private dietaryPreferences: Map<string, Map<string, DietaryPreference>> = new Map();
 
   private shouldTryGraph(): boolean {
     if (this.graphFailures >= this.MAX_FAILURES) {
@@ -143,6 +151,46 @@ export class GraphStorage implements IStorage {
     } catch {
       return { displayName: email.split("@")[0], email };
     }
+  }
+
+  async setDietaryPreference(sessionId: string, email: string, name: string, preference: string): Promise<void> {
+    const normalizedEmail = email.toLowerCase();
+    if (!this.dietaryPreferences.has(sessionId)) {
+      this.dietaryPreferences.set(sessionId, new Map());
+    }
+    const sessionPrefs = this.dietaryPreferences.get(sessionId)!;
+    
+    if (preference.trim() === "") {
+      // Remove preference if empty
+      sessionPrefs.delete(normalizedEmail);
+    } else {
+      sessionPrefs.set(normalizedEmail, {
+        email: normalizedEmail,
+        name,
+        preference: preference.trim(),
+        submittedAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  async getDietaryPreference(sessionId: string, email: string): Promise<DietaryPreference | undefined> {
+    const normalizedEmail = email.toLowerCase();
+    return this.dietaryPreferences.get(sessionId)?.get(normalizedEmail);
+  }
+
+  async getDietaryPreferencesForSession(sessionId: string): Promise<DietaryPreference[]> {
+    const sessionPrefs = this.dietaryPreferences.get(sessionId);
+    if (!sessionPrefs) return [];
+    return Array.from(sessionPrefs.values());
+  }
+
+  async getAllDietaryPreferences(): Promise<Map<string, DietaryPreference[]>> {
+    const result = new Map<string, DietaryPreference[]>();
+    const entries = Array.from(this.dietaryPreferences.entries());
+    entries.forEach(([sessionId, prefs]) => {
+      result.set(sessionId, Array.from(prefs.values()));
+    });
+    return result;
   }
 }
 

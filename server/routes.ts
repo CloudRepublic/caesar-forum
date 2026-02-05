@@ -7,6 +7,18 @@ const sessionIdSchema = z.object({
   sessionId: z.string(),
 });
 
+const dietaryPreferenceSchema = z.object({
+  sessionId: z.string(),
+  preference: z.string().max(500),
+});
+
+// Check if user is a dietary admin
+function isDietaryAdmin(email: string): boolean {
+  const admins = process.env.DIETARY_ADMINS || "";
+  const adminList = admins.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
+  return adminList.includes(email.toLowerCase());
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -221,6 +233,102 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching user info:", error);
       res.status(500).json({ error: "Failed to fetch user info" });
+    }
+  });
+
+  // Save dietary preference for a session (requires authentication)
+  app.post("/api/dietary-preferences", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) {
+        return res.status(401).json({ error: "Je moet ingelogd zijn om dieetwensen door te geven" });
+      }
+
+      const parsed = dietaryPreferenceSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request body", details: parsed.error.errors });
+      }
+
+      const { sessionId, preference } = parsed.data;
+      await storage.setDietaryPreference(sessionId, user.email, user.name, preference);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving dietary preference:", error);
+      res.status(500).json({ error: "Er is een fout opgetreden bij het opslaan van dieetwensen." });
+    }
+  });
+
+  // Get my dietary preference for a session (requires authentication)
+  app.get("/api/dietary-preferences/:sessionId/me", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) {
+        return res.status(401).json({ error: "Je moet ingelogd zijn" });
+      }
+
+      const preference = await storage.getDietaryPreference(req.params.sessionId, user.email);
+      res.json({ preference: preference?.preference || null });
+    } catch (error) {
+      console.error("Error fetching dietary preference:", error);
+      res.status(500).json({ error: "Er is een fout opgetreden." });
+    }
+  });
+
+  // Get all dietary preferences (dietary admins only)
+  app.get("/api/dietary-preferences", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) {
+        return res.status(401).json({ error: "Je moet ingelogd zijn" });
+      }
+
+      if (!isDietaryAdmin(user.email)) {
+        return res.status(403).json({ error: "Je hebt geen toegang tot dit overzicht" });
+      }
+
+      // Get all preferences and enrich with session data
+      const allPrefs = await storage.getAllDietaryPreferences();
+      const forumData = await storage.getForumData();
+      
+      const result: Array<{
+        session: { id: string; title: string; slug: string };
+        preferences: Array<{ email: string; name: string; preference: string; submittedAt: string }>;
+      }> = [];
+
+      const entries = Array.from(allPrefs.entries());
+      entries.forEach(([sessionId, prefs]) => {
+        const session = forumData.sessions.find(s => s.id === sessionId);
+        if (session && prefs.length > 0) {
+          result.push({
+            session: { id: session.id, title: session.title, slug: session.slug },
+            preferences: prefs,
+          });
+        }
+      });
+
+      res.json({ sessions: result });
+    } catch (error) {
+      console.error("Error fetching all dietary preferences:", error);
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een fout opgetreden." });
+    }
+  });
+
+  // Check if user is dietary admin
+  app.get("/api/dietary-preferences/admin-check", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) {
+        return res.json({ isAdmin: false });
+      }
+
+      res.json({ isAdmin: isDietaryAdmin(user.email) });
+    } catch (error) {
+      console.error("Error checking dietary admin status:", error);
+      res.status(500).json({ error: "Er is een fout opgetreden." });
     }
   });
 
