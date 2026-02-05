@@ -1,5 +1,8 @@
 import type { Session, ForumEdition, ForumData, DietaryPreference } from "@shared/schema";
 import { getMicrosoftGraphService } from "./microsoft-graph";
+import { db } from "./db";
+import { dietaryPreferences } from "./db/schema";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   getForumData(): Promise<ForumData>;
@@ -28,9 +31,6 @@ export class GraphStorage implements IStorage {
   private lastGraphAttempt: Date | null = null;
   private readonly MAX_FAILURES = 3;
   private readonly RETRY_DELAY_MS = 60000;
-  
-  // In-memory storage for dietary preferences (sessionId -> email -> preference)
-  private dietaryPreferences: Map<string, Map<string, DietaryPreference>> = new Map();
 
   private shouldTryGraph(): boolean {
     if (this.graphFailures >= this.MAX_FAILURES) {
@@ -155,41 +155,85 @@ export class GraphStorage implements IStorage {
 
   async setDietaryPreference(sessionId: string, email: string, name: string, preference: string): Promise<void> {
     const normalizedEmail = email.toLowerCase();
-    if (!this.dietaryPreferences.has(sessionId)) {
-      this.dietaryPreferences.set(sessionId, new Map());
-    }
-    const sessionPrefs = this.dietaryPreferences.get(sessionId)!;
+    const trimmedPreference = preference.trim();
     
-    if (preference.trim() === "") {
-      // Remove preference if empty
-      sessionPrefs.delete(normalizedEmail);
+    const existing = await db.select()
+      .from(dietaryPreferences)
+      .where(and(
+        eq(dietaryPreferences.sessionId, sessionId),
+        eq(dietaryPreferences.email, normalizedEmail)
+      ))
+      .limit(1);
+
+    if (trimmedPreference === "") {
+      if (existing.length > 0) {
+        await db.delete(dietaryPreferences)
+          .where(and(
+            eq(dietaryPreferences.sessionId, sessionId),
+            eq(dietaryPreferences.email, normalizedEmail)
+          ));
+      }
+    } else if (existing.length > 0) {
+      await db.update(dietaryPreferences)
+        .set({ name, preference: trimmedPreference, submittedAt: new Date() })
+        .where(and(
+          eq(dietaryPreferences.sessionId, sessionId),
+          eq(dietaryPreferences.email, normalizedEmail)
+        ));
     } else {
-      sessionPrefs.set(normalizedEmail, {
-        email: normalizedEmail,
-        name,
-        preference: preference.trim(),
-        submittedAt: new Date().toISOString(),
-      });
+      await db.insert(dietaryPreferences)
+        .values({ sessionId, email: normalizedEmail, name, preference: trimmedPreference });
     }
   }
 
   async getDietaryPreference(sessionId: string, email: string): Promise<DietaryPreference | undefined> {
     const normalizedEmail = email.toLowerCase();
-    return this.dietaryPreferences.get(sessionId)?.get(normalizedEmail);
+    const rows = await db.select()
+      .from(dietaryPreferences)
+      .where(and(
+        eq(dietaryPreferences.sessionId, sessionId),
+        eq(dietaryPreferences.email, normalizedEmail)
+      ))
+      .limit(1);
+    
+    if (rows.length === 0) return undefined;
+    const row = rows[0];
+    return {
+      email: row.email,
+      name: row.name,
+      preference: row.preference,
+      submittedAt: row.submittedAt.toISOString(),
+    };
   }
 
   async getDietaryPreferencesForSession(sessionId: string): Promise<DietaryPreference[]> {
-    const sessionPrefs = this.dietaryPreferences.get(sessionId);
-    if (!sessionPrefs) return [];
-    return Array.from(sessionPrefs.values());
+    const rows = await db.select()
+      .from(dietaryPreferences)
+      .where(eq(dietaryPreferences.sessionId, sessionId));
+    
+    return rows.map(row => ({
+      email: row.email,
+      name: row.name,
+      preference: row.preference,
+      submittedAt: row.submittedAt.toISOString(),
+    }));
   }
 
   async getAllDietaryPreferences(): Promise<Map<string, DietaryPreference[]>> {
+    const rows = await db.select().from(dietaryPreferences);
     const result = new Map<string, DietaryPreference[]>();
-    const entries = Array.from(this.dietaryPreferences.entries());
-    entries.forEach(([sessionId, prefs]) => {
-      result.set(sessionId, Array.from(prefs.values()));
-    });
+    
+    for (const row of rows) {
+      const prefs = result.get(row.sessionId) || [];
+      prefs.push({
+        email: row.email,
+        name: row.name,
+        preference: row.preference,
+        submittedAt: row.submittedAt.toISOString(),
+      });
+      result.set(row.sessionId, prefs);
+    }
+    
     return result;
   }
 }
