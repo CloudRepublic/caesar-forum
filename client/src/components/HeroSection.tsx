@@ -119,7 +119,7 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
                     <span className="text-2xl font-bold text-white" data-testid="text-participant-count">
                       {participantCount}
                     </span>
-                    <span>{isUniqueCount ? "deelnemer" : "inschrijving"}{participantCount !== 1 ? (isUniqueCount ? "s" : "en") : ""}</span>
+                    <span>deelnemer{participantCount !== 1 ? "s" : ""}</span>
                   </div>
                   {userEmail && userRegistrations > 0 && (
                     <div className="rounded-full bg-white/20 px-3 py-1">
