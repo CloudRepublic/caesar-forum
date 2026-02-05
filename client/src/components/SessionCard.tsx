@@ -166,10 +166,12 @@ export function SessionCard({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="h-4 w-4" />
           <span data-testid={`text-attendees-${session.id}`}>
-            {session.capacity 
-              ? `${session.attendees.length} van ${session.capacity} deelnemers`
-              : `${session.attendees.length} deelnemer${session.attendees.length !== 1 ? "s" : ""}`
-            }
+            {(() => {
+              const count = session.attendeeCount ?? session.attendees.length;
+              return session.capacity 
+                ? `${count} van ${session.capacity} deelnemers`
+                : `${count} deelnemer${count !== 1 ? "s" : ""}`;
+            })()}
           </span>
         </div>
       </CardContent>
@@ -195,7 +197,7 @@ export function SessionCard({
             >
               Uitschrijven
             </Button>
-          ) : session.capacity && session.attendees.length >= session.capacity ? (
+          ) : session.capacity && (session.attendeeCount ?? session.attendees.length) >= session.capacity ? (
             <Button
               className="w-full"
               disabled

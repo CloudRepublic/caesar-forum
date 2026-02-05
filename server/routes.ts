@@ -44,12 +44,15 @@ export async function registerRoutes(
       const data = await storage.getForumData();
       
       // Strip personal data (speakers, attendees) if not authenticated
+      // but keep counts visible
       const user = req.session.user;
       if (!user) {
         const sanitizedSessions = data.sessions.map(session => ({
           ...session,
           speakers: [],
           attendees: [],
+          speakerCount: session.speakers.length,
+          attendeeCount: session.attendees.length,
         }));
         return res.json({ ...data, sessions: sanitizedSessions });
       }
@@ -72,10 +75,16 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Sessie niet gevonden" });
       }
       
-      // Strip personal data if not authenticated
+      // Strip personal data if not authenticated but keep counts
       const user = req.session.user;
       if (!user) {
-        return res.json({ ...session, speakers: [], attendees: [] });
+        return res.json({ 
+          ...session, 
+          speakers: [], 
+          attendees: [],
+          speakerCount: session.speakers.length,
+          attendeeCount: session.attendees.length,
+        });
       }
       
       res.json(session);
@@ -96,10 +105,16 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Sessie niet gevonden" });
       }
       
-      // Strip personal data if not authenticated
+      // Strip personal data if not authenticated but keep counts
       const user = req.session.user;
       if (!user) {
-        return res.json({ ...session, speakers: [], attendees: [] });
+        return res.json({ 
+          ...session, 
+          speakers: [], 
+          attendees: [],
+          speakerCount: session.speakers.length,
+          attendeeCount: session.attendees.length,
+        });
       }
       
       res.json(session);
