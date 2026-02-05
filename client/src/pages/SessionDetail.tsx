@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Clock, MapPin, Users, Calendar, Check, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Users, Calendar, Check, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +34,55 @@ function AttendeeItem({ attendee, index }: { attendee: Attendee; index: number }
         {displayName}
       </span>
     </div>
+  );
+}
+
+const INITIAL_ATTENDEES_SHOWN = 5;
+
+function AttendeesList({ attendees, capacity }: { attendees: Attendee[]; capacity?: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const displayedAttendees = isExpanded 
+    ? attendees 
+    : attendees.slice(0, INITIAL_ATTENDEES_SHOWN);
+  
+  const hasMore = attendees.length > INITIAL_ATTENDEES_SHOWN;
+  const hiddenCount = attendees.length - INITIAL_ATTENDEES_SHOWN;
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <h3 className="mb-4 text-sm font-medium text-muted-foreground">
+          Deelnemers ({capacity ? `${attendees.length}/${capacity}` : attendees.length})
+        </h3>
+        <div className="space-y-3">
+          {displayedAttendees.map((attendee, index) => (
+            <AttendeeItem key={attendee.email} attendee={attendee} index={index} />
+          ))}
+        </div>
+        {hasMore && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3 w-full text-muted-foreground"
+            onClick={() => setIsExpanded(!isExpanded)}
+            data-testid="button-toggle-attendees"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="mr-2 h-4 w-4" />
+                Toon minder
+              </>
+            ) : (
+              <>
+                <ChevronDown className="mr-2 h-4 w-4" />
+                Toon {hiddenCount} meer
+              </>
+            )}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -334,10 +383,12 @@ export default function SessionDetail() {
                 <div className="flex items-center gap-3 text-sm">
                   <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span data-testid="text-session-attendees">
-                    {session.capacity 
-                      ? `${session.attendees.length} van ${session.capacity} deelnemers`
-                      : `${session.attendees.length} deelnemer${session.attendees.length !== 1 ? "s" : ""}`
-                    }
+                    {(() => {
+                      const count = session.attendeeCount ?? session.attendees.length;
+                      return session.capacity 
+                        ? `${count} van ${session.capacity} deelnemers`
+                        : `${count} deelnemer${count !== 1 ? "s" : ""}`;
+                    })()}
                   </span>
                 </div>
               </div>
@@ -363,7 +414,7 @@ export default function SessionDetail() {
                     >
                       Uitschrijven
                     </Button>
-                  ) : session.capacity && session.attendees.length >= session.capacity ? (
+                  ) : session.capacity && (session.attendeeCount ?? session.attendees.length) >= session.capacity ? (
                     <Button
                       className="w-full"
                       disabled
@@ -391,18 +442,10 @@ export default function SessionDetail() {
           </Card>
 
           {user && session.attendees.length > 0 && (
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="mb-4 text-sm font-medium text-muted-foreground">
-                  Deelnemers ({session.capacity ? `${session.attendees.length}/${session.capacity}` : session.attendees.length})
-                </h3>
-                <div className="space-y-3">
-                  {session.attendees.map((attendee, index) => (
-                    <AttendeeItem key={attendee.email} attendee={attendee} index={index} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <AttendeesList 
+              attendees={session.attendees} 
+              capacity={session.capacity} 
+            />
           )}
         </div>
       </div>
