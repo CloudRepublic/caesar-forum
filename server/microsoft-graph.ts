@@ -562,6 +562,10 @@ export class MicrosoftGraphService {
       const capacity = capacityValue ? parseInt(capacityValue, 10) : undefined;
       const validCapacity = capacity && !isNaN(capacity) && capacity > 0 ? capacity : undefined;
       
+      // Parse diet-form from back-matter if provided
+      const dietFormValue = metadata["diet-form"];
+      const showDietaryForm = dietFormValue?.toLowerCase() === "true" || dietFormValue === "1";
+      
       // Strip back-matter from HTML for display
       const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
       
@@ -606,6 +610,7 @@ export class MicrosoftGraphService {
         speakers,
         attendees: registeredAttendees,
         capacity: validCapacity,
+        showDietaryForm: showDietaryForm || undefined,
       };
     });
 
@@ -659,6 +664,10 @@ export class MicrosoftGraphService {
       const capacity = capacityValue ? parseInt(capacityValue, 10) : undefined;
       const validCapacity = capacity && !isNaN(capacity) && capacity > 0 ? capacity : undefined;
       
+      // Parse diet-form from back-matter if provided
+      const dietFormValue = metadata["diet-form"];
+      const showDietaryForm = dietFormValue?.toLowerCase() === "true" || dietFormValue === "1";
+      
       // Strip back-matter from HTML for display
       const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
 
@@ -703,6 +712,7 @@ export class MicrosoftGraphService {
         speakers,
         attendees: registeredAttendees,
         capacity: validCapacity,
+        showDietaryForm: showDietaryForm || undefined,
       };
     } catch (error) {
       logApiError("GET", endpoint, error, undefined, `Session not found: ${id}`);

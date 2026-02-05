@@ -18,6 +18,16 @@ export const attendeeSchema = z.object({
 
 export type Attendee = z.infer<typeof attendeeSchema>;
 
+// Dietary preference schema - stored per attendee
+export const dietaryPreferenceSchema = z.object({
+  email: z.string(),
+  name: z.string(),
+  preference: z.string(),
+  submittedAt: z.string(), // ISO datetime
+});
+
+export type DietaryPreference = z.infer<typeof dietaryPreferenceSchema>;
+
 // Session schema - categories come directly from Outlook
 export const sessionSchema = z.object({
   id: z.string(),
@@ -32,6 +42,7 @@ export const sessionSchema = z.object({
   speakers: z.array(speakerSchema), // Array of speakers (required attendees)
   attendees: z.array(attendeeSchema), // Array of attendees with name and email
   capacity: z.number().optional(), // Maximum number of attendees (from back-matter)
+  showDietaryForm: z.boolean().optional(), // Show dietary preferences form (from back-matter diet-form: true)
   // Counts for unauthenticated users (when personal data is stripped)
   speakerCount: z.number().optional(),
   attendeeCount: z.number().optional(),
