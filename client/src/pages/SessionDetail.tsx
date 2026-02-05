@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Clock, MapPin, Users, Calendar, Check, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Users, Calendar, Check, AlertTriangle, ChevronDown, ChevronUp, Utensils, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -80,6 +82,112 @@ function AttendeesList({ attendees, capacity }: { attendees: Attendee[]; capacit
               </>
             )}
           </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
+  const { toast } = useToast();
+  const [preference, setPreference] = useState("");
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  const { data: existingPref, isLoading } = useQuery<{ preference: string | null }>({
+    queryKey: ["/api/dietary-preferences", sessionId, "me"],
+    queryFn: async () => {
+      const res = await fetch(`/api/dietary-preferences/${sessionId}/me`);
+      if (!res.ok) throw new Error("Failed to fetch preference");
+      return res.json();
+    },
+  });
+
+  useEffect(() => {
+    if (existingPref && !hasLoaded) {
+      setPreference(existingPref.preference || "");
+      setHasLoaded(true);
+    }
+  }, [existingPref, hasLoaded]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (newPreference: string) => {
+      await apiRequest("POST", "/api/dietary-preferences", { 
+        sessionId, 
+        preference: newPreference 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dietary-preferences", sessionId, "me"] });
+      toast({
+        title: "Opgeslagen",
+        description: "Je dieetwensen zijn opgeslagen",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Fout",
+        description: "Kon dieetwensen niet opslaan",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = () => {
+    saveMutation.mutate(preference);
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Laden...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const hasChanged = preference !== (existingPref?.preference || "");
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Utensils className="h-4 w-4 text-muted-foreground" />
+          <Label htmlFor="dietary-preference" className="text-sm font-medium text-muted-foreground">
+            Dieetwensen of allergieën
+          </Label>
+        </div>
+        <Textarea
+          id="dietary-preference"
+          placeholder="Bijv. vegetarisch, glutenvrij, notenallergie..."
+          value={preference}
+          onChange={(e) => setPreference(e.target.value)}
+          className="min-h-[80px] resize-none"
+          data-testid="input-dietary-preference"
+        />
+        <Button
+          size="sm"
+          className="mt-3 w-full"
+          onClick={handleSave}
+          disabled={saveMutation.isPending || !hasChanged}
+          data-testid="button-save-dietary"
+        >
+          {saveMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Opslaan...
+            </>
+          ) : (
+            "Opslaan"
+          )}
+        </Button>
+        {existingPref?.preference && (
+          <p className="mt-2 text-xs text-muted-foreground text-center">
+            Laatst opgeslagen: {existingPref.preference.slice(0, 50)}{existingPref.preference.length > 50 ? "..." : ""}
+          </p>
         )}
       </CardContent>
     </Card>
@@ -446,6 +554,10 @@ export default function SessionDetail() {
               attendees={session.attendees} 
               capacity={session.capacity} 
             />
+          )}
+
+          {user && session.showDietaryForm && isRegistered && (
+            <DietaryPreferenceForm sessionId={session.id} />
           )}
         </div>
       </div>
