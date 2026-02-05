@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, Mic } from "lucide-react";
 import { useMemo } from "react";
 import { isEmailInAttendees } from "@/lib/email-utils";
 import type { ForumEdition, Session } from "@shared/schema";
@@ -92,6 +92,13 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
                       {sessions.length}
                     </span>
                     <span>sessies</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mic className="h-4 w-4" />
+                    <span className="text-2xl font-bold text-white" data-testid="text-speaker-count">
+                      {edition.speakerCount ?? 0}
+                    </span>
+                    <span>spreker{(edition.speakerCount ?? 0) !== 1 ? "s" : ""}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
