@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
+import { useQuery } from "@tanstack/react-query";
 import { LogIn, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { getInitials } from "@/lib/utils";
@@ -15,11 +16,25 @@ export function Navigation({ isAprilFools = false }: NavigationProps) {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navItems = [
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/dietary-preferences/admin-check"],
+    queryFn: async () => {
+      const res = await fetch("/api/dietary-preferences/admin-check");
+      if (!res.ok) return { isAdmin: false };
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
+  const baseNavItems = [
     { href: "/", label: "Dashboard" },
     { href: "/mijn-sessies", label: "Mijn Sessies" },
     { href: "/over", label: "Over" },
   ];
+
+  const navItems = adminCheck?.isAdmin
+    ? [...baseNavItems.slice(0, 2), { href: "/dieetwensen", label: "Dieetwensen" }, baseNavItems[2]]
+    : baseNavItems;
 
   const navClassName = isAprilFools
     ? "fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rotate-180"
