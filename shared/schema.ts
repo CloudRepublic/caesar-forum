@@ -45,6 +45,9 @@ export const forumEditionSchema = z.object({
   title: z.string(),
   date: z.string(), // ISO date
   location: z.string(),
+  // Unique counts across all sessions (calculated server-side)
+  speakerCount: z.number().optional(),
+  attendeeCount: z.number().optional(),
 });
 
 export type ForumEdition = z.infer<typeof forumEditionSchema>;

@@ -545,14 +545,6 @@ export class MicrosoftGraphService {
       "Juli", "Augustus", "September", "Oktober", "November", "December"
     ];
 
-    // Use the all-day event's subject as the forum title
-    const edition: ForumEdition = {
-      id: `edition-${forumDate.getFullYear()}-${String(forumDate.getMonth() + 1).padStart(2, "0")}-${String(forumDate.getDate()).padStart(2, "0")}`,
-      title: allDayEvent.subject,
-      date: forumDate.toISOString().split("T")[0],
-      location: allDayEvent.location?.displayName || "Caesar Hoofdkantoor, Utrecht",
-    };
-
     const sessions: Session[] = sessionEvents.map((event) => {
       const bodyContent = event.body?.content || "";
       const isHtml = event.body?.contentType === "html";
@@ -616,6 +608,24 @@ export class MicrosoftGraphService {
         capacity: validCapacity,
       };
     });
+
+    // Calculate unique speaker and attendee counts across all sessions
+    const uniqueSpeakers = new Set<string>();
+    const uniqueAttendees = new Set<string>();
+    sessions.forEach(session => {
+      session.speakers.forEach(s => uniqueSpeakers.add(s.email.toLowerCase()));
+      session.attendees.forEach(a => uniqueAttendees.add(a.email.toLowerCase()));
+    });
+
+    // Use the all-day event's subject as the forum title
+    const edition: ForumEdition = {
+      id: `edition-${forumDate.getFullYear()}-${String(forumDate.getMonth() + 1).padStart(2, "0")}-${String(forumDate.getDate()).padStart(2, "0")}`,
+      title: allDayEvent.subject,
+      date: forumDate.toISOString().split("T")[0],
+      location: allDayEvent.location?.displayName || "Caesar Hoofdkantoor, Utrecht",
+      speakerCount: uniqueSpeakers.size,
+      attendeeCount: uniqueAttendees.size,
+    };
 
     return { edition, sessions };
   }

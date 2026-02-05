@@ -27,27 +27,6 @@ interface HeroSectionProps {
 export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) {
   const backdropImage = useMemo(() => getRandomBackdrop(), []);
   
-  const { participantCount, isUniqueCount } = useMemo(() => {
-    // If we have attendee details, calculate unique participants
-    const hasAttendeeDetails = sessions.some(s => s.attendees.length > 0);
-    
-    if (hasAttendeeDetails) {
-      const emails = new Set<string>();
-      sessions.forEach(session => {
-        session.attendees.forEach(attendee => {
-          emails.add(attendee.email.toLowerCase());
-        });
-      });
-      return { participantCount: emails.size, isUniqueCount: true };
-    }
-    
-    // Fallback: use attendeeCount sum (for unauthenticated users)
-    const totalRegistrations = sessions.reduce(
-      (sum, session) => sum + (session.attendeeCount ?? 0),
-      0
-    );
-    return { participantCount: totalRegistrations, isUniqueCount: false };
-  }, [sessions]);
   
   const userRegistrations = userEmail
     ? sessions.filter((s) => isEmailInAttendees(userEmail, s.attendees)).length
@@ -117,9 +96,9 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     <span className="text-2xl font-bold text-white" data-testid="text-participant-count">
-                      {participantCount}
+                      {edition.attendeeCount ?? 0}
                     </span>
-                    <span>deelnemer{participantCount !== 1 ? "s" : ""}</span>
+                    <span>deelnemer{(edition.attendeeCount ?? 0) !== 1 ? "s" : ""}</span>
                   </div>
                   {userEmail && userRegistrations > 0 && (
                     <div className="rounded-full bg-white/20 px-3 py-1">
