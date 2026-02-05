@@ -27,6 +27,15 @@ interface HeroSectionProps {
 export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) {
   const backdropImage = useMemo(() => getRandomBackdrop(), []);
   
+  // Filter out "Eten & Drinken" and sessions without categories for the count
+  const contentSessions = useMemo(() => {
+    return sessions.filter(session => {
+      const categories = session.categories || [];
+      if (categories.length === 0) return false;
+      if (categories.some(c => c.toLowerCase() === "eten & drinken")) return false;
+      return true;
+    });
+  }, [sessions]);
   
   const userRegistrations = userEmail
     ? sessions.filter((s) => isEmailInAttendees(userEmail, s.attendees)).length
@@ -89,7 +98,7 @@ export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) 
                 <div className="mb-8 flex flex-wrap items-center justify-center gap-6 text-sm text-white/80">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold text-white" data-testid="text-session-count">
-                      {sessions.length}
+                      {contentSessions.length}
                     </span>
                     <span>sessies</span>
                   </div>
