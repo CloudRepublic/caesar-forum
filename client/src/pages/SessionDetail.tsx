@@ -90,8 +90,7 @@ function AttendeesList({ attendees, capacity }: { attendees: Attendee[]; capacit
 
 function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
-  const [preference, setPreference] = useState("");
-  const [hasLoaded, setHasLoaded] = useState(false);
+  const [preference, setPreference] = useState<string | null>(null);
 
   const { data: existingPref, isLoading } = useQuery<{ preference: string | null }>({
     queryKey: ["/api/dietary-preferences", sessionId, "me"],
@@ -103,11 +102,10 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
   });
 
   useEffect(() => {
-    if (existingPref && !hasLoaded) {
+    if (existingPref && preference === null) {
       setPreference(existingPref.preference || "");
-      setHasLoaded(true);
     }
-  }, [existingPref, hasLoaded]);
+  }, [existingPref, preference]);
 
   const saveMutation = useMutation({
     mutationFn: async (newPreference: string) => {
@@ -133,7 +131,9 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
   });
 
   const handleSave = () => {
-    saveMutation.mutate(preference);
+    if (preference !== null) {
+      saveMutation.mutate(preference);
+    }
   };
 
   if (isLoading) {
@@ -149,7 +149,7 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
     );
   }
 
-  const hasChanged = preference !== (existingPref?.preference || "");
+  const hasChanged = preference !== null && preference !== (existingPref?.preference || "");
 
   return (
     <Card>
@@ -163,7 +163,7 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
         <Textarea
           id="dietary-preference"
           placeholder="Bijv. vegetarisch, glutenvrij, notenallergie..."
-          value={preference}
+          value={preference ?? ""}
           onChange={(e) => setPreference(e.target.value)}
           className="min-h-[80px] resize-none"
           data-testid="input-dietary-preference"
