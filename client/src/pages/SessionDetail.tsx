@@ -170,7 +170,7 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
         />
         <Button
           size="sm"
-          className="mt-3 w-full"
+          className="mt-3"
           onClick={handleSave}
           disabled={saveMutation.isPending || !hasChanged}
           data-testid="button-save-dietary"
@@ -184,11 +184,6 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
             "Opslaan"
           )}
         </Button>
-        {existingPref?.preference && (
-          <p className="mt-2 text-xs text-muted-foreground text-center">
-            Laatst opgeslagen: {existingPref.preference.slice(0, 50)}{existingPref.preference.length > 50 ? "..." : ""}
-          </p>
-        )}
       </CardContent>
     </Card>
   );
@@ -438,6 +433,10 @@ export default function SessionDetail() {
               </div>
             )}
           </div>
+
+          {user && session.showDietaryForm && isRegistered && (
+            <DietaryPreferenceForm sessionId={session.id} />
+          )}
         </div>
 
         <div className="space-y-6">
@@ -554,10 +553,6 @@ export default function SessionDetail() {
               attendees={session.attendees} 
               capacity={session.capacity} 
             />
-          )}
-
-          {user && session.showDietaryForm && isRegistered && (
-            <DietaryPreferenceForm sessionId={session.id} />
           )}
         </div>
       </div>
