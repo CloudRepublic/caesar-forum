@@ -230,7 +230,7 @@ export default function DietaryAdmin() {
                         <p className="text-sm text-muted-foreground" data-testid={`text-preference-email-${idx}`}>
                           {pref.email}
                         </p>
-                        <p className="mt-2 text-sm bg-muted/50 rounded-md p-2" data-testid={`text-preference-content-${idx}`}>
+                        <p className="mt-2 text-sm bg-muted/50 rounded-md p-2 whitespace-pre-wrap" data-testid={`text-preference-content-${idx}`}>
                           {pref.preference}
                         </p>
                       </div>
