@@ -9,7 +9,7 @@ const sessionIdSchema = z.object({
 
 const dietaryPreferenceSchema = z.object({
   sessionId: z.string(),
-  preference: z.string().max(500),
+  preference: z.string().max(2000),
 });
 
 // Check if user is a dietary admin
