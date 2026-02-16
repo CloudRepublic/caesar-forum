@@ -112,10 +112,13 @@ export default function FeedbackForm() {
       });
       setLocation(`/edities/${date}`);
     },
-    onError: () => {
+    onError: (error: Error) => {
+      const isSessionExpired = error.message.includes("sessie is verlopen") || error.message.includes("Log opnieuw in");
       toast({
-        title: "Fout bij versturen",
-        description: "Er is iets misgegaan bij het versturen van je feedback. Probeer het later opnieuw.",
+        title: isSessionExpired ? "Sessie verlopen" : "Fout bij versturen",
+        description: isSessionExpired
+          ? "Je sessie is verlopen. Log opnieuw in via het menu en probeer het nogmaals."
+          : "Er is iets misgegaan bij het versturen van je feedback. Probeer het later opnieuw.",
         variant: "destructive",
       });
     },

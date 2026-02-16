@@ -19,6 +19,9 @@ declare module "express-session" {
     user?: User;
     authState?: string;
     authCodeVerifier?: string;
+    userAccessToken?: string;
+    userAccessTokenExpiry?: number;
+    msalAccountId?: string;
   }
 }
 
@@ -41,9 +44,11 @@ const msalConfig = {
 
 const cryptoProvider = new CryptoProvider();
 
+const LOGIN_SCOPES = ["openid", "profile", "email", "Mail.Send"];
+
 let msalClient: ConfidentialClientApplication | null = null;
 
-function getMsalClient(): ConfidentialClientApplication {
+export function getMsalClient(): ConfidentialClientApplication {
   if (!msalClient) {
     if (!process.env.AZURE_CLIENT_ID || !process.env.AZURE_TENANT_ID || !process.env.AZURE_CLIENT_SECRET) {
       throw new Error("Azure AD configuration missing");
@@ -63,7 +68,7 @@ export function registerAuthRoutes(app: Express): void {
       req.session.authCodeVerifier = verifier;
 
       const authCodeUrl = await getMsalClient().getAuthCodeUrl({
-        scopes: ["openid", "profile", "email"],
+        scopes: LOGIN_SCOPES,
         redirectUri: REDIRECT_URI,
         codeChallenge: challenge,
         codeChallengeMethod: "S256",
@@ -105,7 +110,7 @@ export function registerAuthRoutes(app: Express): void {
 
       const tokenResponse = await getMsalClient().acquireTokenByCode({
         code,
-        scopes: ["openid", "profile", "email"],
+        scopes: LOGIN_SCOPES,
         redirectUri: REDIRECT_URI,
         codeVerifier: req.session.authCodeVerifier,
       });
@@ -136,6 +141,11 @@ export function registerAuthRoutes(app: Express): void {
         }
 
         req.session.user = user;
+        req.session.userAccessToken = tokenResponse.accessToken;
+        req.session.userAccessTokenExpiry = tokenResponse.expiresOn
+          ? tokenResponse.expiresOn.getTime()
+          : Date.now() + 3600 * 1000;
+        req.session.msalAccountId = account.homeAccountId;
 
         req.session.save((saveErr) => {
           if (saveErr) {
@@ -171,4 +181,40 @@ export function registerAuthRoutes(app: Express): void {
       res.status(401).json({ error: "Not authenticated" });
     }
   });
+}
+
+export async function getUserAccessToken(req: Request): Promise<string | null> {
+  if (!req.session.userAccessToken) return null;
+
+  if (req.session.userAccessTokenExpiry && req.session.userAccessTokenExpiry > Date.now() + 60000) {
+    return req.session.userAccessToken;
+  }
+
+  try {
+    const client = getMsalClient();
+    const accounts = await client.getTokenCache().getAllAccounts();
+    const account = accounts.find(a => a.homeAccountId === req.session.msalAccountId);
+
+    if (!account) {
+      console.log("No cached MSAL account found for silent token refresh");
+      return req.session.userAccessToken;
+    }
+
+    const result = await client.acquireTokenSilent({
+      scopes: ["Mail.Send"],
+      account,
+    });
+
+    if (result?.accessToken) {
+      req.session.userAccessToken = result.accessToken;
+      req.session.userAccessTokenExpiry = result.expiresOn
+        ? result.expiresOn.getTime()
+        : Date.now() + 3600 * 1000;
+      return result.accessToken;
+    }
+  } catch (error) {
+    console.error("Failed to silently refresh user token:", error);
+  }
+
+  return req.session.userAccessToken;
 }
