@@ -1,5 +1,5 @@
 import type { Session, ForumEdition, ForumData, DietaryPreference } from "@shared/schema";
-import { getMicrosoftGraphService } from "./microsoft-graph";
+import { getMicrosoftGraphService, type PastEdition, type FeedbackEmailData } from "./microsoft-graph";
 import { db } from "./db";
 import { dietaryPreferences } from "./db/schema";
 import { eq, and } from "drizzle-orm";
@@ -17,6 +17,11 @@ export interface IStorage {
   getDietaryPreference(sessionId: string, email: string): Promise<DietaryPreference | undefined>;
   getDietaryPreferencesForSession(sessionId: string): Promise<DietaryPreference[]>;
   getAllDietaryPreferences(): Promise<Map<string, DietaryPreference[]>>;
+  // Past editions
+  getPastEditions(): Promise<PastEdition[]>;
+  getEditionByDate(dateStr: string): Promise<ForumData>;
+  // Feedback
+  sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData): Promise<void>;
 }
 
 export class GraphApiUnavailableError extends Error {
@@ -235,6 +240,50 @@ export class GraphStorage implements IStorage {
     }
     
     return result;
+  }
+
+  async getPastEditions(): Promise<PastEdition[]> {
+    if (!this.shouldTryGraph()) {
+      throw new GraphApiUnavailableError();
+    }
+    try {
+      const graphService = getMicrosoftGraphService();
+      const result = await graphService.getPastEditions();
+      this.recordGraphSuccess();
+      return result;
+    } catch (error) {
+      this.recordGraphFailure(error);
+      throw new GraphApiUnavailableError();
+    }
+  }
+
+  async getEditionByDate(dateStr: string): Promise<ForumData> {
+    if (!this.shouldTryGraph()) {
+      throw new GraphApiUnavailableError();
+    }
+    try {
+      const graphService = getMicrosoftGraphService();
+      const result = await graphService.getEditionByDate(dateStr);
+      this.recordGraphSuccess();
+      return result;
+    } catch (error) {
+      this.recordGraphFailure(error);
+      throw new GraphApiUnavailableError();
+    }
+  }
+
+  async sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData): Promise<void> {
+    if (!this.shouldTryGraph()) {
+      throw new GraphApiUnavailableError();
+    }
+    try {
+      const graphService = getMicrosoftGraphService();
+      await graphService.sendFeedbackEmail(speakerEmails, data);
+      this.recordGraphSuccess();
+    } catch (error) {
+      this.recordGraphFailure(error);
+      throw new GraphApiUnavailableError();
+    }
   }
 }
 

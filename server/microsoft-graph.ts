@@ -3,6 +3,22 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import DOMPurify from "isomorphic-dompurify";
 import type { Session, ForumEdition, ForumData } from "@shared/schema";
 
+export interface PastEdition {
+  edition: ForumEdition;
+  sessionCount: number;
+}
+
+export interface FeedbackEmailData {
+  sessionTitle: string;
+  editionTitle: string;
+  sessionDate: string;
+  senderName: string;
+  senderEmail: string;
+  sessionRating: number;
+  speakerRating: number;
+  comments: string;
+}
+
 // Extract local part from email (before @) for alias comparison
 function getEmailLocalPart(email: string): string {
   return email.split("@")[0].toLowerCase();
@@ -890,6 +906,197 @@ export class MicrosoftGraphService {
       logApiError("PATCH", endpoint, error, undefined, `Unregistration failed for ${userEmail}`);
       return undefined;
     }
+  }
+  async getPastEditions(): Promise<PastEdition[]> {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startDate = new Date(now.getFullYear() - 1, 0, 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 3, 0);
+
+    const events = await this.getCalendarEvents(startDate, endDate);
+
+    const pastAllDayEvents = events.filter((e) => {
+      if (!this.isAllDayEvent(e)) return false;
+      const eventEnd = new Date(e.end.dateTime);
+      return eventEnd <= today;
+    });
+
+    const editions: PastEdition[] = pastAllDayEvents.map((allDayEvent) => {
+      const forumDate = new Date(allDayEvent.start.dateTime);
+
+      const sessionCount = events.filter((e) => {
+        if (this.isAllDayEvent(e)) return false;
+        const eventDate = new Date(e.start.dateTime);
+        return this.isSameDate(eventDate, forumDate);
+      }).length;
+
+      return {
+        edition: {
+          id: `edition-${forumDate.getFullYear()}-${String(forumDate.getMonth() + 1).padStart(2, "0")}-${String(forumDate.getDate()).padStart(2, "0")}`,
+          title: allDayEvent.subject,
+          date: forumDate.toISOString().split("T")[0],
+          location: allDayEvent.location?.displayName || "Caesar Hoofdkantoor, Utrecht",
+        },
+        sessionCount,
+      };
+    });
+
+    return editions.sort((a, b) => b.edition.date.localeCompare(a.edition.date));
+  }
+
+  async getEditionByDate(dateStr: string): Promise<ForumData> {
+    const targetDate = new Date(dateStr + "T00:00:00");
+    const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+    const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 2);
+
+    const [events, masterCategories] = await Promise.all([
+      this.getCalendarEvents(startDate, endDate),
+      this.getMasterCategories(),
+    ]);
+
+    const allDayEvent = events.find((e) => {
+      if (!this.isAllDayEvent(e)) return false;
+      const eventDate = new Date(e.start.dateTime);
+      return this.isSameDate(eventDate, targetDate);
+    });
+
+    if (!allDayEvent) {
+      return {
+        edition: {
+          id: "not-found",
+          title: "Editie niet gevonden",
+          date: dateStr,
+          location: "",
+        },
+        sessions: [],
+      };
+    }
+
+    const forumDate = new Date(allDayEvent.start.dateTime);
+
+    const sessionEvents = events.filter((e) => {
+      if (this.isAllDayEvent(e)) return false;
+      const eventDate = new Date(e.start.dateTime);
+      return this.isSameDate(eventDate, forumDate);
+    });
+
+    const sessions: Session[] = sessionEvents.map((event) => {
+      const bodyContent = event.body?.content || "";
+      const isHtml = event.body?.contentType === "html";
+      const plainText = isHtml ? stripHtml(bodyContent) : bodyContent;
+      const { metadata, content: cleanDescription } = parseBackMatter(plainText);
+      const customSlug = metadata["slug"];
+      const slug = customSlug || generateSlug(event.subject, event.id);
+      const capacityValue = metadata["capacity"];
+      const capacity = capacityValue ? parseInt(capacityValue, 10) : undefined;
+      const validCapacity = capacity && !isNaN(capacity) && capacity > 0 ? capacity : undefined;
+      const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
+
+      const humanAttendees = (event.attendees || [])
+        .filter((a) => a.type.toLowerCase() !== "resource");
+      const requiredAttendees = humanAttendees.filter((a) => a.type.toLowerCase() === "required");
+      const speakers: { name: string; email: string; photoUrl?: string }[] = requiredAttendees.map((a) => ({
+        name: formatDisplayName(a.emailAddress.name || a.emailAddress.address.split("@")[0]),
+        email: a.emailAddress.address,
+        photoUrl: `/api/users/${encodeURIComponent(a.emailAddress.address)}/photo`,
+      }));
+
+      const registeredAttendees = humanAttendees
+        .filter((a) =>
+          (a.type.toLowerCase() === "optional" && a.status.response.toLowerCase() !== "declined") ||
+          a.status.response === "accepted" ||
+          a.status.response === "tentativelyAccepted"
+        )
+        .filter((a) => a.type.toLowerCase() !== "required")
+        .map((a) => ({
+          name: formatDisplayName(a.emailAddress.name || a.emailAddress.address.split("@")[0]),
+          email: a.emailAddress.address,
+          photoUrl: `/api/users/${encodeURIComponent(a.emailAddress.address)}/photo`,
+        }));
+
+      return {
+        id: event.id,
+        slug,
+        title: event.subject,
+        description: cleanDescription || "Geen beschrijving beschikbaar.",
+        descriptionHtml: cleanHtml,
+        categories: getCategories(event.categories),
+        startTime: event.start.dateTime,
+        endTime: event.end.dateTime,
+        room: event.location?.displayName || "Zaal nog te bepalen",
+        speakers,
+        attendees: registeredAttendees,
+        capacity: validCapacity,
+      };
+    });
+
+    const uniqueSpeakers = new Set<string>();
+    const uniqueAttendees = new Set<string>();
+    sessions.forEach(session => {
+      session.speakers.forEach(s => uniqueSpeakers.add(s.email.toLowerCase()));
+      session.attendees.forEach(a => uniqueAttendees.add(a.email.toLowerCase()));
+    });
+
+    const edition: ForumEdition = {
+      id: `edition-${forumDate.getFullYear()}-${String(forumDate.getMonth() + 1).padStart(2, "0")}-${String(forumDate.getDate()).padStart(2, "0")}`,
+      title: allDayEvent.subject,
+      date: forumDate.toISOString().split("T")[0],
+      location: allDayEvent.location?.displayName || "Caesar Hoofdkantoor, Utrecht",
+      speakerCount: uniqueSpeakers.size,
+      attendeeCount: uniqueAttendees.size,
+    };
+
+    return { edition, sessions };
+  }
+
+  async sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData): Promise<void> {
+    const endpoint = `/users/${FORUM_MAILBOX}/sendMail`;
+
+    const starDisplay = (rating: number) => {
+      const filled = "\u2605";
+      const empty = "\u2606";
+      return filled.repeat(rating) + empty.repeat(5 - rating);
+    };
+
+    const htmlBody = `
+      <p>Beste spreker,</p>
+      <p>Er is feedback ontvangen voor jouw sessie <strong>${data.sessionTitle}</strong> (${data.editionTitle}, ${data.sessionDate}).</p>
+      <table style="border-collapse: collapse; margin: 16px 0;">
+        <tr>
+          <td style="padding: 4px 12px 4px 0; color: #666;">Kwaliteit sessie:</td>
+          <td style="padding: 4px 0; font-size: 18px;">${starDisplay(data.sessionRating)} (${data.sessionRating}/5)</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 12px 4px 0; color: #666;">Kwaliteit spreker:</td>
+          <td style="padding: 4px 0; font-size: 18px;">${starDisplay(data.speakerRating)} (${data.speakerRating}/5)</td>
+        </tr>
+      </table>
+      ${data.comments ? `<p><strong>Opmerkingen:</strong></p><p style="white-space: pre-wrap; background: #f5f5f5; padding: 12px; border-radius: 6px;">${data.comments.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>` : ""}
+      <p style="color: #666; font-size: 12px; margin-top: 24px;">
+        Deze feedback is verstuurd door ${data.senderName} (${data.senderEmail}) via Caesar Forum.
+      </p>
+    `;
+
+    const toRecipients = speakerEmails.map(email => ({
+      emailAddress: { address: email },
+    }));
+
+    await this.executeWithRetry("POST", endpoint, async () => {
+      const client = await this.getClient();
+      return await client.api(endpoint).post({
+        message: {
+          subject: `Feedback: ${data.sessionTitle}`,
+          body: {
+            contentType: "HTML",
+            content: htmlBody,
+          },
+          toRecipients,
+        },
+        saveToSentItems: false,
+      });
+    }, `Send feedback email for: ${data.sessionTitle}`);
+
+    console.log(`[${new Date().toISOString()}] [FEEDBACK] Email sent to ${speakerEmails.join(", ")} for session "${data.sessionTitle}" from ${data.senderEmail}`);
   }
 }
 

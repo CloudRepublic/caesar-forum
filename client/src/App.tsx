@@ -12,6 +12,9 @@ import Home from "@/pages/Home";
 import MySessions from "@/pages/MySessions";
 import SessionDetail from "@/pages/SessionDetail";
 import DietaryAdmin from "@/pages/DietaryAdmin";
+import Archive from "@/pages/Archive";
+import EditionDetail from "@/pages/EditionDetail";
+import FeedbackForm from "@/pages/FeedbackForm";
 import About from "@/pages/About";
 import NotFound from "@/pages/not-found";
 
@@ -22,6 +25,9 @@ function Router() {
       <Route path="/sessies/:slug" component={SessionDetail} />
       <Route path="/mijn-sessies" component={MySessions} />
       <Route path="/dieetwensen" component={DietaryAdmin} />
+      <Route path="/eerdere-edities" component={Archive} />
+      <Route path="/edities/:date" component={EditionDetail} />
+      <Route path="/edities/:date/feedback/:sessionId" component={FeedbackForm} />
       <Route path="/over" component={About} />
       <Route component={NotFound} />
     </Switch>

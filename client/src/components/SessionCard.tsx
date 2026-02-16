@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MapPin, Users, Check, Utensils } from "lucide-react";
+import { Clock, MapPin, Users, Check, Utensils, MessageSquare } from "lucide-react";
 import { isEmailInAttendees, isSpeaker } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
@@ -35,6 +35,8 @@ interface SessionCardProps {
   onRegister: (sessionId: string) => void;
   onUnregister: (sessionId: string) => void;
   isPending?: boolean;
+  isPastEdition?: boolean;
+  editionDate?: string;
 }
 
 export function SessionCard({
@@ -43,6 +45,8 @@ export function SessionCard({
   onRegister,
   onUnregister,
   isPending = false,
+  isPastEdition = false,
+  editionDate,
 }: SessionCardProps) {
   const isRegistered = userEmail ? isEmailInAttendees(userEmail, session.attendees) : false;
   const isUserSpeaker = userEmail ? isSpeaker(userEmail, session.speakers) : false;
@@ -177,7 +181,22 @@ export function SessionCard({
       </CardContent>
 
       <CardFooter className="pt-4">
-        {userEmail ? (
+        {isPastEdition ? (
+          userEmail ? (
+            session.speakers.length > 0 ? (
+              <Link href={`/edities/${editionDate}/feedback/${session.id}`} className="w-full">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  data-testid={`button-feedback-${session.id}`}
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Geef feedback
+                </Button>
+              </Link>
+            ) : null
+          ) : null
+        ) : userEmail ? (
           isUserSpeaker ? (
             <Button
               variant="secondary"

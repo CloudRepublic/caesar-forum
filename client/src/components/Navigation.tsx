@@ -29,11 +29,12 @@ export function Navigation({ isAprilFools = false }: NavigationProps) {
   const baseNavItems = [
     { href: "/", label: "Dashboard" },
     { href: "/mijn-sessies", label: "Mijn Sessies" },
+    { href: "/eerdere-edities", label: "Eerdere edities" },
     { href: "/over", label: "Over" },
   ];
 
   const navItems = adminCheck?.isAdmin
-    ? [...baseNavItems.slice(0, 2), { href: "/dieetwensen", label: "Dieetwensen" }, baseNavItems[2]]
+    ? [...baseNavItems.slice(0, 3), { href: "/dieetwensen", label: "Dieetwensen" }, baseNavItems[3]]
     : baseNavItems;
 
   const navClassName = isAprilFools

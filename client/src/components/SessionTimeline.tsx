@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MapPin, Users, Check, Utensils } from "lucide-react";
+import { Clock, MapPin, Users, Check, Utensils, MessageSquare } from "lucide-react";
 import { isEmailInAttendees, isSpeaker } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
@@ -34,6 +34,8 @@ interface SessionTimelineProps {
   onRegister: (sessionId: string) => void;
   onUnregister: (sessionId: string) => void;
   isPending?: boolean;
+  isPastEdition?: boolean;
+  editionDate?: string;
 }
 
 export function SessionTimeline({
@@ -42,6 +44,8 @@ export function SessionTimeline({
   onRegister,
   onUnregister,
   isPending = false,
+  isPastEdition = false,
+  editionDate,
 }: SessionTimelineProps) {
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -204,7 +208,20 @@ export function SessionTimeline({
                       </div>
 
                       <div className="flex shrink-0 items-center gap-2 md:flex-col md:items-end">
-                        {userEmail ? (
+                        {isPastEdition ? (
+                          userEmail && session.speakers.length > 0 ? (
+                            <Link href={`/edities/${editionDate}/feedback/${session.id}`}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                data-testid={`timeline-feedback-${session.id}`}
+                              >
+                                <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+                                Feedback
+                              </Button>
+                            </Link>
+                          ) : null
+                        ) : userEmail ? (
                           isUserSpeaker ? (
                             <Button
                               variant="secondary"

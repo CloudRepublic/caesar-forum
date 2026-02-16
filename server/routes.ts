@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage, GraphApiUnavailableError } from "./storage";
+import type { FeedbackEmailData } from "./microsoft-graph";
 import { z } from "zod";
 
 const sessionIdSchema = z.object({
@@ -10,6 +11,14 @@ const sessionIdSchema = z.object({
 const dietaryPreferenceSchema = z.object({
   sessionId: z.string(),
   preference: z.string().max(2000),
+});
+
+const feedbackSchema = z.object({
+  sessionId: z.string(),
+  editionDate: z.string(),
+  sessionRating: z.number().min(1).max(5),
+  speakerRating: z.number().min(1).max(5),
+  comments: z.string().max(2000).optional().default(""),
 });
 
 // Check if user is a dietary admin
@@ -329,6 +338,109 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error checking dietary admin status:", error);
       res.status(500).json({ error: "Er is een fout opgetreden." });
+    }
+  });
+
+  // Get past editions (archive)
+  app.get("/api/editions", async (req: Request, res: Response) => {
+    try {
+      const editions = await storage.getPastEditions();
+      res.json({ editions });
+    } catch (error) {
+      console.error("Error fetching past editions:", error);
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een onverwachte fout opgetreden." });
+    }
+  });
+
+  // Get edition by date (archive detail)
+  app.get("/api/editions/:date", async (req: Request, res: Response) => {
+    try {
+      const dateStr = req.params.date;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return res.status(400).json({ error: "Ongeldig datumformaat. Gebruik YYYY-MM-DD." });
+      }
+
+      const data = await storage.getEditionByDate(dateStr);
+
+      const user = req.session.user;
+      if (!user) {
+        const sanitizedSessions = data.sessions.map(session => ({
+          ...session,
+          speakers: [],
+          attendees: [],
+          speakerCount: session.speakers.length,
+          attendeeCount: session.attendees.length,
+        }));
+        return res.json({ ...data, sessions: sanitizedSessions });
+      }
+
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching edition by date:", error);
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een onverwachte fout opgetreden." });
+    }
+  });
+
+  // Submit feedback for a session (sends email to speakers)
+  app.post("/api/feedback", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) {
+        return res.status(401).json({ error: "Je moet ingelogd zijn om feedback te geven" });
+      }
+
+      const parsed = feedbackSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Ongeldige invoer", details: parsed.error.errors });
+      }
+
+      const { sessionId, editionDate, sessionRating, speakerRating, comments } = parsed.data;
+
+      const editionData = await storage.getEditionByDate(editionDate);
+      const session = editionData.sessions.find(s => s.id === sessionId);
+
+      if (!session) {
+        return res.status(404).json({ error: "Sessie niet gevonden" });
+      }
+
+      if (session.speakers.length === 0) {
+        return res.status(400).json({ error: "Deze sessie heeft geen sprekers om feedback naar te sturen" });
+      }
+
+      const speakerEmails = session.speakers.map(s => s.email);
+      const sessionDate = new Date(session.startTime).toLocaleDateString("nl-NL", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      const feedbackData: FeedbackEmailData = {
+        sessionTitle: session.title,
+        editionTitle: editionData.edition.title,
+        sessionDate,
+        senderName: user.name,
+        senderEmail: user.email,
+        sessionRating,
+        speakerRating,
+        comments: comments || "",
+      };
+
+      await storage.sendFeedbackEmail(speakerEmails, feedbackData);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error sending feedback:", error);
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een fout opgetreden bij het versturen van feedback." });
     }
   });
 
