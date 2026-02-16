@@ -153,14 +153,23 @@ export function SessionTimeline({
                           )}
                         </div>
 
-                        <Link href={`/sessies/${session.slug}`}>
+                        {isPastEdition ? (
                           <h4
-                            className="text-lg font-semibold leading-tight hover:text-primary cursor-pointer transition-colors"
+                            className="text-lg font-semibold leading-tight"
                             data-testid={`timeline-title-${session.id}`}
                           >
                             {session.title}
                           </h4>
-                        </Link>
+                        ) : (
+                          <Link href={`/sessies/${session.slug}`}>
+                            <h4
+                              className="text-lg font-semibold leading-tight hover:text-primary cursor-pointer transition-colors"
+                              data-testid={`timeline-title-${session.id}`}
+                            >
+                              {session.title}
+                            </h4>
+                          </Link>
+                        )}
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1.5">
