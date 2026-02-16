@@ -515,7 +515,13 @@ export class MicrosoftGraphService {
     ]);
 
     // Find the first upcoming all-day event - this defines the Forum
-    const allDayEvent = events.find((e) => this.isAllDayEvent(e));
+    // Only consider all-day events that haven't ended yet (today or future)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const allDayEvent = events.find((e) => {
+      if (!this.isAllDayEvent(e)) return false;
+      const eventEnd = new Date(e.end.dateTime);
+      return eventEnd > today;
+    });
 
     // No all-day event means no Forum
     if (!allDayEvent) {
