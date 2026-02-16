@@ -226,10 +226,18 @@ export default function FeedbackForm() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {session.description && (
-            <p className="text-sm text-muted-foreground whitespace-pre-line" data-testid="text-session-description">
-              {session.description}
-            </p>
+          {(session.descriptionHtml || session.description) && (
+            session.descriptionHtml ? (
+              <div
+                className="text-sm text-muted-foreground [&>p]:mb-3 [&>ul]:mb-3 [&>ul]:list-disc [&>ul]:pl-6 [&>ol]:mb-3 [&>ol]:list-decimal [&>ol]:pl-6"
+                data-testid="text-session-description"
+                dangerouslySetInnerHTML={{ __html: session.descriptionHtml }}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground whitespace-pre-line" data-testid="text-session-description">
+                {session.description}
+              </p>
+            )
           )}
           {session.speakers.length > 0 && (
             <div>
