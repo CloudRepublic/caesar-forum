@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Calendar, MapPin, Users } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Users, ChevronDown, ChevronUp, Mic } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SessionFilters, type ViewMode } from "@/components/SessionFilters";
 import { SessionCard } from "@/components/SessionCard";
 import { SessionTimeline } from "@/components/SessionTimeline";
 import { useUser } from "@/context/UserContext";
-import type { ForumData } from "@shared/schema";
+import { getInitials } from "@/lib/utils";
+import type { ForumData, Speaker, Attendee } from "@shared/schema";
 
 const categoryColorMap: Record<string, string> = {
   talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
@@ -66,6 +69,31 @@ export default function EditionDetail() {
       (session.categories || []).forEach((cat) => categories.add(cat));
     });
     return Array.from(categories).sort();
+  }, [data?.sessions]);
+
+  const [showParticipants, setShowParticipants] = useState(false);
+
+  const { uniqueSpeakers, uniqueAttendees } = useMemo(() => {
+    if (!data?.sessions) return { uniqueSpeakers: [], uniqueAttendees: [] };
+    const speakerMap = new Map<string, Speaker>();
+    const attendeeMap = new Map<string, Attendee>();
+    data.sessions.forEach((session) => {
+      (session.speakers || []).forEach((s) => {
+        if (!speakerMap.has(s.email.toLowerCase())) {
+          speakerMap.set(s.email.toLowerCase(), s);
+        }
+      });
+      (session.attendees || []).forEach((a) => {
+        const key = a.email.toLowerCase();
+        if (!speakerMap.has(key) && !attendeeMap.has(key)) {
+          attendeeMap.set(key, a);
+        }
+      });
+    });
+    return {
+      uniqueSpeakers: Array.from(speakerMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
+      uniqueAttendees: Array.from(attendeeMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
+    };
   }, [data?.sessions]);
 
   const filteredSessions = useMemo(() => {
@@ -168,6 +196,82 @@ export default function EditionDetail() {
           Afgelopen editie
         </Badge>
       </div>
+
+      {user && (uniqueSpeakers.length > 0 || uniqueAttendees.length > 0) && (
+        <div className="mb-8">
+          <Button
+            variant="outline"
+            onClick={() => setShowParticipants(!showParticipants)}
+            data-testid="button-toggle-participants"
+          >
+            <Users className="mr-2 h-4 w-4" />
+            Deelnemers en sprekers ({uniqueSpeakers.length + uniqueAttendees.length})
+            {showParticipants ? (
+              <ChevronUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+
+          {showParticipants && (
+            <Card className="mt-4">
+              <CardContent className="space-y-6 pt-6">
+                {uniqueSpeakers.length > 0 && (
+                  <div>
+                    <div className="mb-3 flex items-center gap-2">
+                      <Mic className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        Sprekers ({uniqueSpeakers.length})
+                      </h3>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {uniqueSpeakers.map((speaker) => (
+                        <div key={speaker.email} className="flex items-center gap-3" data-testid={`participant-speaker-${speaker.email}`}>
+                          <Avatar className="h-8 w-8 shrink-0">
+                            {speaker.photoUrl ? (
+                              <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                            ) : null}
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {getInitials(speaker.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm truncate">{speaker.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {uniqueAttendees.length > 0 && (
+                  <div>
+                    <div className="mb-3 flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        Deelnemers ({uniqueAttendees.length})
+                      </h3>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {uniqueAttendees.map((attendee) => (
+                        <div key={attendee.email} className="flex items-center gap-3" data-testid={`participant-attendee-${attendee.email}`}>
+                          <Avatar className="h-8 w-8 shrink-0">
+                            {attendee.photoUrl ? (
+                              <AvatarImage src={attendee.photoUrl} alt={attendee.name} />
+                            ) : null}
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {getInitials(attendee.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm truncate">{attendee.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       {data.sessions.length > 0 ? (
         <>

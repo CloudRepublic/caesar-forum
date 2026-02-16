@@ -225,7 +225,12 @@ export default function FeedbackForm() {
             ))}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {session.description && (
+            <p className="text-sm text-muted-foreground whitespace-pre-line" data-testid="text-session-description">
+              {session.description}
+            </p>
+          )}
           {session.speakers.length > 0 && (
             <div>
               <Label className="mb-2 block text-xs uppercase tracking-wider text-muted-foreground">
