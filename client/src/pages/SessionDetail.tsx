@@ -241,6 +241,18 @@ export default function SessionDetail() {
     queryKey: ["/api/forum"],
   });
 
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin-check"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin-check");
+      if (!res.ok) return { isAdmin: false };
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
   const registeredSessions = useMemo(() => {
     if (!forumData?.sessions || !user?.email) return [];
     return forumData.sessions.filter((s) => isEmailInAttendees(user.email, s.attendees));
@@ -355,18 +367,6 @@ export default function SessionDetail() {
       </div>
     );
   }
-
-  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
-    queryKey: ["/api/admin-check"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin-check");
-      if (!res.ok) return { isAdmin: false };
-      return res.json();
-    },
-    enabled: !!user,
-  });
-
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const isRegistered = user?.email ? isEmailInAttendees(user.email, session.attendees) : false;
   const isUserSpeaker = user?.email ? isSpeaker(user.email, session.speakers) : false;
