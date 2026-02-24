@@ -75,6 +75,30 @@ Caesar Forum is an internal session registration platform for Caesar.nl, designe
 
 - **Auto-suggest Food & Drinks**: The system automatically suggests "Eten & Drinken" sessions that fall between sessions a user is already registered for, making it easier to plan meals during the forum day.
 
+### Dietary Preferences (Dieetwensen)
+The platform includes a catering management feature that allows registered attendees to submit dietary preferences and allergies per session.
+
+- **Enabling per session**: Organizers add `diet-form: true` to the session's back-matter in Outlook:
+  ```
+  ---
+  diet-form: true
+  ---
+  ```
+  When enabled, registered attendees see a text field on the session detail page where they can enter preferences (e.g., vegetarisch, glutenvrij, notenallergie).
+
+- **Data storage**: Preferences are stored in the PostgreSQL `dietary_preferences` table with fields: `sessionId`, `email`, `name`, `preference`, and `submittedAt`. Users can update or clear their preference at any time.
+
+- **Admin panel**: A dedicated admin page at `/dieetwensen` shows all submitted dietary preferences grouped by session. Only users listed in the `DIETARY_ADMINS` environment variable have access.
+
+- **Environment variable**:
+  - `DIETARY_ADMINS`: Comma-separated list of email addresses that have access to the dietary admin panel (e.g., `office@caesar.nl,hr@caesar.nl`)
+
+- **API endpoints**:
+  - `POST /api/dietary-preferences` — Save or update preference (authenticated)
+  - `GET /api/dietary-preferences/:sessionId/me` — Get own preference for a session (authenticated)
+  - `GET /api/dietary-preferences` — Get all preferences grouped by session (dietary admins only)
+  - `GET /api/dietary-preferences/admin-check` — Check if current user is a dietary admin
+
 ### Error Handling & Resilience
 - **Retry Mechanism**: All Graph API calls use exponential backoff with jitter (max 3 retries, 1-30 second delays)
 - **Token Refresh**: 401 errors trigger automatic token invalidation and re-acquisition
@@ -153,6 +177,7 @@ docker run -p 5000:5000 \
   -e DATABASE_URL=your-database-url \
   -e SESSION_SECRET=your-session-secret \
   -e APP_URL=https://your-domain.com \
+  -e DIETARY_ADMINS=office@caesar.nl \
   caesar-forum
 ```
 
