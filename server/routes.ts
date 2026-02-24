@@ -22,8 +22,14 @@ const feedbackSchema = z.object({
   comments: z.string().max(2000).optional().default(""),
 });
 
-// Check if user is a dietary admin
+function isForumAdmin(email: string): boolean {
+  const admins = process.env.FORUM_ADMINS || "";
+  const adminList = admins.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
+  return adminList.includes(email.toLowerCase());
+}
+
 function isDietaryAdmin(email: string): boolean {
+  if (isForumAdmin(email)) return true;
   const admins = process.env.DIETARY_ADMINS || "";
   const adminList = admins.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
   return adminList.includes(email.toLowerCase());
@@ -338,6 +344,20 @@ export async function registerRoutes(
       res.json({ isAdmin: isDietaryAdmin(user.email) });
     } catch (error) {
       console.error("Error checking dietary admin status:", error);
+      res.status(500).json({ error: "Er is een fout opgetreden." });
+    }
+  });
+
+  // Check if user is forum admin
+  app.get("/api/admin-check", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) {
+        return res.json({ isAdmin: false });
+      }
+      res.json({ isAdmin: isForumAdmin(user.email) });
+    } catch (error) {
+      console.error("Error checking forum admin status:", error);
       res.status(500).json({ error: "Er is een fout opgetreden." });
     }
   });

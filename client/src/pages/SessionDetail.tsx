@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Clock, MapPin, Users, Calendar, Check, AlertTriangle, ChevronDown, ChevronUp, Utensils, Loader2 } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Users, Calendar, Check, AlertTriangle, ChevronDown, ChevronUp, Utensils, Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isEmailInAttendees, isSpeaker } from "@/lib/email-utils";
 import { findOverlapsWithSession } from "@/lib/session-utils";
 import { formatDisplayName } from "@/lib/name-utils";
+import { generateSessionPdf } from "@/lib/generate-session-pdf";
 import { getInitials } from "@/lib/utils";
 import type { Session, ForumData, Attendee } from "@shared/schema";
 
@@ -355,9 +356,22 @@ export default function SessionDetail() {
     );
   }
 
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin-check"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin-check");
+      if (!res.ok) return { isAdmin: false };
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
   const isRegistered = user?.email ? isEmailInAttendees(user.email, session.attendees) : false;
   const isUserSpeaker = user?.email ? isSpeaker(user.email, session.speakers) : false;
   const isPending = registerMutation.isPending || unregisterMutation.isPending;
+  const canDownloadPdf = isUserSpeaker || adminCheck?.isAdmin;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-8">
@@ -545,6 +559,37 @@ export default function SessionDetail() {
                   </Button>
                 )}
               </div>
+
+              {canDownloadPdf && (
+                <div className="border-t pt-4">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    disabled={isGeneratingPdf}
+                    data-testid="button-download-pdf"
+                    onClick={async () => {
+                      setIsGeneratingPdf(true);
+                      try {
+                        const editionDate = session.startTime.split("T")[0];
+                        const baseUrl = window.location.origin;
+                        const reviewUrl = `${baseUrl}/edities/${editionDate}/feedback/${session.id}`;
+                        await generateSessionPdf({ session, editionDate, reviewUrl });
+                        toast({ title: "PDF gedownload", description: "De sessie-PDF is gedownload." });
+                      } catch {
+                        toast({ title: "Fout", description: "Kon de PDF niet genereren.", variant: "destructive" });
+                      } finally {
+                        setIsGeneratingPdf(false);
+                      }
+                    }}
+                  >
+                    {isGeneratingPdf ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />PDF genereren...</>
+                    ) : (
+                      <><Download className="mr-2 h-4 w-4" />Download PDF</>
+                    )}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 

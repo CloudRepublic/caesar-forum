@@ -99,6 +99,22 @@ The platform includes a catering management feature that allows registered atten
   - `GET /api/dietary-preferences` — Get all preferences grouped by session (dietary admins only)
   - `GET /api/dietary-preferences/admin-check` — Check if current user is a dietary admin
 
+### Session PDF Download
+Speakers and forum admins can download a PDF for any session. The PDF contains:
+- Caesar Forum branding with edition date
+- Session title, time, room, speakers, and categories
+- Session description
+- QR code linking to the feedback page for that session
+
+The "Download PDF" button appears on the session detail page, visible only to:
+- Speakers of that session (detected via email matching)
+- Users listed in the `FORUM_ADMINS` environment variable
+
+- **Environment variable**:
+  - `FORUM_ADMINS`: Comma-separated list of email addresses with admin access (e.g., `admin@caesar.nl`). Forum admins also automatically have dietary admin access.
+
+- **Technology**: PDF is generated client-side using jsPDF and qrcode libraries (no server-side rendering needed).
+
 ### Error Handling & Resilience
 - **Retry Mechanism**: All Graph API calls use exponential backoff with jitter (max 3 retries, 1-30 second delays)
 - **Token Refresh**: 401 errors trigger automatic token invalidation and re-acquisition
@@ -177,6 +193,7 @@ docker run -p 5000:5000 \
   -e DATABASE_URL=your-database-url \
   -e SESSION_SECRET=your-session-secret \
   -e APP_URL=https://your-domain.com \
+  -e FORUM_ADMINS=admin@caesar.nl \
   -e DIETARY_ADMINS=office@caesar.nl \
   caesar-forum
 ```
