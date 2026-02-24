@@ -105,19 +105,28 @@ function drawEmoji(doc: jsPDF, cx: number, cy: number, radius: number, type: "sa
   }
 }
 
-function drawLogo(doc: jsPDF, centerX: number, y: number) {
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
+async function loadLogoAsDataUrl(): Promise<string> {
+  const res = await fetch("/logo.svg");
+  const svgText = await res.text();
+  const svgBlob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
 
-  doc.setTextColor(31, 86, 134);
-  const caesarWidth = doc.getTextWidth("CAESAR ");
-  const totalWidth = caesarWidth + doc.getTextWidth("FORUM");
-  const startX = centerX - totalWidth / 2;
-
-  doc.text("CAESAR", startX, y);
-
-  doc.setTextColor(239, 97, 98);
-  doc.text("FORUM", startX + caesarWidth, y);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = 4;
+      canvas.width = img.naturalWidth * scale;
+      canvas.height = img.naturalHeight * scale;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load logo")); };
+    img.src = url;
+  });
 }
 
 export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Promise<void> {
@@ -164,31 +173,52 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
   doc.text("HOE WAS", cardCenterX, y, { align: "center" });
   y += 12;
   doc.text("DEZE SESSIE?", cardCenterX, y, { align: "center" });
-  y += 20;
+  y += 28;
 
   const emojiR = 12;
   const emojiSpacing = 38;
   drawEmoji(doc, cardCenterX - emojiSpacing, y, emojiR, "sad");
   drawEmoji(doc, cardCenterX, y, emojiR, "neutral");
   drawEmoji(doc, cardCenterX + emojiSpacing, y, emojiR, "happy");
-  y += emojiR + 22;
+  y += emojiR + 16;
 
-  const qrSize = 55;
+  const logoH = 12;
+  const cardBottom = cardMarginY + cardH;
+  const remainingSpace = cardBottom - y - logoH - 16;
+
+  const qrSize = Math.min(55, remainingSpace - 20);
   const qrDataUrl = await QRCode.toDataURL(reviewUrl, {
     width: 500,
     margin: 1,
     color: { dark: "#1a2744", light: "#FFFFFF" },
   });
   doc.addImage(qrDataUrl, "PNG", cardCenterX - qrSize / 2, y, qrSize, qrSize);
-  y += qrSize + 10;
+  y += qrSize + 8;
 
   doc.setTextColor(26, 39, 68);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("SCAN & BEOORDEEL", cardCenterX, y, { align: "center" });
 
-  const logoY = cardMarginY + cardH - 14;
-  drawLogo(doc, cardCenterX, logoY);
+  try {
+    const logoDataUrl = await loadLogoAsDataUrl();
+    const logoAspect = 1684 / 375;
+    const logoW = 55;
+    const logoFinalH = logoW / logoAspect;
+    const logoY = cardBottom - logoFinalH - 10;
+    doc.addImage(logoDataUrl, "PNG", cardCenterX - logoW / 2, logoY, logoW, logoFinalH);
+  } catch {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(31, 86, 134);
+    const caesarW = doc.getTextWidth("CAESAR ");
+    const totalW = caesarW + doc.getTextWidth("FORUM");
+    const startX = cardCenterX - totalW / 2;
+    const logoY = cardBottom - 14;
+    doc.text("CAESAR", startX, logoY);
+    doc.setTextColor(239, 97, 98);
+    doc.text("FORUM", startX + caesarW, logoY);
+  }
 
   const slug = session.slug || session.id;
   doc.save(`caesar-forum-${slug}.pdf`);
