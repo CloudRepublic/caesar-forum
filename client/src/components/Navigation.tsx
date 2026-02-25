@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
 import { useQuery } from "@tanstack/react-query";
-import { LogIn, LogOut, Menu, X } from "lucide-react";
+import { LogIn, LogOut, Menu, X, Monitor } from "lucide-react";
 import { useState } from "react";
 import { getInitials } from "@/lib/utils";
 
@@ -16,10 +16,20 @@ export function Navigation({ isAprilFools = false }: NavigationProps) {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+  const { data: dietaryAdminCheck } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/dietary-preferences/admin-check"],
     queryFn: async () => {
       const res = await fetch("/api/dietary-preferences/admin-check");
+      if (!res.ok) return { isAdmin: false };
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
+  const { data: forumAdminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin-check"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin-check");
       if (!res.ok) return { isAdmin: false };
       return res.json();
     },
@@ -33,9 +43,12 @@ export function Navigation({ isAprilFools = false }: NavigationProps) {
     { href: "/over", label: "Over" },
   ];
 
-  const navItems = adminCheck?.isAdmin
-    ? [...baseNavItems.slice(0, 3), { href: "/dieetwensen", label: "Dieetwensen" }, baseNavItems[3]]
-    : baseNavItems;
+  const navItems = [
+    ...baseNavItems.slice(0, 3),
+    ...(dietaryAdminCheck?.isAdmin ? [{ href: "/dieetwensen", label: "Dieetwensen" }] : []),
+    baseNavItems[3],
+    ...(forumAdminCheck?.isAdmin ? [{ href: "/kiosk", label: "Kiosk", icon: true }] : []),
+  ];
 
   const navClassName = isAprilFools
     ? "fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rotate-180"
@@ -62,6 +75,7 @@ export function Navigation({ isAprilFools = false }: NavigationProps) {
                   size="sm"
                   data-testid={`link-nav-${item.label.toLowerCase().replace(" ", "-")}`}
                 >
+                  {"icon" in item && <Monitor className="mr-1.5 h-4 w-4" />}
                   {item.label}
                 </Button>
               </Link>

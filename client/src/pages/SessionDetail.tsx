@@ -1,7 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { ArrowLeft, Clock, MapPin, Users, Calendar, Check, AlertTriangle, ChevronDown, ChevronUp, Utensils, Loader2, Download } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  MapPin,
+  Users,
+  Calendar,
+  Check,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Utensils,
+  Loader2,
+  Download,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,10 +33,25 @@ import { generateSessionPdf } from "@/lib/generate-session-pdf";
 import { getInitials } from "@/lib/utils";
 import type { Session, ForumData, Attendee } from "@shared/schema";
 
-function AttendeeItem({ attendee, index }: { attendee: Attendee; index: number }) {
+function AttendeeItem({
+  attendee,
+  index,
+}: {
+  attendee: Attendee;
+  index: number;
+}) {
   const displayName = formatDisplayName(attendee.name);
-  const initials = displayName.split(/[\s]+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase() || attendee.email.slice(0, 2).toUpperCase();
-  const photoUrl = attendee.photoUrl || `/api/users/${encodeURIComponent(attendee.email)}/photo`;
+  const initials =
+    displayName
+      .split(/[\s]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w: string) => w[0])
+      .join("")
+      .toUpperCase() || attendee.email.slice(0, 2).toUpperCase();
+  const photoUrl =
+    attendee.photoUrl ||
+    `/api/users/${encodeURIComponent(attendee.email)}/photo`;
 
   return (
     <div className="flex items-center gap-3" data-testid={`attendee-${index}`}>
@@ -33,7 +61,10 @@ function AttendeeItem({ attendee, index }: { attendee: Attendee; index: number }
           {initials}
         </AvatarFallback>
       </Avatar>
-      <span className="text-sm truncate" data-testid={`text-attendee-name-${index}`}>
+      <span
+        className="text-sm truncate"
+        data-testid={`text-attendee-name-${index}`}
+      >
         {displayName}
       </span>
     </div>
@@ -42,13 +73,19 @@ function AttendeeItem({ attendee, index }: { attendee: Attendee; index: number }
 
 const INITIAL_ATTENDEES_SHOWN = 5;
 
-function AttendeesList({ attendees, capacity }: { attendees: Attendee[]; capacity?: number }) {
+function AttendeesList({
+  attendees,
+  capacity,
+}: {
+  attendees: Attendee[];
+  capacity?: number;
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
-  const displayedAttendees = isExpanded 
-    ? attendees 
+
+  const displayedAttendees = isExpanded
+    ? attendees
     : attendees.slice(0, INITIAL_ATTENDEES_SHOWN);
-  
+
   const hasMore = attendees.length > INITIAL_ATTENDEES_SHOWN;
   const hiddenCount = attendees.length - INITIAL_ATTENDEES_SHOWN;
 
@@ -56,11 +93,16 @@ function AttendeesList({ attendees, capacity }: { attendees: Attendee[]; capacit
     <Card>
       <CardContent className="pt-6">
         <h3 className="mb-4 text-sm font-medium text-muted-foreground">
-          Deelnemers ({capacity ? `${attendees.length}/${capacity}` : attendees.length})
+          Deelnemers (
+          {capacity ? `${attendees.length}/${capacity}` : attendees.length})
         </h3>
         <div className="space-y-3">
           {displayedAttendees.map((attendee, index) => (
-            <AttendeeItem key={attendee.email} attendee={attendee} index={index} />
+            <AttendeeItem
+              key={attendee.email}
+              attendee={attendee}
+              index={index}
+            />
           ))}
         </div>
         {hasMore && (
@@ -93,7 +135,9 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
   const { toast } = useToast();
   const [preference, setPreference] = useState<string | null>(null);
 
-  const { data: existingPref, isLoading } = useQuery<{ preference: string | null }>({
+  const { data: existingPref, isLoading } = useQuery<{
+    preference: string | null;
+  }>({
     queryKey: ["/api/dietary-preferences", sessionId, "me"],
     queryFn: async () => {
       const res = await fetch(`/api/dietary-preferences/${sessionId}/me`);
@@ -110,13 +154,15 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
 
   const saveMutation = useMutation({
     mutationFn: async (newPreference: string) => {
-      await apiRequest("POST", "/api/dietary-preferences", { 
-        sessionId, 
-        preference: newPreference 
+      await apiRequest("POST", "/api/dietary-preferences", {
+        sessionId,
+        preference: newPreference,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/dietary-preferences", sessionId, "me"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/dietary-preferences", sessionId, "me"],
+      });
       toast({
         title: "Opgeslagen",
         description: "Je dieetwensen zijn opgeslagen",
@@ -150,14 +196,18 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
     );
   }
 
-  const hasChanged = preference !== null && preference !== (existingPref?.preference || "");
+  const hasChanged =
+    preference !== null && preference !== (existingPref?.preference || "");
 
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="flex items-center gap-2 mb-4">
           <Utensils className="h-4 w-4 text-muted-foreground" />
-          <Label htmlFor="dietary-preference" className="text-sm font-medium text-muted-foreground">
+          <Label
+            htmlFor="dietary-preference"
+            className="text-sm font-medium text-muted-foreground"
+          >
             Dieetwensen of allergieën
           </Label>
         </div>
@@ -192,18 +242,27 @@ function DietaryPreferenceForm({ sessionId }: { sessionId: string }) {
 
 const categoryColorMap: Record<string, string> = {
   talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
-  workshop: "bg-[hsl(var(--category-workshop-bg))] text-[hsl(var(--category-workshop-fg))]",
+  workshop:
+    "bg-[hsl(var(--category-workshop-bg))] text-[hsl(var(--category-workshop-fg))]",
   demo: "bg-[hsl(var(--category-demo-bg))] text-[hsl(var(--category-demo-fg))]",
-  brainstorm: "bg-[hsl(var(--category-brainstorm-bg))] text-[hsl(var(--category-brainstorm-fg))]",
-  hackathon: "bg-[hsl(var(--category-hackathon-bg))] text-[hsl(var(--category-hackathon-fg))]",
-  promotion: "bg-[hsl(var(--category-promotion-bg))] text-[hsl(var(--category-promotion-fg))]",
-  kennissessie: "bg-[hsl(var(--category-kennissessie-bg))] text-[hsl(var(--category-kennissessie-fg))]",
-  deepdive: "bg-[hsl(var(--category-deepdive-bg))] text-[hsl(var(--category-deepdive-fg))]",
+  brainstorm:
+    "bg-[hsl(var(--category-brainstorm-bg))] text-[hsl(var(--category-brainstorm-fg))]",
+  hackathon:
+    "bg-[hsl(var(--category-hackathon-bg))] text-[hsl(var(--category-hackathon-fg))]",
+  promotion:
+    "bg-[hsl(var(--category-promotion-bg))] text-[hsl(var(--category-promotion-fg))]",
+  kennissessie:
+    "bg-[hsl(var(--category-kennissessie-bg))] text-[hsl(var(--category-kennissessie-fg))]",
+  deepdive:
+    "bg-[hsl(var(--category-deepdive-bg))] text-[hsl(var(--category-deepdive-fg))]",
 };
 
 function getCategoryColors(category: string): string {
   const key = category.toLowerCase().replace(/\s+/g, "");
-  return categoryColorMap[key] || "bg-[hsl(var(--category-default-bg))] text-[hsl(var(--category-default-fg))]";
+  return (
+    categoryColorMap[key] ||
+    "bg-[hsl(var(--category-default-bg))] text-[hsl(var(--category-default-fg))]"
+  );
 }
 
 export default function SessionDetail() {
@@ -217,7 +276,12 @@ export default function SessionDetail() {
 
   const { toast } = useToast();
 
-  const { data: session, isLoading, error, refetch } = useQuery<Session>({
+  const {
+    data: session,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<Session>({
     queryKey: ["/api/sessions/slug", slug],
     queryFn: async () => {
       const res = await fetch(`/api/sessions/slug/${slug}`);
@@ -255,7 +319,9 @@ export default function SessionDetail() {
 
   const registeredSessions = useMemo(() => {
     if (!forumData?.sessions || !user?.email) return [];
-    return forumData.sessions.filter((s) => isEmailInAttendees(user.email, s.attendees));
+    return forumData.sessions.filter((s) =>
+      isEmailInAttendees(user.email, s.attendees),
+    );
   }, [forumData?.sessions, user?.email]);
 
   const overlappingSessions = useMemo(() => {
@@ -273,7 +339,9 @@ export default function SessionDetail() {
 
   const registerMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/sessions/register", { sessionId: session?.id });
+      await apiRequest("POST", "/api/sessions/register", {
+        sessionId: session?.id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sessions/slug", slug] });
@@ -286,7 +354,8 @@ export default function SessionDetail() {
     onError: (error: Error) => {
       toast({
         title: "Fout",
-        description: error.message || "Er is iets misgegaan bij het inschrijven",
+        description:
+          error.message || "Er is iets misgegaan bij het inschrijven",
         variant: "destructive",
       });
     },
@@ -294,7 +363,9 @@ export default function SessionDetail() {
 
   const unregisterMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/sessions/unregister", { sessionId: session?.id });
+      await apiRequest("POST", "/api/sessions/unregister", {
+        sessionId: session?.id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sessions/slug", slug] });
@@ -307,7 +378,8 @@ export default function SessionDetail() {
     onError: (error: Error) => {
       toast({
         title: "Fout",
-        description: error.message || "Er is iets misgegaan bij het uitschrijven",
+        description:
+          error.message || "Er is iets misgegaan bij het uitschrijven",
         variant: "destructive",
       });
     },
@@ -352,7 +424,10 @@ export default function SessionDetail() {
   if (error || !session) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8 md:px-8">
-        <Link href="/" className="mb-8 inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+        <Link
+          href="/"
+          className="mb-8 inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4" />
           Terug naar overzicht
         </Link>
@@ -368,8 +443,12 @@ export default function SessionDetail() {
     );
   }
 
-  const isRegistered = user?.email ? isEmailInAttendees(user.email, session.attendees) : false;
-  const isUserSpeaker = user?.email ? isSpeaker(user.email, session.speakers) : false;
+  const isRegistered = user?.email
+    ? isEmailInAttendees(user.email, session.attendees)
+    : false;
+  const isUserSpeaker = user?.email
+    ? isSpeaker(user.email, session.speakers)
+    : false;
   const isPending = registerMutation.isPending || unregisterMutation.isPending;
   const canDownloadPdf = isUserSpeaker || adminCheck?.isAdmin;
 
@@ -407,26 +486,47 @@ export default function SessionDetail() {
         )}
       </div>
 
-      <h1 className="mb-8 text-3xl font-bold md:text-4xl" data-testid="text-session-title">
+      <h1
+        className="mb-8 text-3xl font-bold md:text-4xl"
+        data-testid="text-session-title"
+      >
         {session.title}
       </h1>
 
       {overlappingSessions.length > 0 && (
-        <Alert variant="destructive" className="mb-6 border-amber-500/50 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-500" data-testid="alert-overlap-warning">
+        <Alert
+          variant="destructive"
+          className="mb-6 border-amber-500/50 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-500"
+          data-testid="alert-overlap-warning"
+        >
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Overlappende sessie</AlertTitle>
           <AlertDescription className="text-amber-700 dark:text-amber-300">
             Deze sessie overlapt met{" "}
             {overlappingSessions.map((s, i) => (
               <span key={s.id}>
-                {i > 0 && (i === overlappingSessions.length - 1 ? " en " : ", ")}
-                <Link href={`/sessies/${s.slug}`} className="font-medium underline hover:no-underline">
+                {i > 0 &&
+                  (i === overlappingSessions.length - 1 ? " en " : ", ")}
+                <Link
+                  href={`/sessies/${s.slug}`}
+                  className="font-medium underline hover:no-underline"
+                >
                   {s.title}
-                </Link>
-                {" "}({new Date(s.startTime).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })} - {new Date(s.endTime).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })})
+                </Link>{" "}
+                (
+                {new Date(s.startTime).toLocaleTimeString("nl-NL", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}{" "}
+                -{" "}
+                {new Date(s.endTime).toLocaleTimeString("nl-NL", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                )
               </span>
-            ))}
-            {" "}waarvoor je al ingeschreven bent.
+            ))}{" "}
+            waarvoor je al ingeschreven bent.
           </AlertDescription>
         </Alert>
       )}
@@ -436,13 +536,16 @@ export default function SessionDetail() {
           <div className="prose prose-lg dark:prose-invert max-w-none">
             <h2 className="text-xl font-semibold">Over deze sessie</h2>
             {session.descriptionHtml ? (
-              <div 
+              <div
                 className="text-muted-foreground [&>p]:mb-4 [&>ul]:mb-4 [&>ul]:list-disc [&>ul]:pl-6 [&>ol]:mb-4 [&>ol]:list-decimal [&>ol]:pl-6"
                 data-testid="text-session-description"
                 dangerouslySetInnerHTML={{ __html: session.descriptionHtml }}
               />
             ) : (
-              <div className="text-muted-foreground" data-testid="text-session-description">
+              <div
+                className="text-muted-foreground"
+                data-testid="text-session-description"
+              >
                 {session.description}
               </div>
             )}
@@ -463,20 +566,32 @@ export default function SessionDetail() {
                   </h3>
                   <div className="space-y-3">
                     {session.speakers.map((speaker, idx) => (
-                      <div key={speaker.email} className="flex items-center gap-3">
+                      <div
+                        key={speaker.email}
+                        className="flex items-center gap-3"
+                      >
                         <Avatar className="h-12 w-12 shrink-0">
                           {speaker.photoUrl ? (
-                            <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                            <AvatarImage
+                              src={speaker.photoUrl}
+                              alt={speaker.name}
+                            />
                           ) : null}
                           <AvatarFallback className="bg-primary/10 text-primary text-sm">
                             {getInitials(speaker.name)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <p className="font-semibold truncate" data-testid={`text-speaker-name-${idx}`}>
+                          <p
+                            className="font-semibold truncate"
+                            data-testid={`text-speaker-name-${idx}`}
+                          >
                             {speaker.name}
                           </p>
-                          <p className="text-sm text-muted-foreground truncate" data-testid={`text-speaker-email-${idx}`}>
+                          <p
+                            className="text-sm text-muted-foreground truncate"
+                            data-testid={`text-speaker-email-${idx}`}
+                          >
                             {speaker.email}
                           </p>
                         </div>
@@ -489,12 +604,15 @@ export default function SessionDetail() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span data-testid="text-session-date">{formatDate(session.startTime)}</span>
+                  <span data-testid="text-session-date">
+                    {formatDate(session.startTime)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span data-testid="text-session-time">
-                    {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                    {formatTime(session.startTime)} -{" "}
+                    {formatTime(session.endTime)}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
@@ -505,8 +623,9 @@ export default function SessionDetail() {
                   <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span data-testid="text-session-attendees">
                     {(() => {
-                      const count = session.attendeeCount ?? session.attendees.length;
-                      return session.capacity 
+                      const count =
+                        session.attendeeCount ?? session.attendees.length;
+                      return session.capacity
                         ? `${count} van ${session.capacity} deelnemers`
                         : `${count} deelnemer${count !== 1 ? "s" : ""}`;
                     })()}
@@ -535,7 +654,9 @@ export default function SessionDetail() {
                     >
                       Uitschrijven
                     </Button>
-                  ) : session.capacity && (session.attendeeCount ?? session.attendees.length) >= session.capacity ? (
+                  ) : session.capacity &&
+                    (session.attendeeCount ?? session.attendees.length) >=
+                      session.capacity ? (
                     <Button
                       className="w-full"
                       disabled
@@ -573,19 +694,36 @@ export default function SessionDetail() {
                         const editionDate = session.startTime.split("T")[0];
                         const baseUrl = window.location.origin;
                         const reviewUrl = `${baseUrl}/edities/${editionDate}/feedback/${session.id}`;
-                        await generateSessionPdf({ session, editionDate, reviewUrl });
-                        toast({ title: "PDF gedownload", description: "De sessie-PDF is gedownload." });
+                        await generateSessionPdf({
+                          session,
+                          editionDate,
+                          reviewUrl,
+                        });
+                        toast({
+                          title: "PDF gedownload",
+                          description: "De sessie-PDF is gedownload.",
+                        });
                       } catch {
-                        toast({ title: "Fout", description: "Kon de PDF niet genereren.", variant: "destructive" });
+                        toast({
+                          title: "Fout",
+                          description: "Kon de PDF niet genereren.",
+                          variant: "destructive",
+                        });
                       } finally {
                         setIsGeneratingPdf(false);
                       }
                     }}
                   >
                     {isGeneratingPdf ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />PDF genereren...</>
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        PDF genereren...
+                      </>
                     ) : (
-                      <><Download className="mr-2 h-4 w-4" />Download PDF</>
+                      <>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download review PDF
+                      </>
                     )}
                   </Button>
                 </div>
@@ -594,9 +732,9 @@ export default function SessionDetail() {
           </Card>
 
           {user && session.attendees.length > 0 && (
-            <AttendeesList 
-              attendees={session.attendees} 
-              capacity={session.capacity} 
+            <AttendeesList
+              attendees={session.attendees}
+              capacity={session.capacity}
             />
           )}
         </div>

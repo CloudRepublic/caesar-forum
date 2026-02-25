@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,6 +16,7 @@ import Archive from "@/pages/Archive";
 import EditionDetail from "@/pages/EditionDetail";
 import FeedbackForm from "@/pages/FeedbackForm";
 import About from "@/pages/About";
+import Kiosk from "@/pages/Kiosk";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +37,11 @@ function Router() {
 
 function AppContent() {
   const { isAprilFools } = useAprilFools();
+  const [location] = useLocation();
+
+  if (location === "/kiosk") {
+    return <Kiosk />;
+  }
 
   if (isAprilFools) {
     return (
