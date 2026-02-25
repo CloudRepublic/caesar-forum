@@ -14,16 +14,92 @@ function drawGeometricBackground(doc: jsPDF, w: number, h: number) {
   doc.rect(0, 0, w, h, "F");
 
   const shapes: { points: number[][]; color: [number, number, number] }[] = [
-    { points: [[0, 0], [60, 0], [0, 80]], color: [31, 51, 85] },
-    { points: [[w - 70, 0], [w, 0], [w, 50], [w - 40, 30]], color: [35, 58, 95] },
-    { points: [[0, h - 90], [50, h - 40], [0, h]], color: [35, 58, 95] },
-    { points: [[w, h - 70], [w, h], [w - 80, h]], color: [31, 51, 85] },
-    { points: [[w - 50, 60], [w, 90], [w, 150], [w - 30, 120]], color: [28, 45, 78] },
-    { points: [[0, 120], [40, 100], [50, 160], [10, 170]], color: [28, 45, 78] },
-    { points: [[30, h - 50], [80, h - 80], [100, h - 30], [50, h]], color: [28, 45, 78] },
-    { points: [[w - 90, h - 20], [w - 50, h - 60], [w - 20, h - 10], [w - 60, h]], color: [35, 58, 95] },
-    { points: [[60, 20], [90, 0], [110, 40], [80, 55]], color: [24, 36, 62] },
-    { points: [[w - 120, h - 50], [w - 80, h - 70], [w - 60, h - 30]], color: [24, 36, 62] },
+    {
+      points: [
+        [0, 0],
+        [60, 0],
+        [0, 80],
+      ],
+      color: [31, 51, 85],
+    },
+    {
+      points: [
+        [w - 70, 0],
+        [w, 0],
+        [w, 50],
+        [w - 40, 30],
+      ],
+      color: [35, 58, 95],
+    },
+    {
+      points: [
+        [0, h - 90],
+        [50, h - 40],
+        [0, h],
+      ],
+      color: [35, 58, 95],
+    },
+    {
+      points: [
+        [w, h - 70],
+        [w, h],
+        [w - 80, h],
+      ],
+      color: [31, 51, 85],
+    },
+    {
+      points: [
+        [w - 50, 60],
+        [w, 90],
+        [w, 150],
+        [w - 30, 120],
+      ],
+      color: [28, 45, 78],
+    },
+    {
+      points: [
+        [0, 120],
+        [40, 100],
+        [50, 160],
+        [10, 170],
+      ],
+      color: [28, 45, 78],
+    },
+    {
+      points: [
+        [30, h - 50],
+        [80, h - 80],
+        [100, h - 30],
+        [50, h],
+      ],
+      color: [28, 45, 78],
+    },
+    {
+      points: [
+        [w - 90, h - 20],
+        [w - 50, h - 60],
+        [w - 20, h - 10],
+        [w - 60, h],
+      ],
+      color: [35, 58, 95],
+    },
+    {
+      points: [
+        [60, 20],
+        [90, 0],
+        [110, 40],
+        [80, 55],
+      ],
+      color: [24, 36, 62],
+    },
+    {
+      points: [
+        [w - 120, h - 50],
+        [w - 80, h - 70],
+        [w - 60, h - 30],
+      ],
+      color: [24, 36, 62],
+    },
   ];
 
   for (const shape of shapes) {
@@ -35,7 +111,14 @@ function drawGeometricBackground(doc: jsPDF, w: number, h: number) {
   }
 }
 
-function drawWhiteCard(doc: jsPDF, x: number, y: number, w: number, h: number, r: number) {
+function drawWhiteCard(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
   doc.setFillColor(240, 242, 245);
   doc.roundedRect(x + 1.5, y + 1.5, w, h, r, r, "F");
 
@@ -71,7 +154,10 @@ function loadImageAsDataUrl(src: string): Promise<string> {
       canvas.width = img.naturalWidth * scale;
       canvas.height = img.naturalHeight * scale;
       const ctx = canvas.getContext("2d");
-      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+      if (!ctx) {
+        reject(new Error("Canvas not supported"));
+        return;
+      }
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       resolve(canvas.toDataURL("image/png"));
     };
@@ -94,17 +180,26 @@ async function loadLogoAsDataUrl(): Promise<string> {
       canvas.width = img.naturalWidth * scale;
       canvas.height = img.naturalHeight * scale;
       const ctx = canvas.getContext("2d");
-      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+      if (!ctx) {
+        reject(new Error("Canvas not supported"));
+        return;
+      }
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
       resolve(canvas.toDataURL("image/png"));
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load logo")); };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load logo"));
+    };
     img.src = url;
   });
 }
 
-export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Promise<void> {
+export async function generateSessionPdf({
+  session,
+  reviewUrl,
+}: PdfOptions): Promise<void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -126,7 +221,10 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
   const maxTitleWidth = cardW - 30;
-  const titleLines = doc.splitTextToSize(session.title.toUpperCase(), maxTitleWidth);
+  const titleLines = doc.splitTextToSize(
+    session.title.toUpperCase(),
+    maxTitleWidth,
+  );
   doc.text(titleLines, cardCenterX, y, { align: "center" });
   y += titleLines.length * 9 + 4;
 
@@ -149,19 +247,26 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
   doc.text("HOE WAS", cardCenterX, y, { align: "center" });
   y += 12;
   doc.text("DEZE SESSIE?", cardCenterX, y, { align: "center" });
-  y += 10;
 
   try {
     const emojisDataUrl = await loadImageAsDataUrl(caesarEmojisPath);
     const emojisW = cardW - 40;
     const emojisAspect = 1536 / 1024;
     const emojisH = emojisW / emojisAspect;
-    doc.addImage(emojisDataUrl, "PNG", cardCenterX - emojisW / 2, y, emojisW, emojisH);
+    doc.addImage(
+      emojisDataUrl,
+      "PNG",
+      cardCenterX - emojisW / 2,
+      y,
+      emojisW,
+      emojisH,
+    );
     y += emojisH + 2;
   } catch {
     y += 8;
   }
 
+  y -= 10;
   const qrSize = 50;
   const qrDataUrl = await QRCode.toDataURL(reviewUrl, {
     width: 500,
@@ -182,7 +287,14 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
     const logoW = 55;
     const logoFinalH = logoW / logoAspect;
     const logoY = cardBottom - logoFinalH - 10;
-    doc.addImage(logoDataUrl, "PNG", cardCenterX - logoW / 2, logoY, logoW, logoFinalH);
+    doc.addImage(
+      logoDataUrl,
+      "PNG",
+      cardCenterX - logoW / 2,
+      logoY,
+      logoW,
+      logoFinalH,
+    );
   } catch {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
