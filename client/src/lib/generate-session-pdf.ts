@@ -153,10 +153,10 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
   try {
     const emojisDataUrl = await loadImageAsDataUrl(caesarEmojisPath);
     const emojisW = cardW - 40;
-    const emojisAspect = 1024 / 579;
+    const emojisAspect = 1536 / 1024;
     const emojisH = emojisW / emojisAspect;
     doc.addImage(emojisDataUrl, "PNG", cardCenterX - emojisW / 2, y, emojisW, emojisH);
-    y += emojisH + 8;
+    y += emojisH + 4;
   } catch {
     y += 8;
   }
@@ -165,14 +165,14 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
   const cardBottom = cardMarginY + cardH;
   const remainingSpace = cardBottom - y - logoH - 16;
 
-  const qrSize = Math.min(55, remainingSpace - 20);
+  const qrSize = Math.min(55, remainingSpace - 16);
   const qrDataUrl = await QRCode.toDataURL(reviewUrl, {
     width: 500,
     margin: 1,
     color: { dark: "#1a2744", light: "#FFFFFF" },
   });
   doc.addImage(qrDataUrl, "PNG", cardCenterX - qrSize / 2, y, qrSize, qrSize);
-  y += qrSize + 8;
+  y += qrSize + 6;
 
   doc.setTextColor(26, 39, 68);
   doc.setFontSize(12);
