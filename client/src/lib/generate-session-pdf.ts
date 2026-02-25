@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
 import type { Session } from "@shared/schema";
+import caesarEmojisPath from "@assets/image_1772049028712.png";
 
 interface PdfOptions {
   session: Session;
@@ -60,49 +61,23 @@ function drawDivider(doc: jsPDF, centerX: number, y: number) {
   doc.fill();
 }
 
-function drawEmoji(doc: jsPDF, cx: number, cy: number, radius: number, type: "sad" | "neutral" | "happy") {
-  const colors: Record<string, [number, number, number]> = {
-    sad: [231, 76, 60],
-    neutral: [243, 156, 18],
-    happy: [46, 174, 96],
-  };
-
-  doc.setFillColor(...colors[type]);
-  doc.circle(cx, cy, radius, "F");
-
-  doc.setFillColor(255, 255, 255);
-  const eyeY = cy - radius * 0.2;
-  const eyeSpacing = radius * 0.35;
-  const eyeR = radius * 0.12;
-  doc.circle(cx - eyeSpacing, eyeY, eyeR, "F");
-  doc.circle(cx + eyeSpacing, eyeY, eyeR, "F");
-
-  doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(radius * 0.1);
-  const mouthY = cy + radius * 0.3;
-  const mouthW = radius * 0.4;
-
-  if (type === "sad") {
-    const cp1x = cx - mouthW * 0.6;
-    const cp1y = mouthY + radius * 0.35;
-    const cp2x = cx + mouthW * 0.6;
-    const cp2y = mouthY + radius * 0.35;
-
-    doc.moveTo(cx - mouthW, mouthY + radius * 0.15);
-    doc.curveTo(cp1x, cp1y - radius * 0.3, cp2x, cp2y - radius * 0.3, cx + mouthW, mouthY + radius * 0.15);
-    doc.stroke();
-  } else if (type === "neutral") {
-    doc.line(cx - mouthW, mouthY, cx + mouthW, mouthY);
-  } else {
-    const cp1x = cx - mouthW * 0.6;
-    const cp1y = mouthY + radius * 0.35;
-    const cp2x = cx + mouthW * 0.6;
-    const cp2y = mouthY + radius * 0.35;
-
-    doc.moveTo(cx - mouthW, mouthY);
-    doc.curveTo(cp1x, cp1y, cp2x, cp2y, cx + mouthW, mouthY);
-    doc.stroke();
-  }
+function loadImageAsDataUrl(src: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = 2;
+      canvas.width = img.naturalWidth * scale;
+      canvas.height = img.naturalHeight * scale;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { reject(new Error("Canvas not supported")); return; }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = src;
+  });
 }
 
 async function loadLogoAsDataUrl(): Promise<string> {
@@ -173,14 +148,18 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
   doc.text("HOE WAS", cardCenterX, y, { align: "center" });
   y += 12;
   doc.text("DEZE SESSIE?", cardCenterX, y, { align: "center" });
-  y += 28;
+  y += 16;
 
-  const emojiR = 12;
-  const emojiSpacing = 38;
-  drawEmoji(doc, cardCenterX - emojiSpacing, y, emojiR, "sad");
-  drawEmoji(doc, cardCenterX, y, emojiR, "neutral");
-  drawEmoji(doc, cardCenterX + emojiSpacing, y, emojiR, "happy");
-  y += emojiR + 16;
+  try {
+    const emojisDataUrl = await loadImageAsDataUrl(caesarEmojisPath);
+    const emojisW = cardW - 40;
+    const emojisAspect = 1024 / 579;
+    const emojisH = emojisW / emojisAspect;
+    doc.addImage(emojisDataUrl, "PNG", cardCenterX - emojisW / 2, y, emojisW, emojisH);
+    y += emojisH + 8;
+  } catch {
+    y += 8;
+  }
 
   const logoH = 12;
   const cardBottom = cardMarginY + cardH;
