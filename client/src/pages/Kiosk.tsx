@@ -93,6 +93,24 @@ const DUMMY_SESSIONS: KioskSession[] = [
     speakers: [],
     categories: ["Feedback"],
   },
+  {
+    id: "10",
+    title: "Diner",
+    room: "Lobby",
+    startTime: "2026-04-16T15:45:00",
+    endTime: "2026-04-16T16:30:00",
+    speakers: [],
+    categories: ["Eten & Drinken"],
+  },
+  {
+    id: "11",
+    title: "Borrel",
+    room: "Lobby",
+    startTime: "2026-04-16T17:15:00",
+    endTime: "2026-04-16T18:00:00",
+    speakers: [],
+    categories: ["Eten & Drinken"],
+  },
 ];
 
 function formatTime(iso: string) {
@@ -148,7 +166,7 @@ function SessionBlock({
           ? "border-green-400 bg-green-50 dark:bg-green-950/30 dark:border-green-600 shadow-lg shadow-green-100 dark:shadow-green-900/20"
           : isNext
             ? "border-amber-400 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-600 shadow-md shadow-amber-100 dark:shadow-amber-900/20"
-            : "border-border/30 bg-muted/20 opacity-50"
+            : "border-border/40 bg-muted/30 opacity-70"
         }
       `}
       style={{ height: `${heightPx}px`, minHeight: "60px" }}
@@ -173,7 +191,7 @@ function SessionBlock({
             </span>
           )}
           {session.categories.length > 0 && (
-            <span className={`text-xs font-medium ${isLater ? "text-muted-foreground/50" : "text-muted-foreground"}`}>
+            <span className={`text-xs font-medium ${isLater ? "text-muted-foreground/70" : "text-muted-foreground"}`}>
               {session.categories.join(", ")}
             </span>
           )}
@@ -189,7 +207,7 @@ function SessionBlock({
         </h3>
 
         {session.speakers.length > 0 && !isCompact && (
-          <div className={`flex items-center gap-1.5 ${isLater ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
+          <div className={`flex items-center gap-1.5 ${isLater ? "text-muted-foreground/60" : "text-muted-foreground"}`}>
             <User className="h-3.5 w-3.5 shrink-0" />
             <span className="text-sm truncate">
               {session.speakers.map(s => s.name).join(", ")}
@@ -198,7 +216,7 @@ function SessionBlock({
         )}
       </div>
 
-      <div className={`flex items-center gap-1.5 mt-1 ${isLater ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
+      <div className={`flex items-center gap-1.5 mt-1 ${isLater ? "text-muted-foreground/60" : "text-muted-foreground"}`}>
         <Clock className="h-3.5 w-3.5 shrink-0" />
         <span className="text-xs font-medium">
           {formatTime(session.startTime)} – {formatTime(session.endTime)}
