@@ -161,11 +161,9 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
     y += 8;
   }
 
-  const logoH = 12;
   const cardBottom = cardMarginY + cardH;
-  const remainingSpace = cardBottom - y - logoH - 16;
 
-  const qrSize = Math.min(55, remainingSpace - 10);
+  const qrSize = 50;
   const qrDataUrl = await QRCode.toDataURL(reviewUrl, {
     width: 500,
     margin: 1,
