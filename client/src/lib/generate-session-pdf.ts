@@ -148,7 +148,7 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
   doc.text("HOE WAS", cardCenterX, y, { align: "center" });
   y += 12;
   doc.text("DEZE SESSIE?", cardCenterX, y, { align: "center" });
-  y += 16;
+  y += 10;
 
   try {
     const emojisDataUrl = await loadImageAsDataUrl(caesarEmojisPath);
@@ -156,7 +156,7 @@ export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Pr
     const emojisAspect = 1536 / 1024;
     const emojisH = emojisW / emojisAspect;
     doc.addImage(emojisDataUrl, "PNG", cardCenterX - emojisW / 2, y, emojisW, emojisH);
-    y += emojisH + 4;
+    y += emojisH + 2;
   } catch {
     y += 8;
   }
