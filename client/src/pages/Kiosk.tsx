@@ -124,19 +124,19 @@ function getSessionStatus(session: KioskSession, now: Date): SessionStatus {
 }
 
 function findNextSessions(sessions: KioskSession[], now: Date): Set<string> {
-  const futureSessions = sessions
-    .filter(s => new Date(s.startTime) > now)
-    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-
-  if (futureSessions.length === 0) return new Set();
-
-  const earliestStart = new Date(futureSessions[0].startTime).getTime();
+  const rooms = [...new Set(sessions.map(s => s.room))];
   const nextIds = new Set<string>();
-  for (const s of futureSessions) {
-    if (new Date(s.startTime).getTime() === earliestStart) {
-      nextIds.add(s.id);
+
+  for (const room of rooms) {
+    const futureSessions = sessions
+      .filter(s => s.room === room && new Date(s.startTime) > now)
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+    if (futureSessions.length > 0) {
+      nextIds.add(futureSessions[0].id);
     }
   }
+
   return nextIds;
 }
 
