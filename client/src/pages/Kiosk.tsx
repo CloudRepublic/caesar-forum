@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Clock, MapPin, User, Monitor, Utensils } from "lucide-react";
 import foodDrinkBg from "@assets/image_1768474260490.png";
+import type { ForumData } from "@shared/schema";
 
 interface KioskSession {
   id: string;
@@ -11,99 +13,6 @@ interface KioskSession {
   speakers: { name: string }[];
   categories: string[];
 }
-
-const DUMMY_SESSIONS: KioskSession[] = [
-  {
-    id: "1",
-    title: "Hoe kleur kleurt",
-    room: "Zaal 1 — Auditorium",
-    startTime: "2026-04-16T15:00:00",
-    endTime: "2026-04-16T15:45:00",
-    speakers: [{ name: "Lisa de Vries" }],
-    categories: ["Kennissessie"],
-  },
-  {
-    id: "2",
-    title: "Getting started with Svelte",
-    room: "Zaal 2 — Workshopruimte",
-    startTime: "2026-04-16T15:00:00",
-    endTime: "2026-04-16T16:00:00",
-    speakers: [{ name: "Pieter Jansen" }],
-    categories: ["Workshop"],
-  },
-  {
-    id: "3",
-    title: "AI in de praktijk",
-    room: "Zaal 3 — Innovatielab",
-    startTime: "2026-04-16T15:00:00",
-    endTime: "2026-04-16T15:30:00",
-    speakers: [{ name: "Sarah Bakker" }, { name: "Tom Hendriks" }],
-    categories: ["Demo"],
-  },
-  {
-    id: "4",
-    title: "Design Systems bij Caesar",
-    room: "Zaal 1 — Auditorium",
-    startTime: "2026-04-16T15:50:00",
-    endTime: "2026-04-16T16:35:00",
-    speakers: [{ name: "Emma Willems" }],
-    categories: ["Kennissessie"],
-  },
-  {
-    id: "5",
-    title: "Accessibility Workshop",
-    room: "Zaal 3 — Innovatielab",
-    startTime: "2026-04-16T15:35:00",
-    endTime: "2026-04-16T16:20:00",
-    speakers: [{ name: "Nadia El Amrani" }],
-    categories: ["Workshop"],
-  },
-  {
-    id: "6",
-    title: "Security Awareness",
-    room: "Zaal 2 — Workshopruimte",
-    startTime: "2026-04-16T16:05:00",
-    endTime: "2026-04-16T16:50:00",
-    speakers: [{ name: "Martijn de Boer" }],
-    categories: ["Deepdive"],
-  },
-  {
-    id: "7",
-    title: "Lightning Talks",
-    room: "Zaal 1 — Auditorium",
-    startTime: "2026-04-16T16:40:00",
-    endTime: "2026-04-16T17:10:00",
-    speakers: [{ name: "Diverse sprekers" }],
-    categories: ["Demo"],
-  },
-  {
-    id: "8",
-    title: "GraphQL in productie",
-    room: "Zaal 3 — Innovatielab",
-    startTime: "2026-04-16T16:25:00",
-    endTime: "2026-04-16T17:10:00",
-    speakers: [{ name: "Ruben Visser" }],
-    categories: ["Deepdive"],
-  },
-  {
-    id: "10",
-    title: "Diner",
-    room: "Lobby",
-    startTime: "2026-04-16T15:45:00",
-    endTime: "2026-04-16T16:30:00",
-    speakers: [],
-    categories: ["Eten & Drinken"],
-  },
-  {
-    id: "11",
-    title: "Borrel",
-    room: "Lobby",
-    startTime: "2026-04-16T17:15:00",
-    endTime: "2026-04-16T18:00:00",
-    speakers: [],
-    categories: ["Eten & Drinken"],
-  },
-];
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
@@ -234,12 +143,10 @@ function SessionBlock({
 }
 
 export default function Kiosk() {
-  const [now, setNow] = useState(() => new Date("2026-04-16T15:20:00"));
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(prev => new Date(prev.getTime() + 60000));
-    }, 60000);
+    const interval = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -247,7 +154,32 @@ export default function Kiosk() {
     document.title = "Caesar Forum — Kiosk";
   }, []);
 
-  const allTimes = DUMMY_SESSIONS.flatMap(s => [
+  const { data, isLoading } = useQuery<ForumData>({
+    queryKey: ["/api/forum"],
+  });
+
+  const sessions: KioskSession[] = (data?.sessions ?? []).map(s => ({
+    id: s.id,
+    title: s.title,
+    room: s.room,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    speakers: s.speakers,
+    categories: s.categories,
+  }));
+
+  if (isLoading || sessions.length === 0) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background" data-testid="kiosk-container">
+        <div className="text-center text-muted-foreground">
+          <Monitor className="h-12 w-12 mx-auto mb-4 opacity-40" />
+          <p className="text-xl font-semibold">{isLoading ? "Rooster laden…" : "Geen sessies gevonden"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const allTimes = sessions.flatMap(s => [
     new Date(s.startTime).getTime(),
     new Date(s.endTime).getTime(),
   ]);
@@ -255,9 +187,8 @@ export default function Kiosk() {
   const timelineEnd = Math.max(...allTimes);
   const totalMinutes = (timelineEnd - timelineStart) / 60000;
 
-  const rooms = [...new Set(DUMMY_SESSIONS.map(s => s.room))];
-
-  const nextSessionIds = findNextSessions(DUMMY_SESSIONS, now);
+  const rooms = [...new Set(sessions.map(s => s.room))];
+  const nextSessionIds = findNextSessions(sessions, now);
 
   const PIXELS_PER_MINUTE = 5;
   const timelineHeightPx = totalMinutes * PIXELS_PER_MINUTE;
@@ -311,7 +242,7 @@ export default function Kiosk() {
             style={{ gridTemplateColumns: `repeat(${rooms.length}, 1fr)` }}
           >
             {rooms.map(room => {
-              const roomSessions = DUMMY_SESSIONS
+              const roomSessions = sessions
                 .filter(s => s.room === room)
                 .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
