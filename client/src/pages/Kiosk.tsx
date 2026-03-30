@@ -33,7 +33,7 @@ function getSessionStatus(session: KioskSession, now: Date): SessionStatus {
 }
 
 function findNextSessions(sessions: KioskSession[], now: Date): Set<string> {
-  const rooms = [...new Set(sessions.map(s => s.room))];
+  const rooms = Array.from(new Set(sessions.map(s => s.room)));
   const nextIds = new Set<string>();
 
   for (const room of rooms) {
@@ -187,7 +187,7 @@ export default function Kiosk() {
   const timelineEnd = Math.max(...allTimes);
   const totalMinutes = (timelineEnd - timelineStart) / 60000;
 
-  const rooms = [...new Set(sessions.map(s => s.room))];
+  const rooms = Array.from(new Set(sessions.map(s => s.room)));
   const nextSessionIds = findNextSessions(sessions, now);
 
   const PIXELS_PER_MINUTE = 5;
@@ -241,10 +241,12 @@ export default function Kiosk() {
             className="flex-1 grid gap-4"
             style={{ gridTemplateColumns: `repeat(${rooms.length}, 1fr)` }}
           >
-            {rooms.map(room => {
+            {rooms.map((room, roomIndex) => {
               const roomSessions = sessions
                 .filter(s => s.room === room)
                 .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+              const showNowLine = now.getTime() >= timelineStart && now.getTime() <= timelineEnd;
+              const nowTopPx = ((now.getTime() - timelineStart) / 60000) * PIXELS_PER_MINUTE;
 
               return (
                 <div key={room} className="flex flex-col min-w-0">
@@ -254,6 +256,17 @@ export default function Kiosk() {
                   </div>
 
                   <div className="relative" style={{ height: `${timelineHeightPx}px` }}>
+                    {showNowLine && (
+                      <div
+                        className="absolute left-0 right-0 z-20 pointer-events-none"
+                        style={{ top: `${nowTopPx}px` }}
+                      >
+                        {roomIndex === 0 && (
+                          <div className="absolute -left-2 h-3 w-3 rounded-full bg-red-500 -translate-y-1/2" />
+                        )}
+                        <div className="h-0.5 w-full bg-red-500" />
+                      </div>
+                    )}
                     {roomSessions.map(session => {
                       const startMs = new Date(session.startTime).getTime();
                       const endMs = new Date(session.endTime).getTime();
