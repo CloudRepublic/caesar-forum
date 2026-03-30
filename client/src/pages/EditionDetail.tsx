@@ -106,6 +106,12 @@ export default function EditionDetail() {
     return Array.from(tracks).sort();
   }, [data?.sessions]);
 
+  useEffect(() => {
+    if (activeTrack !== "all" && availableTracks.length > 0 && !availableTracks.includes(activeTrack)) {
+      setActiveTrack("all");
+    }
+  }, [availableTracks, activeTrack]);
+
   const filteredSessions = useMemo(() => {
     if (!data?.sessions) return [];
     return data.sessions.filter((session) => {
