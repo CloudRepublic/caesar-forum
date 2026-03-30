@@ -90,12 +90,9 @@ function SessionBlock({
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-1.5">
           {isNow && (
-            <span className="relative inline-flex" data-testid="badge-now">
-              <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-60" />
-              <span className="relative inline-flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-1 text-sm font-bold text-white">
-                <span className="h-2 w-2 rounded-full bg-white" />
-                NU BEZIG
-              </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-1 text-sm font-bold text-white animate-pulse-strong" data-testid="badge-now">
+              <span className="h-2 w-2 rounded-full bg-white" />
+              NU BEZIG
             </span>
           )}
           {isNext && (

@@ -397,3 +397,11 @@
   pointer-events: none;
   z-index: 9999;
 }
+
+@keyframes pulse-strong {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+.animate-pulse-strong {
+  animation: pulse-strong 1.5s ease-in-out infinite;
+}
