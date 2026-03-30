@@ -403,5 +403,5 @@
   50% { opacity: 0.15; }
 }
 .animate-pulse-strong {
-  animation: pulse-strong 1.5s ease-in-out infinite;
+  animation: pulse-strong 2.5s ease-in-out infinite;
 }
