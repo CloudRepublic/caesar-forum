@@ -125,8 +125,9 @@ export default function EditionDetail() {
         session.room.toLowerCase().includes(searchLower);
       const matchesFilter =
         activeFilter === "all" || (session.categories || []).includes(activeFilter);
+      const isEtenDrinken = (session.categories || []).includes("Eten & Drinken");
       const matchesTrack =
-        activeTrack === "all" || (session.track || "Algemeen") === activeTrack;
+        activeTrack === "all" || isEtenDrinken || (session.track || "Algemeen") === activeTrack;
       return matchesSearch && matchesFilter && matchesTrack;
     });
   }, [data?.sessions, searchQuery, activeFilter, activeTrack]);

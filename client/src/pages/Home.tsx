@@ -129,8 +129,9 @@ export default function Home() {
       const matchesFilter =
         activeFilter === "all" || (session.categories || []).includes(activeFilter);
 
+      const isEtenDrinken = (session.categories || []).includes("Eten & Drinken");
       const matchesTrack =
-        activeTrack === "all" || (session.track || "Algemeen") === activeTrack;
+        activeTrack === "all" || isEtenDrinken || (session.track || "Algemeen") === activeTrack;
 
       return matchesSearch && matchesFilter && matchesTrack;
     });
