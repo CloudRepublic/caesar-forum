@@ -90,9 +90,12 @@ function SessionBlock({
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-1.5">
           {isNow && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-1 text-sm font-bold text-white animate-pulse" data-testid="badge-now">
-              <span className="h-2 w-2 rounded-full bg-white" />
-              NU BEZIG
+            <span className="relative inline-flex" data-testid="badge-now">
+              <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-60" />
+              <span className="relative inline-flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-1 text-sm font-bold text-white">
+                <span className="h-2 w-2 rounded-full bg-white" />
+                NU BEZIG
+              </span>
             </span>
           )}
           {isNext && (
@@ -143,12 +146,10 @@ function SessionBlock({
 }
 
 export default function Kiosk() {
-  const [now, setNow] = useState(() => new Date(new Date().toISOString().replace(/^\d{4}-\d{2}-\d{2}/, "2026-04-16")));
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(prev => new Date(new Date().toISOString().replace(/^\d{4}-\d{2}-\d{2}/, "2026-04-16")));
-    }, 60000);
+    const interval = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(interval);
   }, []);
 
