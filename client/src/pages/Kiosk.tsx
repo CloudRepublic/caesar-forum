@@ -143,10 +143,12 @@ function SessionBlock({
 }
 
 export default function Kiosk() {
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState(() => new Date(new Date().toISOString().replace(/^\d{4}-\d{2}-\d{2}/, "2026-04-16")));
 
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 60000);
+    const interval = setInterval(() => {
+      setNow(prev => new Date(new Date().toISOString().replace(/^\d{4}-\d{2}-\d{2}/, "2026-04-16")));
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 
