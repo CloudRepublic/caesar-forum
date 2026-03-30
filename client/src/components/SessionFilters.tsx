@@ -72,7 +72,7 @@ export function SessionFilters({
 
       {showTrackFilter && (
         <div className="flex items-start gap-3">
-          <span className="shrink-0 pt-1.5 text-sm font-medium text-muted-foreground w-24">Track:</span>
+          <span className="shrink-0 pt-1.5 text-sm font-semibold text-foreground w-24">Track:</span>
           <div className="flex flex-wrap gap-2">
             <Button
               variant={activeTrack === "all" ? "default" : "outline"}
@@ -98,7 +98,7 @@ export function SessionFilters({
       )}
 
       <div className="flex items-start gap-3">
-        <span className="shrink-0 pt-1.5 text-sm font-medium text-muted-foreground w-24">Type sessie:</span>
+        <span className="shrink-0 pt-1.5 text-sm font-semibold text-foreground w-24">Type sessie:</span>
         <div className="flex flex-wrap gap-2">
           <Button
             variant={activeFilter === "all" ? "secondary" : "ghost"}
