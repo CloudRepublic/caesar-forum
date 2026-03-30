@@ -71,49 +71,55 @@ export function SessionFilters({
       </div>
 
       {showTrackFilter && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant={activeTrack === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => onTrackChange("all")}
-            data-testid="button-track-all"
-          >
-            Alle tracks
-          </Button>
-          {availableTracks.map((track) => (
+        <div className="flex items-start gap-3">
+          <span className="shrink-0 pt-1.5 text-sm font-medium text-muted-foreground w-24">Track:</span>
+          <div className="flex flex-wrap gap-2">
             <Button
-              key={track}
-              variant={activeTrack === track ? "default" : "outline"}
+              variant={activeTrack === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => onTrackChange(track)}
-              data-testid={`button-track-${track.toLowerCase().replace(/\s+/g, "-")}`}
+              onClick={() => onTrackChange("all")}
+              data-testid="button-track-all"
             >
-              {track}
+              Alle tracks
             </Button>
-          ))}
+            {availableTracks.map((track) => (
+              <Button
+                key={track}
+                variant={activeTrack === track ? "default" : "outline"}
+                size="sm"
+                onClick={() => onTrackChange(track)}
+                data-testid={`button-track-${track.toLowerCase().replace(/\s+/g, "-")}`}
+              >
+                {track}
+              </Button>
+            ))}
+          </div>
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          variant={activeFilter === "all" ? "secondary" : "ghost"}
-          size="sm"
-          onClick={() => onFilterChange("all")}
-          data-testid="button-filter-all"
-        >
-          Alle
-        </Button>
-        {availableCategories.map((category) => (
+      <div className="flex items-start gap-3">
+        <span className="shrink-0 pt-1.5 text-sm font-medium text-muted-foreground w-24">Type sessie:</span>
+        <div className="flex flex-wrap gap-2">
           <Button
-            key={category}
-            variant={activeFilter === category ? "secondary" : "ghost"}
+            variant={activeFilter === "all" ? "secondary" : "ghost"}
             size="sm"
-            onClick={() => onFilterChange(category)}
-            data-testid={`button-filter-${category.toLowerCase()}`}
+            onClick={() => onFilterChange("all")}
+            data-testid="button-filter-all"
           >
-            {category}
+            Alle
           </Button>
-        ))}
+          {availableCategories.map((category) => (
+            <Button
+              key={category}
+              variant={activeFilter === category ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => onFilterChange(category)}
+              data-testid={`button-filter-${category.toLowerCase()}`}
+            >
+              {category}
+            </Button>
+          ))}
+        </div>
       </div>
     </div>
   );
