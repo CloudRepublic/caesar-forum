@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, LayoutGrid, Clock } from "lucide-react";
+import { Search, LayoutGrid, Clock, Tag } from "lucide-react";
 
 export type ViewMode = "grid" | "timeline";
 
@@ -10,6 +10,9 @@ interface SessionFiltersProps {
   activeFilter: string;
   onFilterChange: (filter: string) => void;
   availableCategories: string[];
+  activeTrack: string;
+  onTrackChange: (track: string) => void;
+  availableTracks: string[];
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
 }
@@ -20,9 +23,14 @@ export function SessionFilters({
   activeFilter,
   onFilterChange,
   availableCategories,
+  activeTrack,
+  onTrackChange,
+  availableTracks,
   viewMode,
   onViewModeChange,
 }: SessionFiltersProps) {
+  const showTrackFilter = availableTracks.length > 1;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -61,6 +69,31 @@ export function SessionFilters({
           </div>
         </div>
       </div>
+
+      {showTrackFilter && (
+        <div className="flex flex-wrap items-center gap-2 pb-1 border-b">
+          <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Button
+            variant={activeTrack === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => onTrackChange("all")}
+            data-testid="button-track-all"
+          >
+            Alle tracks
+          </Button>
+          {availableTracks.map((track) => (
+            <Button
+              key={track}
+              variant={activeTrack === track ? "default" : "outline"}
+              size="sm"
+              onClick={() => onTrackChange(track)}
+              data-testid={`button-track-${track.toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              {track}
+            </Button>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <Button

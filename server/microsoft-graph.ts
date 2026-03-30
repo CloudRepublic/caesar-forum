@@ -587,6 +587,9 @@ export class MicrosoftGraphService {
       // Parse diet-form from back-matter if provided
       const dietFormValue = metadata["diet-form"];
       const showDietaryForm = dietFormValue?.toLowerCase() === "true" || dietFormValue === "1";
+
+      // Parse track from back-matter if provided, default to "Algemeen"
+      const track = metadata["track"] || "Algemeen";
       
       // Strip back-matter from HTML for display
       const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
@@ -633,6 +636,7 @@ export class MicrosoftGraphService {
         attendees: registeredAttendees,
         capacity: validCapacity,
         showDietaryForm: showDietaryForm || undefined,
+        track,
       };
     });
 
@@ -689,6 +693,9 @@ export class MicrosoftGraphService {
       // Parse diet-form from back-matter if provided
       const dietFormValue = metadata["diet-form"];
       const showDietaryForm = dietFormValue?.toLowerCase() === "true" || dietFormValue === "1";
+
+      // Parse track from back-matter if provided, default to "Algemeen"
+      const track = metadata["track"] || "Algemeen";
       
       // Strip back-matter from HTML for display
       const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
@@ -735,6 +742,7 @@ export class MicrosoftGraphService {
         attendees: registeredAttendees,
         capacity: validCapacity,
         showDietaryForm: showDietaryForm || undefined,
+        track,
       };
     } catch (error) {
       logApiError("GET", endpoint, error, undefined, `Session not found: ${id}`);

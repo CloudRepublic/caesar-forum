@@ -43,6 +43,7 @@ export const sessionSchema = z.object({
   attendees: z.array(attendeeSchema), // Array of attendees with name and email
   capacity: z.number().optional(), // Maximum number of attendees (from back-matter)
   showDietaryForm: z.boolean().optional(), // Show dietary preferences form (from back-matter diet-form: true)
+  track: z.string().optional(), // Track name (from back-matter track: ...), defaults to "Algemeen"
   // Counts for unauthenticated users (when personal data is stripped)
   speakerCount: z.number().optional(),
   attendeeCount: z.number().optional(),

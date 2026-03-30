@@ -30,6 +30,7 @@ export default function Home() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [activeTrack, setActiveTrack] = useState<string>("all");
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem("forum-view-mode");
     return (saved === "grid" || saved === "timeline") ? saved : "grid";
@@ -96,6 +97,15 @@ export default function Home() {
     return Array.from(categories).sort();
   }, [data?.sessions]);
 
+  const availableTracks = useMemo(() => {
+    if (!data?.sessions) return [];
+    const tracks = new Set<string>();
+    data.sessions.forEach((session) => {
+      tracks.add(session.track || "Algemeen");
+    });
+    return Array.from(tracks).sort();
+  }, [data?.sessions]);
+
   const filteredSessions = useMemo(() => {
     if (!data?.sessions) return [];
 
@@ -113,9 +123,12 @@ export default function Home() {
       const matchesFilter =
         activeFilter === "all" || (session.categories || []).includes(activeFilter);
 
-      return matchesSearch && matchesFilter;
+      const matchesTrack =
+        activeTrack === "all" || (session.track || "Algemeen") === activeTrack;
+
+      return matchesSearch && matchesFilter && matchesTrack;
     });
-  }, [data?.sessions, searchQuery, activeFilter]);
+  }, [data?.sessions, searchQuery, activeFilter, activeTrack]);
 
   const findFoodDrinkSessionBetween = (
     newSessionId: string,
@@ -268,6 +281,9 @@ export default function Home() {
                 activeFilter={activeFilter}
                 onFilterChange={setActiveFilter}
                 availableCategories={availableCategories}
+                activeTrack={activeTrack}
+                onTrackChange={setActiveTrack}
+                availableTracks={availableTracks}
                 viewMode={viewMode}
                 onViewModeChange={handleViewModeChange}
               />

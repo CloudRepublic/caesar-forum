@@ -1,7 +1,6 @@
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
 import type { Session } from "@shared/schema";
-import caesarEmojisPath from "@assets/image_1772049028712.png";
 
 interface PdfOptions {
   session: Session;
@@ -14,92 +13,16 @@ function drawGeometricBackground(doc: jsPDF, w: number, h: number) {
   doc.rect(0, 0, w, h, "F");
 
   const shapes: { points: number[][]; color: [number, number, number] }[] = [
-    {
-      points: [
-        [0, 0],
-        [60, 0],
-        [0, 80],
-      ],
-      color: [31, 51, 85],
-    },
-    {
-      points: [
-        [w - 70, 0],
-        [w, 0],
-        [w, 50],
-        [w - 40, 30],
-      ],
-      color: [35, 58, 95],
-    },
-    {
-      points: [
-        [0, h - 90],
-        [50, h - 40],
-        [0, h],
-      ],
-      color: [35, 58, 95],
-    },
-    {
-      points: [
-        [w, h - 70],
-        [w, h],
-        [w - 80, h],
-      ],
-      color: [31, 51, 85],
-    },
-    {
-      points: [
-        [w - 50, 60],
-        [w, 90],
-        [w, 150],
-        [w - 30, 120],
-      ],
-      color: [28, 45, 78],
-    },
-    {
-      points: [
-        [0, 120],
-        [40, 100],
-        [50, 160],
-        [10, 170],
-      ],
-      color: [28, 45, 78],
-    },
-    {
-      points: [
-        [30, h - 50],
-        [80, h - 80],
-        [100, h - 30],
-        [50, h],
-      ],
-      color: [28, 45, 78],
-    },
-    {
-      points: [
-        [w - 90, h - 20],
-        [w - 50, h - 60],
-        [w - 20, h - 10],
-        [w - 60, h],
-      ],
-      color: [35, 58, 95],
-    },
-    {
-      points: [
-        [60, 20],
-        [90, 0],
-        [110, 40],
-        [80, 55],
-      ],
-      color: [24, 36, 62],
-    },
-    {
-      points: [
-        [w - 120, h - 50],
-        [w - 80, h - 70],
-        [w - 60, h - 30],
-      ],
-      color: [24, 36, 62],
-    },
+    { points: [[0, 0], [60, 0], [0, 80]], color: [31, 51, 85] },
+    { points: [[w - 70, 0], [w, 0], [w, 50], [w - 40, 30]], color: [35, 58, 95] },
+    { points: [[0, h - 90], [50, h - 40], [0, h]], color: [35, 58, 95] },
+    { points: [[w, h - 70], [w, h], [w - 80, h]], color: [31, 51, 85] },
+    { points: [[w - 50, 60], [w, 90], [w, 150], [w - 30, 120]], color: [28, 45, 78] },
+    { points: [[0, 120], [40, 100], [50, 160], [10, 170]], color: [28, 45, 78] },
+    { points: [[30, h - 50], [80, h - 80], [100, h - 30], [50, h]], color: [28, 45, 78] },
+    { points: [[w - 90, h - 20], [w - 50, h - 60], [w - 20, h - 10], [w - 60, h]], color: [35, 58, 95] },
+    { points: [[60, 20], [90, 0], [110, 40], [80, 55]], color: [24, 36, 62] },
+    { points: [[w - 120, h - 50], [w - 80, h - 70], [w - 60, h - 30]], color: [24, 36, 62] },
   ];
 
   for (const shape of shapes) {
@@ -111,17 +34,9 @@ function drawGeometricBackground(doc: jsPDF, w: number, h: number) {
   }
 }
 
-function drawWhiteCard(
-  doc: jsPDF,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number,
-) {
-  doc.setFillColor(240, 242, 245);
+function drawWhiteCard(doc: jsPDF, x: number, y: number, w: number, h: number, r: number) {
+  doc.setFillColor(220, 224, 230);
   doc.roundedRect(x + 1.5, y + 1.5, w, h, r, r, "F");
-
   doc.setFillColor(255, 255, 255);
   doc.roundedRect(x, y, w, h, r, r, "F");
 }
@@ -129,12 +44,10 @@ function drawWhiteCard(
 function drawDivider(doc: jsPDF, centerX: number, y: number) {
   const lineLen = 35;
   const gap = 6;
-
   doc.setDrawColor(0, 47, 108);
   doc.setLineWidth(0.4);
   doc.line(centerX - lineLen - gap, y, centerX - gap, y);
   doc.line(centerX + gap, y, centerX + lineLen + gap, y);
-
   const d = 3.5;
   doc.setFillColor(0, 47, 108);
   doc.moveTo(centerX, y - d);
@@ -144,26 +57,62 @@ function drawDivider(doc: jsPDF, centerX: number, y: number) {
   doc.fill();
 }
 
-function loadImageAsDataUrl(src: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const scale = 2;
-      canvas.width = img.naturalWidth * scale;
-      canvas.height = img.naturalHeight * scale;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Canvas not supported"));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/png"));
-    };
-    img.onerror = () => reject(new Error("Failed to load image"));
-    img.src = src;
-  });
+function drawArcPoints(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  startDeg: number,
+  endDeg: number,
+  steps = 16,
+): [number, number][] {
+  const pts: [number, number][] = [];
+  for (let i = 0; i <= steps; i++) {
+    const angle = startDeg + ((endDeg - startDeg) * i) / steps;
+    const rad = (angle * Math.PI) / 180;
+    pts.push([cx + rx * Math.cos(rad), cy + ry * Math.sin(rad)]);
+  }
+  return pts;
+}
+
+function drawEmojiCircle(
+  doc: jsPDF,
+  cx: number,
+  cy: number,
+  r: number,
+  color: [number, number, number],
+  type: "sad" | "neutral" | "happy",
+) {
+  doc.setFillColor(...color);
+  doc.circle(cx, cy, r, "F");
+
+  const eyeR = r * 0.12;
+  const eyeOffX = r * 0.28;
+  const eyeOffY = r * 0.22;
+
+  doc.setFillColor(255, 255, 255);
+  doc.circle(cx - eyeOffX, cy - eyeOffY, eyeR, "F");
+  doc.circle(cx + eyeOffX, cy - eyeOffY, eyeR, "F");
+
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(r * 0.08);
+
+  const mouthRx = r * 0.30;
+  const mouthRy = r * 0.18;
+
+  if (type === "happy") {
+    const pts = drawArcPoints(cx, cy + r * 0.12, mouthRx, mouthRy, 10, 170);
+    for (let i = 0; i < pts.length - 1; i++) {
+      doc.line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]);
+    }
+  } else if (type === "neutral") {
+    doc.line(cx - mouthRx, cy + r * 0.22, cx + mouthRx, cy + r * 0.22);
+  } else {
+    const pts = drawArcPoints(cx, cy + r * 0.48, mouthRx, mouthRy, 190, 350);
+    for (let i = 0; i < pts.length - 1; i++) {
+      doc.line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]);
+    }
+  }
 }
 
 async function loadLogoAsDataUrl(): Promise<string> {
@@ -180,26 +129,17 @@ async function loadLogoAsDataUrl(): Promise<string> {
       canvas.width = img.naturalWidth * scale;
       canvas.height = img.naturalHeight * scale;
       const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Canvas not supported"));
-        return;
-      }
+      if (!ctx) { reject(new Error("Canvas not supported")); return; }
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
       resolve(canvas.toDataURL("image/png"));
     };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load logo"));
-    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load logo")); };
     img.src = url;
   });
 }
 
-export async function generateSessionPdf({
-  session,
-  reviewUrl,
-}: PdfOptions): Promise<void> {
+export async function generateSessionPdf({ session, reviewUrl }: PdfOptions): Promise<void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -213,7 +153,6 @@ export async function generateSessionPdf({
   const cardH = pageHeight - cardMarginY * 2;
   drawWhiteCard(doc, cardMarginX, cardMarginY, cardW, cardH, 4);
 
-  const cardCenterX = centerX;
   const cardBottom = cardMarginY + cardH;
   let y = cardMarginY + 28;
 
@@ -221,11 +160,8 @@ export async function generateSessionPdf({
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
   const maxTitleWidth = cardW - 30;
-  const titleLines = doc.splitTextToSize(
-    session.title.toUpperCase(),
-    maxTitleWidth,
-  );
-  doc.text(titleLines, cardCenterX, y, { align: "center" });
+  const titleLines = doc.splitTextToSize(session.title.toUpperCase(), maxTitleWidth);
+  doc.text(titleLines, centerX, y, { align: "center" });
   y += titleLines.length * 9 + 4;
 
   if (session.speakers.length > 0) {
@@ -233,53 +169,43 @@ export async function generateSessionPdf({
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(120, 120, 120);
-    doc.text(speakerNames.toUpperCase(), cardCenterX, y, { align: "center" });
+    doc.text(speakerNames.toUpperCase(), centerX, y, { align: "center" });
     y += 10;
   }
 
   y += 8;
-  drawDivider(doc, cardCenterX, y);
+  drawDivider(doc, centerX, y);
   y += 16;
 
   doc.setTextColor(26, 39, 68);
   doc.setFontSize(28);
   doc.setFont("helvetica", "bold");
-  doc.text("HOE WAS", cardCenterX, y, { align: "center" });
+  doc.text("HOE WAS", centerX, y, { align: "center" });
   y += 12;
-  doc.text("DEZE SESSIE?", cardCenterX, y, { align: "center" });
+  doc.text("DEZE SESSIE?", centerX, y, { align: "center" });
+  y += 18;
 
-  try {
-    const emojisDataUrl = await loadImageAsDataUrl(caesarEmojisPath);
-    const emojisW = cardW - 40;
-    const emojisAspect = 1536 / 1024;
-    const emojisH = emojisW / emojisAspect;
-    doc.addImage(
-      emojisDataUrl,
-      "PNG",
-      cardCenterX - emojisW / 2,
-      y,
-      emojisW,
-      emojisH,
-    );
-    y += emojisH + 2;
-  } catch {
-    y += 8;
-  }
+  const emojiR = 18;
+  const emojiSpacing = 52;
+  const emojiY = y + emojiR;
+  drawEmojiCircle(doc, centerX - emojiSpacing, emojiY, emojiR, [211, 47, 47], "sad");
+  drawEmojiCircle(doc, centerX, emojiY, emojiR, [245, 124, 0], "neutral");
+  drawEmojiCircle(doc, centerX + emojiSpacing, emojiY, emojiR, [56, 142, 60], "happy");
+  y += emojiR * 2 + 18;
 
-  y -= 10;
-  const qrSize = 50;
+  const qrSize = 52;
   const qrDataUrl = await QRCode.toDataURL(reviewUrl, {
     width: 500,
     margin: 1,
     color: { dark: "#1a2744", light: "#FFFFFF" },
   });
-  doc.addImage(qrDataUrl, "PNG", cardCenterX - qrSize / 2, y, qrSize, qrSize);
-  y += qrSize + 6;
+  doc.addImage(qrDataUrl, "PNG", centerX - qrSize / 2, y, qrSize, qrSize);
+  y += qrSize + 7;
 
   doc.setTextColor(26, 39, 68);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("SCAN & BEOORDEEL", cardCenterX, y, { align: "center" });
+  doc.text("SCAN & BEOORDEEL", centerX, y, { align: "center" });
 
   try {
     const logoDataUrl = await loadLogoAsDataUrl();
@@ -287,21 +213,14 @@ export async function generateSessionPdf({
     const logoW = 55;
     const logoFinalH = logoW / logoAspect;
     const logoY = cardBottom - logoFinalH - 10;
-    doc.addImage(
-      logoDataUrl,
-      "PNG",
-      cardCenterX - logoW / 2,
-      logoY,
-      logoW,
-      logoFinalH,
-    );
+    doc.addImage(logoDataUrl, "PNG", centerX - logoW / 2, logoY, logoW, logoFinalH);
   } catch {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(31, 86, 134);
     const caesarW = doc.getTextWidth("CAESAR ");
     const totalW = caesarW + doc.getTextWidth("FORUM");
-    const startX = cardCenterX - totalW / 2;
+    const startX = centerX - totalW / 2;
     const logoY = cardBottom - 14;
     doc.text("CAESAR", startX, logoY);
     doc.setTextColor(239, 97, 98);
