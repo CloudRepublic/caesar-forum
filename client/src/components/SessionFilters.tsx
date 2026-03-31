@@ -45,8 +45,8 @@ export function SessionFilters({
   const showTrackFilter = availableTracks.length > 1;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="relative min-w-[200px] flex-1">
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="relative w-full flex-1 sm:min-w-[200px]">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
@@ -60,7 +60,7 @@ export function SessionFilters({
 
       {showTrackFilter && (
         <Select value={activeTrack} onValueChange={onTrackChange}>
-          <SelectTrigger className="w-auto min-w-[150px]" data-testid="select-track">
+          <SelectTrigger className="w-full sm:w-auto sm:min-w-[180px]" data-testid="select-track">
             <SelectValue>
               {activeTrack === "all" ? "Track: Alle" : `Track: ${activeTrack}`}
             </SelectValue>
@@ -86,7 +86,7 @@ export function SessionFilters({
       )}
 
       <Select value={activeFilter} onValueChange={onFilterChange}>
-        <SelectTrigger className="w-auto min-w-[130px]" data-testid="select-type">
+        <SelectTrigger className="w-full sm:w-auto sm:min-w-[160px]" data-testid="select-type">
           <SelectValue>
             {activeFilter === "all" ? "Type: Alle" : `Type: ${activeFilter}`}
           </SelectValue>
