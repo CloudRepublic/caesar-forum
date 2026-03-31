@@ -101,7 +101,7 @@ export function SessionFilters({
         </SelectContent>
       </Select>
 
-      <div className="flex items-center rounded-md border bg-muted p-0.5">
+      <div className="flex w-auto items-center rounded-md border bg-muted p-0.5">
         <Button
           variant="ghost"
           size="sm"
