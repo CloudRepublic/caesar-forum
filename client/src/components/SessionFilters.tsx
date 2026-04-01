@@ -25,6 +25,7 @@ interface SessionFiltersProps {
 }
 
 const TRACK_DESCRIPTIONS: Record<string, string> = {
+  "Data": "Gericht op data-engineers: van Microsoft SQL to Fabric en DuckDB komen aan bod",
   Algemeen: "Geschikt voor iedereen.",
   Development:
     "Gericht op developers: code, technieken en infrastructuur achter development concepten.",
