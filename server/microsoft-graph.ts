@@ -53,6 +53,15 @@ function sanitizeHtml(html: string): string {
   return sanitized;
 }
 
+// Strip location code prefix from room names, e.g. "_JVK 0-02 - De Royal Room" → "De Royal Room"
+function formatRoomName(displayName: string): string {
+  if (displayName.startsWith('_')) {
+    const dashIdx = displayName.indexOf(' - ');
+    if (dashIdx !== -1) return displayName.slice(dashIdx + 3);
+  }
+  return displayName;
+}
+
 // Strip Microsoft Teams meeting block from HTML body.
 // Identified by elements with id="meet_invite_block.*" (language-independent).
 // The Teams block always begins with a long underscore separator (40+ chars).
@@ -671,7 +680,7 @@ export class MicrosoftGraphService {
         categories: getCategories(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
-        room: event.location?.displayName || "Zaal nog te bepalen",
+        room: formatRoomName(event.location?.displayName || "") || "Zaal nog te bepalen",
         speakers,
         attendees: registeredAttendees,
         capacity: validCapacity,
@@ -779,7 +788,7 @@ export class MicrosoftGraphService {
         categories: getCategories(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
-        room: event.location?.displayName || "Zaal nog te bepalen",
+        room: formatRoomName(event.location?.displayName || "") || "Zaal nog te bepalen",
         speakers,
         attendees: registeredAttendees,
         capacity: validCapacity,
@@ -1074,7 +1083,7 @@ export class MicrosoftGraphService {
         categories: getCategories(event.categories),
         startTime: event.start.dateTime,
         endTime: event.end.dateTime,
-        room: event.location?.displayName || "Zaal nog te bepalen",
+        room: formatRoomName(event.location?.displayName || "") || "Zaal nog te bepalen",
         speakers,
         attendees: registeredAttendees,
         capacity: validCapacity,
