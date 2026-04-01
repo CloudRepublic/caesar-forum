@@ -588,8 +588,9 @@ export class MicrosoftGraphService {
       const dietFormValue = metadata["diet-form"];
       const showDietaryForm = dietFormValue?.toLowerCase() === "true" || dietFormValue === "1";
 
-      // Parse track from back-matter if provided, default to "Algemeen"
-      const track = metadata["track"] || "Algemeen";
+      // Parse track from back-matter - supports comma-separated values, default to "Algemeen"
+      const trackRaw = metadata["track"] || "Algemeen";
+      const track = trackRaw.split(",").map((t: string) => t.trim()).filter(Boolean);
       
       // Strip back-matter from HTML for display
       const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
@@ -694,8 +695,9 @@ export class MicrosoftGraphService {
       const dietFormValue = metadata["diet-form"];
       const showDietaryForm = dietFormValue?.toLowerCase() === "true" || dietFormValue === "1";
 
-      // Parse track from back-matter if provided, default to "Algemeen"
-      const track = metadata["track"] || "Algemeen";
+      // Parse track from back-matter - supports comma-separated values, default to "Algemeen"
+      const trackRaw = metadata["track"] || "Algemeen";
+      const track = trackRaw.split(",").map((t: string) => t.trim()).filter(Boolean);
       
       // Strip back-matter from HTML for display
       const cleanHtml = isHtml ? stripBackMatterFromHtml(sanitizeHtml(bodyContent)) : undefined;
