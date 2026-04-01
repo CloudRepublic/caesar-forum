@@ -36,7 +36,7 @@ function Router() {
 }
 
 function AppContent() {
-  const { isAprilFools, dismissAprilFools } = useAprilFools();
+  const { isAprilFools, isRotated, toggleRotation } = useAprilFools();
   const [location] = useLocation();
 
   if (location === "/kiosk") {
@@ -46,19 +46,21 @@ function AppContent() {
   if (isAprilFools) {
     return (
       <>
-        <div className="flex min-h-screen flex-col rotate-180 pt-16">
+        <div className={`flex min-h-screen flex-col pt-16 ${isRotated ? "rotate-180" : ""}`}>
           <main className="flex-1">
             <Router />
           </main>
           <Footer />
         </div>
-        <Navigation isAprilFools />
+        <Navigation isAprilFools={isRotated} />
         <button
-          onClick={dismissAprilFools}
-          data-testid="button-april-fools-dismiss"
+          onClick={toggleRotation}
+          data-testid="button-april-fools-toggle"
           className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-xl border bg-card px-4 py-3 text-sm font-medium shadow-lg transition-colors hover:bg-accent"
         >
-          <span className="flex h-4 w-4 items-center justify-center rounded border-2 border-primary text-primary text-xs">✓</span>
+          <span className={`flex h-4 w-4 items-center justify-center rounded border-2 text-xs transition-colors ${isRotated ? "border-muted-foreground text-muted-foreground" : "border-primary bg-primary text-primary-foreground"}`}>
+            {!isRotated && "✓"}
+          </span>
           Je hebt me te pakken!
         </button>
       </>

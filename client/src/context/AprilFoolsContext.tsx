@@ -1,15 +1,17 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
-const LS_KEY = "april-fools-dismissed";
+const LS_KEY = "april-fools-rotated";
 
 interface AprilFoolsContextType {
   isAprilFools: boolean;
-  dismissAprilFools: () => void;
+  isRotated: boolean;
+  toggleRotation: () => void;
 }
 
 const AprilFoolsContext = createContext<AprilFoolsContextType>({
   isAprilFools: false,
-  dismissAprilFools: () => {},
+  isRotated: false,
+  toggleRotation: () => {},
 });
 
 export function useAprilFools() {
@@ -22,27 +24,30 @@ function isAprilFirst(): boolean {
 }
 
 export function AprilFoolsProvider({ children }: { children: React.ReactNode }) {
-  const [isActive, setIsActive] = useState(false);
+  const [isAprilFools, setIsAprilFools] = useState(false);
+  const [isRotated, setIsRotated] = useState(true);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem(LS_KEY) === "true";
-    if (dismissed) return;
-
     const params = new URLSearchParams(window.location.search);
-    if (params.get("aprilfools") === "true") {
-      setIsActive(true);
-    } else if (isAprilFirst()) {
-      setIsActive(true);
+    const active = params.get("aprilfools") === "true" || isAprilFirst();
+    setIsAprilFools(active);
+
+    if (active) {
+      const saved = localStorage.getItem(LS_KEY);
+      setIsRotated(saved === null ? true : saved === "true");
     }
   }, []);
 
-  const dismissAprilFools = () => {
-    localStorage.setItem(LS_KEY, "true");
-    setIsActive(false);
+  const toggleRotation = () => {
+    setIsRotated((prev) => {
+      const next = !prev;
+      localStorage.setItem(LS_KEY, String(next));
+      return next;
+    });
   };
 
   return (
-    <AprilFoolsContext.Provider value={{ isAprilFools: isActive, dismissAprilFools }}>
+    <AprilFoolsContext.Provider value={{ isAprilFools, isRotated, toggleRotation }}>
       {children}
     </AprilFoolsContext.Provider>
   );
