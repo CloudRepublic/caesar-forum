@@ -53,6 +53,37 @@ function sanitizeHtml(html: string): string {
   return sanitized;
 }
 
+// Strip Microsoft Teams meeting block from HTML body.
+// Identified by elements with id="meet_invite_block.*" (language-independent).
+// The Teams block always begins with a long underscore separator (40+ chars).
+function stripTeamsMeetingBlock(html: string): string {
+  if (!html.includes('meet_invite_block')) return html;
+
+  // The Teams block starts with a long line of underscores as raw text in the HTML.
+  // Find the LAST occurrence of _{40+} before the first meet_invite_block marker.
+  const markerIdx = html.indexOf('meet_invite_block');
+  const beforeMarker = html.slice(0, markerIdx);
+  const sepIdx = beforeMarker.search(/_{40,}/);
+  if (sepIdx === -1) return html;
+
+  // Find the opening HTML element that contains the separator
+  const elemStart = beforeMarker.lastIndexOf('<', sepIdx);
+  if (elemStart === -1) return html;
+
+  // Strip everything from elemStart onward, and also trim any trailing
+  // <br> or empty block elements that precede the Teams block
+  let cut = html.slice(0, elemStart).trimEnd();
+  cut = cut.replace(/(<br\s*\/?>|<p>\s*<\/p>)\s*$/i, '').trimEnd();
+
+  // If a wrapping <div> (e.g. <div lang=...>) is now the trailing element, remove it too
+  const wrapMatch = cut.match(/<div\b[^>]*>\s*$/i);
+  if (wrapMatch) {
+    cut = cut.slice(0, cut.length - wrapMatch[0].length).trimEnd();
+  }
+
+  return cut.trim();
+}
+
 // Parse back-matter metadata from description (YAML-style block at end)
 // Format: ---\nkey: value\nkey2: value2\n---
 // Flexible to handle Outlook's HTML structure where each line becomes a paragraph
@@ -62,6 +93,13 @@ interface BackMatter {
 }
 
 function parseBackMatter(text: string): BackMatter {
+  // Strip Microsoft Teams meeting block from plain text before parsing.
+  // Teams blocks start with a long line of underscores (40+), language-independently.
+  const teamsSepIdx = text.search(/_{40,}/);
+  if (teamsSepIdx !== -1) {
+    text = text.slice(0, teamsSepIdx).trim();
+  }
+
   // Normalize text: collapse multiple newlines/whitespace to single newlines
   const normalizedText = text
     .replace(/\r\n/g, "\n")
@@ -568,8 +606,9 @@ export class MicrosoftGraphService {
     ];
 
     const sessions: Session[] = sessionEvents.map((event) => {
-      const bodyContent = event.body?.content || "";
+      const rawBody = event.body?.content || "";
       const isHtml = event.body?.contentType === "html";
+      const bodyContent = isHtml ? stripTeamsMeetingBlock(rawBody) : rawBody;
       
       // Parse back-matter metadata from plain text content
       const plainText = isHtml ? stripHtml(bodyContent) : bodyContent;
@@ -675,8 +714,9 @@ export class MicrosoftGraphService {
           .get() as CalendarEvent;
       }, `Session ID: ${id}`);
 
-      const bodyContent = event.body?.content || "";
+      const rawBody = event.body?.content || "";
       const isHtml = event.body?.contentType === "html";
+      const bodyContent = isHtml ? stripTeamsMeetingBlock(rawBody) : rawBody;
       
       // Parse back-matter metadata from plain text content
       const plainText = isHtml ? stripHtml(bodyContent) : bodyContent;
@@ -991,8 +1031,9 @@ export class MicrosoftGraphService {
     });
 
     const sessions: Session[] = sessionEvents.map((event) => {
-      const bodyContent = event.body?.content || "";
+      const rawBody = event.body?.content || "";
       const isHtml = event.body?.contentType === "html";
+      const bodyContent = isHtml ? stripTeamsMeetingBlock(rawBody) : rawBody;
       const plainText = isHtml ? stripHtml(bodyContent) : bodyContent;
       const { metadata, content: cleanDescription } = parseBackMatter(plainText);
       const customSlug = metadata["slug"];
