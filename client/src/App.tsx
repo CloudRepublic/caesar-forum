@@ -44,25 +44,44 @@ function AppContent() {
   }
 
   if (isAprilFools) {
+    const dismissButton = (
+      <button
+        onClick={toggleRotation}
+        data-testid="button-april-fools-toggle"
+        className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-xl border bg-card px-4 py-3 text-sm font-medium shadow-lg transition-colors hover:bg-accent"
+      >
+        <span className={`flex h-4 w-4 items-center justify-center rounded border-2 text-xs transition-colors ${isRotated ? "border-muted-foreground text-muted-foreground" : "border-primary bg-primary text-primary-foreground"}`}>
+          {!isRotated && "✓"}
+        </span>
+        Je hebt me te pakken!
+      </button>
+    );
+
+    if (isRotated) {
+      return (
+        <>
+          <div className="flex min-h-screen flex-col rotate-180 pt-16">
+            <main className="flex-1">
+              <Router />
+            </main>
+            <Footer />
+          </div>
+          <Navigation isAprilFools />
+          {dismissButton}
+        </>
+      );
+    }
+
     return (
       <>
-        <div className={`flex min-h-screen flex-col pt-16 ${isRotated ? "rotate-180" : ""}`}>
+        <div className="flex min-h-screen flex-col">
+          <Navigation />
           <main className="flex-1">
             <Router />
           </main>
           <Footer />
         </div>
-        <Navigation isAprilFools={isRotated} />
-        <button
-          onClick={toggleRotation}
-          data-testid="button-april-fools-toggle"
-          className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-xl border bg-card px-4 py-3 text-sm font-medium shadow-lg transition-colors hover:bg-accent"
-        >
-          <span className={`flex h-4 w-4 items-center justify-center rounded border-2 text-xs transition-colors ${isRotated ? "border-muted-foreground text-muted-foreground" : "border-primary bg-primary text-primary-foreground"}`}>
-            {!isRotated && "✓"}
-          </span>
-          Je hebt me te pakken!
-        </button>
+        {dismissButton}
       </>
     );
   }
