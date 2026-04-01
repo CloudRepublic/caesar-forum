@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, MapPin, User, Monitor, Utensils } from "lucide-react";
 import foodDrinkBg from "@assets/image_1768474260490.png";
@@ -144,6 +144,8 @@ function SessionBlock({
 
 export default function Kiosk() {
   const [now, setNow] = useState(() => new Date(new Date().toISOString().replace(/^\d{4}-\d{2}-\d{2}/, "2026-04-16")));
+  const mainRef = useRef<HTMLElement>(null);
+  const [availableHeight, setAvailableHeight] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -154,6 +156,19 @@ export default function Kiosk() {
 
   useEffect(() => {
     document.title = "Caesar Forum — Kiosk";
+  }, []);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (mainRef.current) {
+        // p-6 padding = 24px top + 24px bottom, room header (py-3 + text + mb-4) ≈ 52px
+        setAvailableHeight(mainRef.current.clientHeight - 48 - 52);
+      }
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    if (mainRef.current) observer.observe(mainRef.current);
+    return () => observer.disconnect();
   }, []);
 
   const { data, isLoading } = useQuery<ForumData>({
@@ -192,7 +207,7 @@ export default function Kiosk() {
   const rooms = Array.from(new Set(sessions.map(s => s.room)));
   const nextSessionIds = findNextSessions(sessions, now);
 
-  const PIXELS_PER_MINUTE = 5;
+  const PIXELS_PER_MINUTE = availableHeight > 0 ? availableHeight / totalMinutes : 5;
   const timelineHeightPx = totalMinutes * PIXELS_PER_MINUTE;
   const GAP = 4;
 
@@ -223,7 +238,7 @@ export default function Kiosk() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto p-6">
+      <main ref={mainRef} className="flex-1 overflow-hidden p-6">
         <div className="flex gap-4 h-full">
           <div className="w-20 shrink-0 relative" style={{ height: `${timelineHeightPx}px` }}>
             {timeMarkers.map((marker, i) => (
