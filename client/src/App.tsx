@@ -36,7 +36,7 @@ function Router() {
 }
 
 function AppContent() {
-  const { isAprilFools } = useAprilFools();
+  const { isAprilFools, dismissAprilFools } = useAprilFools();
   const [location] = useLocation();
 
   if (location === "/kiosk") {
@@ -53,6 +53,14 @@ function AppContent() {
           <Footer />
         </div>
         <Navigation isAprilFools />
+        <button
+          onClick={dismissAprilFools}
+          data-testid="button-april-fools-dismiss"
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-xl border bg-card px-4 py-3 text-sm font-medium shadow-lg transition-colors hover:bg-accent"
+        >
+          <span className="flex h-4 w-4 items-center justify-center rounded border-2 border-primary text-primary text-xs">✓</span>
+          Je hebt me te pakken!
+        </button>
       </>
     );
   }
