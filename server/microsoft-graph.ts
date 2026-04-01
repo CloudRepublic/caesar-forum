@@ -109,31 +109,46 @@ function parseBackMatter(text: string): BackMatter {
     text = text.slice(0, teamsSepIdx).trim();
   }
 
-  // Normalize text: collapse multiple newlines/whitespace to single newlines
+  // Normalize line endings
   const normalizedText = text
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
-    .replace(/\n\s*\n/g, "\n")
     .trim();
-  
-  // Match a YAML-style block at the end: ---\n...\n---
-  // Allow for flexible whitespace and empty lines between elements
-  const backMatterRegex = /[\n\s]*---[\n\s]+([\s\S]*?)[\n\s]+---[\n\s]*$/;
-  const match = normalizedText.match(backMatterRegex);
-  
-  if (!match) {
-    return { metadata: {}, content: text };
+
+  // Split into lines and trim trailing whitespace from each line so that
+  // "--- " and "---" are treated identically.
+  const lines = normalizedText.split("\n").map((l) => l.trimEnd());
+
+  // Find the closing --- delimiter (last line that is exactly "---" when trimmed)
+  let closeIdx = -1;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (lines[i].trim() === "---") {
+      closeIdx = i;
+      break;
+    }
   }
-  
+
+  if (closeIdx === -1) return { metadata: {}, content: text };
+
+  // Find the opening --- delimiter (the nearest --- before closeIdx)
+  let openIdx = -1;
+  for (let i = closeIdx - 1; i >= 0; i--) {
+    if (lines[i].trim() === "---") {
+      openIdx = i;
+      break;
+    }
+  }
+
+  if (openIdx === -1) return { metadata: {}, content: text };
+
   const metadata: Record<string, string> = {};
-  const yamlContent = match[1];
-  
+  const yamlLines = lines.slice(openIdx + 1, closeIdx);
+
   // Parse simple key: value pairs
-  const lines = yamlContent.split(/[\n]+/);
-  for (const line of lines) {
+  for (const line of yamlLines) {
     const trimmedLine = line.trim();
     if (!trimmedLine) continue;
-    
+
     const colonIndex = trimmedLine.indexOf(":");
     if (colonIndex > 0) {
       const key = trimmedLine.substring(0, colonIndex).trim().toLowerCase();
@@ -143,23 +158,19 @@ function parseBackMatter(text: string): BackMatter {
       }
     }
   }
-  
+
   // Only return metadata if we found valid key-value pairs
   if (Object.keys(metadata).length === 0) {
     return { metadata: {}, content: text };
   }
-  
-  // Remove the back-matter block from content using the same regex on normalized text
-  // Then clean up excessive whitespace
-  let content = normalizedText.replace(backMatterRegex, "").trim();
-  
-  // Clean up excessive whitespace that might remain
-  content = content
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")  // Max 2 consecutive newlines
+
+  // Build content from everything before the opening ---
+  let content = lines
+    .slice(0, openIdx)
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
-  
+
   return { metadata, content };
 }
 
@@ -184,13 +195,14 @@ function stripBackMatterFromHtml(html: string): string {
   let result = html;
   
   // Pattern: Find --- followed by key:value pairs followed by --- (with any HTML/whitespace between)
-  // This is a more aggressive pattern that handles Outlook's various formatting quirks
-  const generalPattern = /<(p|div|span)[^>]*>[\s\n]*---[\s\S]*?---[\s\n]*(<br\s*\/?>)?[\s\n]*<\/(p|div|span)>/gi;
+  // This is a more aggressive pattern that handles Outlook's various formatting quirks.
+  // (?:&nbsp;|\s)* handles non-breaking spaces and regular whitespace after the dashes.
+  const generalPattern = /<(p|div|span)[^>]*>(?:&nbsp;|\s)*---[\s\S]*?---(?:&nbsp;|\s)*(<br\s*\/?>)?(?:&nbsp;|\s)*<\/(p|div|span)>/gi;
   result = result.replace(generalPattern, "");
   
   // Pattern for back-matter spread across multiple block elements
   // Match from first --- block to last --- block including everything between
-  const multiBlockPattern = /<(p|div)[^>]*>[\s\n]*---[\s\n]*<\/(p|div)>[\s\S]*?<(p|div)[^>]*>[\s\n]*---[\s\n]*(<br\s*\/?>)?[\s\n]*<\/(p|div)>/gi;
+  const multiBlockPattern = /<(p|div)[^>]*>(?:&nbsp;|\s)*---(?:&nbsp;|\s)*<\/(p|div)>[\s\S]*?<(p|div)[^>]*>(?:&nbsp;|\s)*---(?:&nbsp;|\s)*(<br\s*\/?>)?(?:&nbsp;|\s)*<\/(p|div)>/gi;
   result = result.replace(multiBlockPattern, "");
   
   // Clean up empty paragraphs and trailing whitespace elements
