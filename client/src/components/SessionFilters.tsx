@@ -25,7 +25,7 @@ interface SessionFiltersProps {
 }
 
 const TRACK_DESCRIPTIONS: Record<string, string> = {
-  "Data": "Gericht op data-engineers: van Microsoft SQL to Fabric en DuckDB komen aan bod",
+  Data: "Gericht op data-engineers: van Microsoft SQL tot Fabric en DuckDB komen aan bod",
   Algemeen: "Geschikt voor iedereen.",
   Development:
     "Gericht op developers: code, technieken en infrastructuur achter development concepten.",
@@ -61,7 +61,10 @@ export function SessionFilters({
 
       {showTrackFilter && (
         <Select value={activeTrack} onValueChange={onTrackChange}>
-          <SelectTrigger className="w-full sm:w-auto sm:min-w-[180px]" data-testid="select-track">
+          <SelectTrigger
+            className="w-full sm:w-auto sm:min-w-[180px]"
+            data-testid="select-track"
+          >
             <SelectValue>
               {activeTrack === "all" ? "Track: Alle" : `Track: ${activeTrack}`}
             </SelectValue>
@@ -87,7 +90,10 @@ export function SessionFilters({
       )}
 
       <Select value={activeFilter} onValueChange={onFilterChange}>
-        <SelectTrigger className="w-full sm:w-auto sm:min-w-[160px]" data-testid="select-type">
+        <SelectTrigger
+          className="w-full sm:w-auto sm:min-w-[160px]"
+          data-testid="select-type"
+        >
           <SelectValue>
             {activeFilter === "all" ? "Type: Alle" : `Type: ${activeFilter}`}
           </SelectValue>
@@ -95,7 +101,11 @@ export function SessionFilters({
         <SelectContent>
           <SelectItem value="all">Alle types</SelectItem>
           {availableCategories.map((category) => (
-            <SelectItem key={category} value={category} data-testid={`option-type-${category.toLowerCase()}`}>
+            <SelectItem
+              key={category}
+              value={category}
+              data-testid={`option-type-${category.toLowerCase()}`}
+            >
               {category}
             </SelectItem>
           ))}
