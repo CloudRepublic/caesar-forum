@@ -268,7 +268,7 @@ function getCategoryColors(category: string): string {
 export default function SessionDetail() {
   const [, params] = useRoute("/sessies/:slug");
   const slug = params?.slug;
-  const { user } = useUser();
+  const { user, login } = useUser();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -675,7 +675,7 @@ export default function SessionDetail() {
                     </Button>
                   )
                 ) : (
-                  <Button variant="secondary" className="w-full" disabled>
+                  <Button variant="secondary" className="w-full" onClick={login} data-testid="button-login">
                     Log in om in te schrijven
                   </Button>
                 )}

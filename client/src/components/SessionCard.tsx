@@ -8,6 +8,7 @@ import { isEmailInAttendees, isSpeaker } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
 import foodDrinkBg from "@assets/image_1768474260490.png";
+import { useUser } from "@/context/UserContext";
 
 const categoryColorMap: Record<string, string> = {
   talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
@@ -48,6 +49,7 @@ export function SessionCard({
   isPastEdition = false,
   editionDate,
 }: SessionCardProps) {
+  const { login } = useUser();
   const isRegistered = userEmail ? isEmailInAttendees(userEmail, session.attendees) : false;
   const isUserSpeaker = userEmail ? isSpeaker(userEmail, session.speakers) : false;
 
@@ -244,7 +246,7 @@ export function SessionCard({
             </Button>
           )
         ) : (
-          <Button variant="secondary" className="w-full" disabled>
+          <Button variant="secondary" className="w-full" onClick={login} data-testid={`button-login-${session.id}`}>
             Log in om in te schrijven
           </Button>
         )}
