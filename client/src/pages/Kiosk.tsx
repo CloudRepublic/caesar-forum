@@ -166,12 +166,16 @@ function SessionBlock({
   );
 }
 
+// Fixed room header height (px) — must match the h-12 class on the header div
+const ROOM_HEADER_H = 48;
+// mb-4 margin below the header
+const ROOM_HEADER_MARGIN = 16;
+const ROOM_HEADER_TOTAL = ROOM_HEADER_H + ROOM_HEADER_MARGIN;
+
 export default function Kiosk() {
   const [now, setNow] = useState(() => new Date(new Date().toISOString().replace(/^\d{4}-\d{2}-\d{2}/, "2026-04-16")));
   const mainRef = useRef<HTMLElement>(null);
-  const roomHeaderRef = useRef<HTMLDivElement>(null);
   const [availableHeight, setAvailableHeight] = useState(0);
-  const [roomHeaderTotalHeight, setRoomHeaderTotalHeight] = useState(68);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -185,15 +189,14 @@ export default function Kiosk() {
   }, []);
 
   useEffect(() => {
-    const updateHeights = () => {
-      const rh = roomHeaderRef.current ? roomHeaderRef.current.offsetHeight + 16 : 68;
-      setRoomHeaderTotalHeight(rh);
+    const updateHeight = () => {
       if (mainRef.current) {
-        setAvailableHeight(mainRef.current.clientHeight - 48 - rh);
+        // p-6 = 24px top + 24px bottom = 48px, plus fixed room header total
+        setAvailableHeight(mainRef.current.clientHeight - 48 - ROOM_HEADER_TOTAL);
       }
     };
-    updateHeights();
-    const observer = new ResizeObserver(updateHeights);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
     if (mainRef.current) observer.observe(mainRef.current);
     return () => observer.disconnect();
   }, []);
@@ -212,12 +215,6 @@ export default function Kiosk() {
     categories: s.categories,
   }));
 
-  useEffect(() => {
-    if (!mainRef.current) return;
-    const rh = roomHeaderRef.current ? roomHeaderRef.current.offsetHeight + 16 : 68;
-    setRoomHeaderTotalHeight(rh);
-    setAvailableHeight(mainRef.current.clientHeight - 48 - rh);
-  }, [sessions.length]);
 
   if (isLoading || sessions.length === 0) {
     return (
@@ -281,7 +278,7 @@ export default function Kiosk() {
             <div
               className="absolute z-20 pointer-events-none h-0.5 bg-red-500"
               style={{
-                top: `${roomHeaderTotalHeight + nowTopPx}px`,
+                top: `${ROOM_HEADER_TOTAL + nowTopPx}px`,
                 left: `calc(80px + 16px)`,
                 right: 0,
               }}
@@ -291,12 +288,12 @@ export default function Kiosk() {
           )}
 
           {/* Time axis with spacer matching room header height */}
-          <div className="w-20 shrink-0 relative" style={{ height: `${roomHeaderTotalHeight + timelineHeightPx}px` }}>
+          <div className="w-20 shrink-0 relative" style={{ height: `${ROOM_HEADER_TOTAL + timelineHeightPx}px` }}>
             {timeMarkers.map((marker, i) => (
               <div
                 key={i}
                 className="absolute right-0 flex items-center gap-1 -translate-y-1/2"
-                style={{ top: `${roomHeaderTotalHeight + marker.offset}px` }}
+                style={{ top: `${ROOM_HEADER_TOTAL + marker.offset}px` }}
               >
                 <span className="text-sm font-mono text-muted-foreground font-semibold">
                   {marker.time.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}
@@ -317,8 +314,8 @@ export default function Kiosk() {
               return (
                 <div key={room} className="flex flex-col min-w-0">
                   <div
-                    ref={roomIndex === 0 ? roomHeaderRef : undefined}
-                    className="flex items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 py-3 text-primary-foreground shrink-0 mb-4"
+                    className="flex items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 text-primary-foreground shrink-0 mb-4"
+                    style={{ height: ROOM_HEADER_H }}
                   >
                     <MapPin className="h-5 w-5 shrink-0" />
                     <h2 className="text-base font-bold truncate" data-testid={`kiosk-room-name-${room}`}>{room}</h2>
