@@ -242,6 +242,8 @@ export default function Kiosk() {
   const nextSessionIds = findNextSessions(sessions, now);
 
   const PIXELS_PER_MINUTE = availableHeight > 0 ? availableHeight / totalMinutes : 5;
+  const showNowLine = now.getTime() >= timelineStart && now.getTime() <= timelineEnd;
+  const nowTopPx = ((now.getTime() - timelineStart) / 60000) * PIXELS_PER_MINUTE;
   const timelineHeightPx = totalMinutes * PIXELS_PER_MINUTE;
   const GAP = 4;
 
@@ -275,17 +277,16 @@ export default function Kiosk() {
       <main ref={mainRef} className="flex-1 overflow-hidden p-6">
         <div className="flex gap-4 h-full relative">
           {/* Single now-line spanning the full grid width, no gaps */}
-          {now.getTime() >= timelineStart && now.getTime() <= timelineEnd && (
+          {showNowLine && (
             <div
-              className="absolute z-20 pointer-events-none flex items-center"
+              className="absolute z-20 pointer-events-none h-0.5 bg-red-500"
               style={{
-                top: `${roomHeaderTotalHeight + ((now.getTime() - timelineStart) / 60000) * PIXELS_PER_MINUTE}px`,
+                top: `${roomHeaderTotalHeight + nowTopPx}px`,
                 left: `calc(80px + 16px)`,
                 right: 0,
               }}
             >
-              <div className="h-3 w-3 rounded-full bg-red-500 shrink-0 -translate-x-1 -translate-y-1/2" />
-              <div className="h-0.5 flex-1 bg-red-500 -translate-y-px" />
+              <div className="absolute h-3 w-3 rounded-full bg-red-500 -translate-x-1/2 -translate-y-1/2" style={{ left: 0, top: '50%' }} />
             </div>
           )}
 
