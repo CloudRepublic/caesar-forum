@@ -330,7 +330,8 @@ export default function Kiosk() {
                       const endMs = new Date(session.endTime).getTime();
                       const topPx = ((startMs - timelineStart) / 60000) * PIXELS_PER_MINUTE;
                       const rawHeight = ((endMs - startMs) / 60000) * PIXELS_PER_MINUTE;
-                      const heightPx = Math.max(rawHeight - GAP, 28);
+                      const slotHeightPx = rawHeight - GAP; // true proportional height for positioning
+                      const displayHeightPx = Math.max(slotHeightPx, 28); // minimum visual height
 
                       const baseStatus = getSessionStatus(session, now);
                       const status: SessionStatus = baseStatus === "later" && nextSessionIds.has(session.id) ? "next" : baseStatus;
@@ -339,9 +340,9 @@ export default function Kiosk() {
                         <div
                           key={session.id}
                           className="absolute left-0 right-0"
-                          style={{ top: `${topPx}px`, height: `${heightPx}px` }}
+                          style={{ top: `${topPx}px`, height: `${slotHeightPx}px` }}
                         >
-                          <SessionBlock session={session} status={status} heightPx={heightPx} />
+                          <SessionBlock session={session} status={status} heightPx={displayHeightPx} />
                         </div>
                       );
                     })}
