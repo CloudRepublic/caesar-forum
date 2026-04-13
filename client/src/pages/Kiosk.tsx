@@ -330,8 +330,8 @@ export default function Kiosk() {
                       const endMs = new Date(session.endTime).getTime();
                       const topPx = ((startMs - timelineStart) / 60000) * PIXELS_PER_MINUTE;
                       const rawHeight = ((endMs - startMs) / 60000) * PIXELS_PER_MINUTE;
-                      const slotHeightPx = rawHeight - GAP; // true proportional height for positioning
-                      const displayHeightPx = Math.max(slotHeightPx, 28); // minimum visual height
+                      const slotHeightPx = rawHeight; // exact proportional slot, no gap subtracted
+                      const displayHeightPx = Math.max(rawHeight - GAP, 28); // visual block with gap
 
                       const baseStatus = getSessionStatus(session, now);
                       const status: SessionStatus = baseStatus === "later" && nextSessionIds.has(session.id) ? "next" : baseStatus;
