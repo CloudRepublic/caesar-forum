@@ -166,16 +166,16 @@ function SessionBlock({
   );
 }
 
-// Fixed room header height (px) — must match the h-12 class on the header div
+// Fixed room header height in px — kept as a design token
 const ROOM_HEADER_H = 48;
-// mb-4 margin below the header
+// Gap below the room header (matches mb-4 = 16px)
 const ROOM_HEADER_MARGIN = 16;
-const ROOM_HEADER_TOTAL = ROOM_HEADER_H + ROOM_HEADER_MARGIN;
 
 export default function Kiosk() {
   const [now, setNow] = useState(() => new Date(new Date().toISOString().replace(/^\d{4}-\d{2}-\d{2}/, "2026-04-16")));
-  const mainRef = useRef<HTMLElement>(null);
-  const [availableHeight, setAvailableHeight] = useState(0);
+  // Ref on the first room's timeline div — CSS (flex-1) determines its height
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const [timelineHeightPx, setTimelineHeightPx] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -186,19 +186,6 @@ export default function Kiosk() {
 
   useEffect(() => {
     document.title = "Caesar Forum — Kiosk";
-  }, []);
-
-  useEffect(() => {
-    const updateHeight = () => {
-      if (mainRef.current) {
-        // p-6 = 24px top + 24px bottom = 48px, plus fixed room header total
-        setAvailableHeight(mainRef.current.clientHeight - 48 - ROOM_HEADER_TOTAL);
-      }
-    };
-    updateHeight();
-    const observer = new ResizeObserver(updateHeight);
-    if (mainRef.current) observer.observe(mainRef.current);
-    return () => observer.disconnect();
   }, []);
 
   const { data, isLoading } = useQuery<ForumData>({
@@ -215,6 +202,17 @@ export default function Kiosk() {
     categories: s.categories,
   }));
 
+  // ResizeObserver: re-runs when sessions appear (sessions.length changes 0→N)
+  // so the ref is mounted before we try to measure it
+  useEffect(() => {
+    const update = () => {
+      if (timelineRef.current) setTimelineHeightPx(timelineRef.current.clientHeight);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    if (timelineRef.current) ro.observe(timelineRef.current);
+    return () => ro.disconnect();
+  }, [sessions.length]);
 
   if (isLoading || sessions.length === 0) {
     return (
@@ -238,18 +236,19 @@ export default function Kiosk() {
   const rooms = Array.from(new Set(sessions.map(s => s.room)));
   const nextSessionIds = findNextSessions(sessions, now);
 
-  const PIXELS_PER_MINUTE = availableHeight > 0 ? availableHeight / totalMinutes : 5;
+  // PIXELS_PER_MINUTE is derived from the actual measured CSS height of the timeline div
+  const PIXELS_PER_MINUTE = timelineHeightPx > 0 ? timelineHeightPx / totalMinutes : 1;
   const showNowLine = now.getTime() >= timelineStart && now.getTime() <= timelineEnd;
   const nowTopPx = ((now.getTime() - timelineStart) / 60000) * PIXELS_PER_MINUTE;
-  const timelineHeightPx = totalMinutes * PIXELS_PER_MINUTE;
   const GAP = 4;
 
-  const timeMarkers: { time: Date; offset: number }[] = [];
+  // Time markers use percentage of total timeline (so they stay correct while CSS height is being measured)
+  const timeMarkers: { time: Date; pct: number }[] = [];
   const firstSlot = new Date(timelineStart);
   firstSlot.setMinutes(Math.ceil(firstSlot.getMinutes() / 15) * 15, 0, 0);
   for (let t = firstSlot.getTime(); t <= timelineEnd; t += 15 * 60000) {
-    const offset = ((t - timelineStart) / 60000) * PIXELS_PER_MINUTE;
-    timeMarkers.push({ time: new Date(t), offset });
+    const pct = ((t - timelineStart) / (timelineEnd - timelineStart)) * 100;
+    timeMarkers.push({ time: new Date(t), pct });
   }
 
   return (
@@ -271,14 +270,15 @@ export default function Kiosk() {
         </div>
       </header>
 
-      <main ref={mainRef} className="flex-1 overflow-hidden p-6">
+      <main className="flex-1 overflow-hidden p-6">
         <div className="flex gap-4 h-full relative">
-          {/* Single now-line spanning the full grid width, no gaps */}
-          {showNowLine && (
+
+          {/* Now-line: positioned over the grid area, using measured nowTopPx */}
+          {showNowLine && timelineHeightPx > 0 && (
             <div
               className="absolute z-20 pointer-events-none h-0.5 bg-red-500"
               style={{
-                top: `${ROOM_HEADER_TOTAL + nowTopPx}px`,
+                top: `${ROOM_HEADER_H + ROOM_HEADER_MARGIN + nowTopPx}px`,
                 left: `calc(80px + 16px)`,
                 right: 0,
               }}
@@ -287,23 +287,27 @@ export default function Kiosk() {
             </div>
           )}
 
-          {/* Time axis with spacer matching room header height */}
-          <div className="w-20 shrink-0 relative" style={{ height: `${ROOM_HEADER_TOTAL + timelineHeightPx}px` }}>
-            {timeMarkers.map((marker, i) => (
-              <div
-                key={i}
-                className="absolute right-0 flex items-center gap-1 -translate-y-1/2"
-                style={{ top: `${ROOM_HEADER_TOTAL + marker.offset}px` }}
-              >
-                <span className="text-sm font-mono text-muted-foreground font-semibold">
-                  {marker.time.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </div>
-            ))}
+          {/* Time axis: mirrors room column structure (fixed header + flex-1 timeline) */}
+          <div className="w-20 shrink-0 flex flex-col h-full">
+            <div style={{ height: ROOM_HEADER_H, marginBottom: ROOM_HEADER_MARGIN }} />
+            <div className="relative flex-1">
+              {timeMarkers.map((marker, i) => (
+                <div
+                  key={i}
+                  className="absolute right-0 flex items-center gap-1 -translate-y-1/2"
+                  style={{ top: `${marker.pct}%` }}
+                >
+                  <span className="text-sm font-mono text-muted-foreground font-semibold">
+                    {marker.time.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
+          {/* Room columns grid */}
           <div
-            className="flex-1 grid gap-4"
+            className="flex-1 grid gap-4 h-full"
             style={{ gridTemplateColumns: `repeat(${rooms.length}, 1fr)` }}
           >
             {rooms.map((room, roomIndex) => {
@@ -312,23 +316,27 @@ export default function Kiosk() {
                 .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
               return (
-                <div key={room} className="flex flex-col min-w-0">
+                <div key={room} className="flex flex-col min-w-0 h-full">
+                  {/* Room header — fixed height, same as time axis spacer */}
                   <div
-                    className="flex items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 text-primary-foreground shrink-0 mb-4"
-                    style={{ height: ROOM_HEADER_H }}
+                    className="flex items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 text-primary-foreground shrink-0 overflow-hidden"
+                    style={{ height: ROOM_HEADER_H, marginBottom: ROOM_HEADER_MARGIN }}
                   >
                     <MapPin className="h-5 w-5 shrink-0" />
                     <h2 className="text-base font-bold truncate" data-testid={`kiosk-room-name-${room}`}>{room}</h2>
                   </div>
 
-                  <div className="relative" style={{ height: `${timelineHeightPx}px` }}>
+                  {/* Timeline: CSS determines height via flex-1, we measure it */}
+                  <div
+                    className="relative flex-1"
+                    ref={roomIndex === 0 ? timelineRef : undefined}
+                  >
                     {roomSessions.map(session => {
                       const startMs = new Date(session.startTime).getTime();
                       const endMs = new Date(session.endTime).getTime();
                       const topPx = ((startMs - timelineStart) / 60000) * PIXELS_PER_MINUTE;
                       const rawHeight = ((endMs - startMs) / 60000) * PIXELS_PER_MINUTE;
-                      const slotHeightPx = rawHeight; // exact proportional slot, no gap subtracted
-                      const displayHeightPx = Math.max(rawHeight - GAP, 28); // visual block with gap
+                      const displayHeightPx = Math.max(rawHeight - GAP, 28);
 
                       const baseStatus = getSessionStatus(session, now);
                       const status: SessionStatus = baseStatus === "later" && nextSessionIds.has(session.id) ? "next" : baseStatus;
@@ -337,7 +345,7 @@ export default function Kiosk() {
                         <div
                           key={session.id}
                           className="absolute left-0 right-0"
-                          style={{ top: `${topPx}px`, height: `${slotHeightPx}px` }}
+                          style={{ top: `${topPx}px`, height: `${rawHeight}px` }}
                         >
                           <SessionBlock session={session} status={status} heightPx={displayHeightPx} />
                         </div>
