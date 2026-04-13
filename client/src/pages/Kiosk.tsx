@@ -280,9 +280,17 @@ export default function Kiosk() {
                 top: `${ROOM_HEADER_H + ROOM_HEADER_MARGIN + nowTopPx}px`,
                 left: `calc(80px + 16px)`,
                 right: 0,
+                boxShadow: '0 0 6px 2px rgba(239,68,68,0.8), 0 0 16px 4px rgba(239,68,68,0.5)',
               }}
             >
-              <div className="absolute h-3 w-3 rounded-full bg-red-500 -translate-x-1/2 -translate-y-1/2" style={{ left: 0, top: '50%' }} />
+              <div
+                className="absolute h-3 w-3 rounded-full bg-red-500 -translate-x-1/2 -translate-y-1/2"
+                style={{
+                  left: 0,
+                  top: '50%',
+                  boxShadow: '0 0 8px 3px rgba(239,68,68,0.9), 0 0 20px 6px rgba(239,68,68,0.6)',
+                }}
+              />
             </div>
           )}
 
