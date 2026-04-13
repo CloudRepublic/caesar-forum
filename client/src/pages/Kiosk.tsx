@@ -240,7 +240,6 @@ export default function Kiosk() {
   const PIXELS_PER_MINUTE = timelineHeightPx > 0 ? timelineHeightPx / totalMinutes : 1;
   const showNowLine = now.getTime() >= timelineStart && now.getTime() <= timelineEnd;
   const nowTopPx = ((now.getTime() - timelineStart) / 60000) * PIXELS_PER_MINUTE;
-  const GAP = 4;
 
   // Time markers use percentage of total timeline (so they stay correct while CSS height is being measured)
   const timeMarkers: { time: Date; pct: number }[] = [];
@@ -335,8 +334,7 @@ export default function Kiosk() {
                       const startMs = new Date(session.startTime).getTime();
                       const endMs = new Date(session.endTime).getTime();
                       const topPx = ((startMs - timelineStart) / 60000) * PIXELS_PER_MINUTE;
-                      const rawHeight = ((endMs - startMs) / 60000) * PIXELS_PER_MINUTE;
-                      const displayHeightPx = Math.max(rawHeight - GAP, 28);
+                      const heightPx = Math.max(((endMs - startMs) / 60000) * PIXELS_PER_MINUTE, 28);
 
                       const baseStatus = getSessionStatus(session, now);
                       const status: SessionStatus = baseStatus === "later" && nextSessionIds.has(session.id) ? "next" : baseStatus;
@@ -345,9 +343,9 @@ export default function Kiosk() {
                         <div
                           key={session.id}
                           className="absolute left-0 right-0"
-                          style={{ top: `${topPx}px`, height: `${rawHeight}px` }}
+                          style={{ top: `${topPx}px`, height: `${heightPx}px` }}
                         >
-                          <SessionBlock session={session} status={status} heightPx={displayHeightPx} />
+                          <SessionBlock session={session} status={status} heightPx={heightPx} />
                         </div>
                       );
                     })}
