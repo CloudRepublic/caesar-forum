@@ -280,7 +280,7 @@ export default function Kiosk() {
                 top: `${ROOM_HEADER_H + ROOM_HEADER_MARGIN + nowTopPx}px`,
                 left: `calc(80px + 16px)`,
                 right: 0,
-                boxShadow: '0 0 6px 2px rgba(239,68,68,0.8), 0 0 16px 4px rgba(239,68,68,0.5)',
+                boxShadow: '0 0 4px 1px rgba(255,80,80,0.6), 0 0 10px 2px rgba(255,80,80,0.25)',
               }}
             >
               <div
@@ -288,7 +288,7 @@ export default function Kiosk() {
                 style={{
                   left: 0,
                   top: '50%',
-                  boxShadow: '0 0 8px 3px rgba(239,68,68,0.9), 0 0 20px 6px rgba(239,68,68,0.6)',
+                  boxShadow: '0 0 5px 2px rgba(255,80,80,0.7), 0 0 12px 3px rgba(255,80,80,0.3)',
                 }}
               />
             </div>
