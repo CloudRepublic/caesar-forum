@@ -1,0 +1,1 @@
+- [Azure production DB migrations](azure-db-migrations.md) — new tables must be created manually on Azure; Replit db:push does not touch the Azure database.
