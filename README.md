@@ -138,6 +138,21 @@ The "Download PDF" button appears on the session detail page, visible only to:
 - **Frontend Integration**: UserContext fetches /api/me on mount and provides login/logout functions
 - **Registration Protection**: All registration APIs require authenticated session (returns 401 otherwise)
 
+### Forum Fase-systeem
+
+Een aankomend Forum-event doorloopt drie fases die bepalen wat bezoekers zien op de homepage. De actieve fase wordt beheerd via de admin-pagina `/admin` (alleen toegankelijk voor `FORUM_ADMINS`).
+
+| Fase | Naam | Bezoekers | Admins |
+|------|------|-----------|--------|
+| 1 | **Sessies aanmelden** | Uitleg + knop naar inschrijfformulier. Geen sessies zichtbaar. | Zien sessies normaal. |
+| 2 | **Programma samenstellen** | Sessies als kaarten zonder tijden/kamer. Inschrijven geblokkeerd. | Zien volledige weergave. |
+| 3 | **Klaar voor inschrijvingen** | Volledige normale weergave. Inschrijven mogelijk. | Zien volledige weergave. |
+
+- **Opslag**: Fase wordt opgeslagen in de `forum_phases` PostgreSQL-tabel per editie-ID.
+- **Standaard**: Fase 1 als er niets is ingesteld.
+- **API**: `GET /api/admin/phase` en `POST /api/admin/phase` (alleen FORUM_ADMINS).
+- **Navigatie**: Forum-admins zien een "Admin" link in de navigatiebalk.
+
 ### Key Design Decisions
 
 1. **Monorepo Structure**: Client (`client/`), server (`server/`), and shared code (`shared/`) in single repository with path aliases (`@/`, `@shared/`)

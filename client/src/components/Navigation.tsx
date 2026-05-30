@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
 import { useQuery } from "@tanstack/react-query";
-import { LogIn, LogOut, Menu, X, Monitor } from "lucide-react";
+import { LogIn, LogOut, Menu, X, Monitor, Settings } from "lucide-react";
 import { useState } from "react";
 import { getInitials } from "@/lib/utils";
 
@@ -47,6 +47,7 @@ export function Navigation({ isAprilFools = false }: NavigationProps) {
     ...baseNavItems.slice(0, 3),
     ...(dietaryAdminCheck?.isAdmin ? [{ href: "/dieetwensen", label: "Dieetwensen" }] : []),
     baseNavItems[3],
+    ...(forumAdminCheck?.isAdmin ? [{ href: "/admin", label: "Admin", adminIcon: true }] : []),
     ...(forumAdminCheck?.isAdmin ? [{ href: "/kiosk", label: "Kiosk", icon: true }] : []),
   ];
 
@@ -75,7 +76,8 @@ export function Navigation({ isAprilFools = false }: NavigationProps) {
                   size="sm"
                   data-testid={`link-nav-${item.label.toLowerCase().replace(" ", "-")}`}
                 >
-                  {"icon" in item && <Monitor className="mr-1.5 h-4 w-4" />}
+                  {"adminIcon" in item && <Settings className="mr-1.5 h-4 w-4" />}
+                  {"icon" in item && !("adminIcon" in item) && <Monitor className="mr-1.5 h-4 w-4" />}
                   {item.label}
                 </Button>
               </Link>

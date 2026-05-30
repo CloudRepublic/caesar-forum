@@ -70,6 +70,8 @@ export async function registerRoutes(
       }
 
       const data = await storage.getForumData();
+      const phase = await storage.getForumPhase(data.edition.id);
+      const editionWithPhase = { ...data.edition, phase };
       
       // Strip personal data (speakers, attendees) if not authenticated
       // but keep counts visible
@@ -82,10 +84,10 @@ export async function registerRoutes(
           speakerCount: session.speakers.length,
           attendeeCount: session.attendees.length,
         }));
-        return res.json({ ...data, sessions: sanitizedSessions });
+        return res.json({ ...data, edition: editionWithPhase, sessions: sanitizedSessions });
       }
       
-      res.json(data);
+      res.json({ ...data, edition: editionWithPhase });
     } catch (error) {
       console.error("Error fetching forum data:", error);
       if (error instanceof GraphApiUnavailableError) {
@@ -358,6 +360,50 @@ export async function registerRoutes(
       res.json({ isAdmin: isForumAdmin(user.email) });
     } catch (error) {
       console.error("Error checking forum admin status:", error);
+      res.status(500).json({ error: "Er is een fout opgetreden." });
+    }
+  });
+
+  // Get current forum phase (forum admins only)
+  app.get("/api/admin/phase", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) {
+        return res.status(401).json({ error: "Je moet ingelogd zijn" });
+      }
+      if (!isForumAdmin(user.email)) {
+        return res.status(403).json({ error: "Je hebt geen toegang" });
+      }
+      const data = await storage.getForumData();
+      const phase = await storage.getForumPhase(data.edition.id);
+      res.json({ editionId: data.edition.id, editionTitle: data.edition.title, phase });
+    } catch (error) {
+      console.error("Error fetching forum phase:", error);
+      if (error instanceof GraphApiUnavailableError) {
+        return res.status(503).json({ error: error.message, code: "GRAPH_UNAVAILABLE" });
+      }
+      res.status(500).json({ error: "Er is een fout opgetreden." });
+    }
+  });
+
+  // Set forum phase (forum admins only)
+  app.post("/api/admin/phase", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) {
+        return res.status(401).json({ error: "Je moet ingelogd zijn" });
+      }
+      if (!isForumAdmin(user.email)) {
+        return res.status(403).json({ error: "Je hebt geen toegang" });
+      }
+      const parsed = z.object({ editionId: z.string(), phase: z.number().int().min(1).max(3) }).safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Ongeldige invoer", details: parsed.error.errors });
+      }
+      await storage.setForumPhase(parsed.data.editionId, parsed.data.phase);
+      res.json({ success: true, phase: parsed.data.phase });
+    } catch (error) {
+      console.error("Error setting forum phase:", error);
       res.status(500).json({ error: "Er is een fout opgetreden." });
     }
   });

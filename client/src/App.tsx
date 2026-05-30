@@ -17,6 +17,7 @@ import EditionDetail from "@/pages/EditionDetail";
 import FeedbackForm from "@/pages/FeedbackForm";
 import About from "@/pages/About";
 import Kiosk from "@/pages/Kiosk";
+import Admin from "@/pages/Admin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/edities/:date" component={EditionDetail} />
       <Route path="/edities/:date/feedback/:sessionId" component={FeedbackForm} />
       <Route path="/over" component={About} />
+      <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );

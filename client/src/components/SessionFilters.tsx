@@ -22,6 +22,7 @@ interface SessionFiltersProps {
   availableTracks: string[];
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  hideViewToggle?: boolean;
 }
 
 const TRACK_DESCRIPTIONS: Record<string, string> = {
@@ -42,6 +43,7 @@ export function SessionFilters({
   availableTracks,
   viewMode,
   onViewModeChange,
+  hideViewToggle = false,
 }: SessionFiltersProps) {
   const showTrackFilter = availableTracks.length > 1;
 
@@ -112,26 +114,28 @@ export function SessionFilters({
         </SelectContent>
       </Select>
 
-      <div className="flex self-start ml-auto items-center rounded-md border bg-muted p-0.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onViewModeChange("grid")}
-          className={`px-2 ${viewMode === "grid" ? "bg-background shadow-sm" : ""}`}
-          data-testid="button-view-grid"
-        >
-          <LayoutGrid className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onViewModeChange("timeline")}
-          className={`px-2 ${viewMode === "timeline" ? "bg-background shadow-sm" : ""}`}
-          data-testid="button-view-timeline"
-        >
-          <Clock className="h-4 w-4" />
-        </Button>
-      </div>
+      {!hideViewToggle && (
+        <div className="flex self-start ml-auto items-center rounded-md border bg-muted p-0.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewModeChange("grid")}
+            className={`px-2 ${viewMode === "grid" ? "bg-background shadow-sm" : ""}`}
+            data-testid="button-view-grid"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewModeChange("timeline")}
+            className={`px-2 ${viewMode === "timeline" ? "bg-background shadow-sm" : ""}`}
+            data-testid="button-view-timeline"
+          >
+            <Clock className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

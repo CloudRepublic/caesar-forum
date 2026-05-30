@@ -60,6 +60,7 @@ export const forumEditionSchema = z.object({
   // Unique counts across all sessions (calculated server-side)
   speakerCount: z.number().optional(),
   attendeeCount: z.number().optional(),
+  phase: z.number().min(1).max(3).optional(), // 1 = sessies aanmelden, 2 = programma samenstellen, 3 = klaar voor inschrijvingen
 });
 
 export type ForumEdition = z.infer<typeof forumEditionSchema>;

@@ -38,6 +38,8 @@ interface SessionCardProps {
   isPending?: boolean;
   isPastEdition?: boolean;
   editionDate?: string;
+  hideTimeAndRoom?: boolean;
+  registrationDisabled?: boolean;
 }
 
 export function SessionCard({
@@ -48,6 +50,8 @@ export function SessionCard({
   isPending = false,
   isPastEdition = false,
   editionDate,
+  hideTimeAndRoom = false,
+  registrationDisabled = false,
 }: SessionCardProps) {
   const { login } = useUser();
   const isRegistered = userEmail ? isEmailInAttendees(userEmail, session.attendees) : false;
@@ -138,17 +142,21 @@ export function SessionCard({
         )}
 
         <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Clock className="h-4 w-4 shrink-0" />
-            <span data-testid={`text-time-${session.id}`}>
-              {formatTime(session.startTime)} - {formatTime(session.endTime)}
-            </span>
-          </div>
+          {!hideTimeAndRoom && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Clock className="h-4 w-4 shrink-0" />
+              <span data-testid={`text-time-${session.id}`}>
+                {formatTime(session.startTime)} - {formatTime(session.endTime)}
+              </span>
+            </div>
+          )}
 
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <MapPin className="h-4 w-4 shrink-0" />
-            <span data-testid={`text-room-${session.id}`}>{session.room}</span>
-          </div>
+          {!hideTimeAndRoom && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-4 w-4 shrink-0" />
+              <span data-testid={`text-room-${session.id}`}>{session.room}</span>
+            </div>
+          )}
 
           {userEmail && session.speakers.length > 0 && (
             <div className="flex items-center gap-2">
@@ -207,6 +215,15 @@ export function SessionCard({
               </Link>
             ) : null
           ) : null
+        ) : registrationDisabled ? (
+          <Button
+            variant="secondary"
+            className="w-full"
+            disabled
+            data-testid={`button-register-disabled-${session.id}`}
+          >
+            Inschrijven nog niet mogelijk
+          </Button>
         ) : userEmail ? (
           isUserSpeaker ? (
             <Button

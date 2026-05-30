@@ -19,11 +19,59 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Utensils } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Utensils, ExternalLink, FileText, Clock } from "lucide-react";
 import { isEmailInAttendees } from "@/lib/email-utils";
 import { findOverlappingSessions } from "@/lib/session-utils";
 import { OverlapWarningBanner } from "@/components/OverlapWarningBanner";
 import type { ForumData, Session } from "@shared/schema";
+
+const SESSION_SUBMIT_URL = "https://mijncaesar.welder.nl/v2/scan/263915";
+
+function Phase1Banner({ isAdmin }: { isAdmin: boolean }) {
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-16 md:px-8 text-center" data-testid="section-phase1-banner">
+      <div className="mb-6 flex justify-center">
+        <div className="rounded-full bg-primary/10 p-4">
+          <FileText className="h-10 w-10 text-primary" />
+        </div>
+      </div>
+      <h2 className="mb-3 text-2xl font-bold" data-testid="text-phase1-title">
+        Sessies aanmelden
+      </h2>
+      <p className="mb-8 text-muted-foreground leading-relaxed" data-testid="text-phase1-description">
+        We hebben nog geen compleet programma — we zijn op zoek naar leuke sessies!
+        Heb jij een interessant onderwerp, demo of workshop te delen met collega's?
+        Meld je sessie dan aan via het formulier.
+      </p>
+      <Button asChild size="lg" data-testid="link-phase1-submit">
+        <a href={SESSION_SUBMIT_URL} target="_blank" rel="noopener noreferrer">
+          Sessie aanmelden
+          <ExternalLink className="ml-2 h-4 w-4" />
+        </a>
+      </Button>
+      {isAdmin && (
+        <p className="mt-6 text-xs text-muted-foreground/60">
+          Je bent admin — je ziet hieronder ook de sessies die al zijn aangemeld.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function Phase2Banner() {
+  return (
+    <div
+      className="mb-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30"
+      data-testid="banner-phase2"
+    >
+      <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+      <p className="text-sm text-amber-800 dark:text-amber-300">
+        We stellen het programma samen — inschrijven is nog niet mogelijk. Kom binnenkort terug!
+      </p>
+    </div>
+  );
+}
 
 export default function Home() {
   const { user } = useUser();
@@ -46,6 +94,17 @@ export default function Home() {
     setViewMode(mode);
     localStorage.setItem("forum-view-mode", mode);
   };
+
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin-check"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin-check");
+      if (!res.ok) return { isAdmin: false };
+      return res.json();
+    },
+    enabled: !!user,
+  });
+  const isAdmin = adminCheck?.isAdmin ?? false;
 
   // Support test mode via ?test=no-events URL parameter
   const testMode = new URLSearchParams(window.location.search).get("test");
@@ -236,6 +295,7 @@ export default function Home() {
   const sessions = data?.sessions || [];
   const hasEvent = edition && edition.id !== "no-events";
   const hasSessions = sessions.length > 0;
+  const phase = edition?.phase ?? 1;
 
   const registeredSessions = useMemo(() => {
     if (!sessions || !user?.email) return [];
@@ -245,6 +305,11 @@ export default function Home() {
   const overlapPairs = useMemo(() => {
     return findOverlappingSessions(registeredSessions);
   }, [registeredSessions]);
+
+  // For phase 2 non-admins: show grid without timeline option and no registration
+  const isPhase2Visitor = phase === 2 && !isAdmin;
+  // For phase 1 non-admins: hide sessions entirely
+  const isPhase1Visitor = phase === 1 && !isAdmin;
 
   if (isLoading) {
     return (
@@ -269,67 +334,205 @@ export default function Home() {
   }
 
   return (
-    <div className={`bg-background ${hasEvent && hasSessions ? "min-h-screen" : ""}`}>
+    <div className={`bg-background ${hasEvent && (hasSessions || isPhase1Visitor) ? "min-h-screen" : ""}`}>
       <HeroSection
         edition={edition}
-        sessions={sessions}
+        sessions={isPhase1Visitor ? [] : sessions}
         userEmail={user?.email}
       />
 
-      {/* Only show sessions section when there's an actual event */}
       {hasEvent && (
         <section id="sessions" className="mx-auto max-w-7xl px-4 py-12 md:px-8">
-          <OverlapWarningBanner overlaps={overlapPairs} />
-          
-          {sessions.length > 0 ? (
-          <>
-            <div className="mb-8">
-              <SessionFilters
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                activeFilter={activeFilter}
-                onFilterChange={setActiveFilter}
-                availableCategories={availableCategories}
-                activeTrack={activeTrack}
-                onTrackChange={setActiveTrack}
-                availableTracks={availableTracks}
-                viewMode={viewMode}
-                onViewModeChange={handleViewModeChange}
-              />
-            </div>
 
-            {filteredSessions.length > 0 ? (
-              viewMode === "grid" ? (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredSessions.map((session) => (
-                    <SessionCard
-                      key={session.id}
-                      session={session}
-                      userEmail={user?.email}
-                      onRegister={handleRegister}
-                      onUnregister={handleUnregister}
-                      isPending={
-                        registerMutation.isPending || unregisterMutation.isPending
-                      }
+          {/* Phase 1: show banner for visitors, sessions for admins */}
+          {phase === 1 && (
+            <>
+              <Phase1Banner isAdmin={isAdmin} />
+              {isAdmin && hasSessions && (
+                <>
+                  <div className="mt-8 mb-6 border-t pt-8">
+                    <p className="mb-6 text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Admin — Aangemelde sessies
+                    </p>
+                    <OverlapWarningBanner overlaps={overlapPairs} />
+                    <SessionFilters
+                      searchQuery={searchQuery}
+                      onSearchChange={setSearchQuery}
+                      activeFilter={activeFilter}
+                      onFilterChange={setActiveFilter}
+                      availableCategories={availableCategories}
+                      activeTrack={activeTrack}
+                      onTrackChange={setActiveTrack}
+                      availableTracks={availableTracks}
+                      viewMode={viewMode}
+                      onViewModeChange={handleViewModeChange}
                     />
-                  ))}
-                </div>
+                  </div>
+                  <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredSessions.map((session) => (
+                      <SessionCard
+                        key={session.id}
+                        session={session}
+                        userEmail={user?.email}
+                        onRegister={handleRegister}
+                        onUnregister={handleUnregister}
+                        isPending={registerMutation.isPending || unregisterMutation.isPending}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* Phase 2: limited view for visitors, full view for admins */}
+          {phase === 2 && (
+            <>
+              {isAdmin ? (
+                <>
+                  <OverlapWarningBanner overlaps={overlapPairs} />
+                  <div className="mb-8">
+                    <SessionFilters
+                      searchQuery={searchQuery}
+                      onSearchChange={setSearchQuery}
+                      activeFilter={activeFilter}
+                      onFilterChange={setActiveFilter}
+                      availableCategories={availableCategories}
+                      activeTrack={activeTrack}
+                      onTrackChange={setActiveTrack}
+                      availableTracks={availableTracks}
+                      viewMode={viewMode}
+                      onViewModeChange={handleViewModeChange}
+                    />
+                  </div>
+                  {filteredSessions.length > 0 ? (
+                    viewMode === "grid" ? (
+                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {filteredSessions.map((session) => (
+                          <SessionCard
+                            key={session.id}
+                            session={session}
+                            userEmail={user?.email}
+                            onRegister={handleRegister}
+                            onUnregister={handleUnregister}
+                            isPending={registerMutation.isPending || unregisterMutation.isPending}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <SessionTimeline
+                        sessions={filteredSessions}
+                        userEmail={user?.email}
+                        onRegister={handleRegister}
+                        onUnregister={handleUnregister}
+                        isPending={registerMutation.isPending || unregisterMutation.isPending}
+                      />
+                    )
+                  ) : (
+                    <EmptyState type="no-results" searchQuery={searchQuery} />
+                  )}
+                </>
               ) : (
-                <SessionTimeline
-                  sessions={filteredSessions}
-                  userEmail={user?.email}
-                  onRegister={handleRegister}
-                  onUnregister={handleUnregister}
-                  isPending={registerMutation.isPending || unregisterMutation.isPending}
-                />
-              )
-            ) : (
-              <EmptyState type="no-results" searchQuery={searchQuery} />
-            )}
-          </>
-        ) : (
-          <EmptyState type="no-sessions" />
-        )}
+                <>
+                  <Phase2Banner />
+                  {hasSessions ? (
+                    <>
+                      <div className="mb-8">
+                        <SessionFilters
+                          searchQuery={searchQuery}
+                          onSearchChange={setSearchQuery}
+                          activeFilter={activeFilter}
+                          onFilterChange={setActiveFilter}
+                          availableCategories={availableCategories}
+                          activeTrack={activeTrack}
+                          onTrackChange={setActiveTrack}
+                          availableTracks={availableTracks}
+                          viewMode="grid"
+                          onViewModeChange={() => {}}
+                          hideViewToggle
+                        />
+                      </div>
+                      {filteredSessions.length > 0 ? (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                          {filteredSessions.map((session) => (
+                            <SessionCard
+                              key={session.id}
+                              session={session}
+                              userEmail={user?.email}
+                              onRegister={handleRegister}
+                              onUnregister={handleUnregister}
+                              isPending={false}
+                              hideTimeAndRoom
+                              registrationDisabled
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <EmptyState type="no-results" searchQuery={searchQuery} />
+                      )}
+                    </>
+                  ) : (
+                    <EmptyState type="no-sessions" />
+                  )}
+                </>
+              )}
+            </>
+          )}
+
+          {/* Phase 3: full view for everyone */}
+          {phase === 3 && (
+            <>
+              <OverlapWarningBanner overlaps={overlapPairs} />
+              
+              {hasSessions ? (
+                <>
+                  <div className="mb-8">
+                    <SessionFilters
+                      searchQuery={searchQuery}
+                      onSearchChange={setSearchQuery}
+                      activeFilter={activeFilter}
+                      onFilterChange={setActiveFilter}
+                      availableCategories={availableCategories}
+                      activeTrack={activeTrack}
+                      onTrackChange={setActiveTrack}
+                      availableTracks={availableTracks}
+                      viewMode={viewMode}
+                      onViewModeChange={handleViewModeChange}
+                    />
+                  </div>
+
+                  {filteredSessions.length > 0 ? (
+                    viewMode === "grid" ? (
+                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {filteredSessions.map((session) => (
+                          <SessionCard
+                            key={session.id}
+                            session={session}
+                            userEmail={user?.email}
+                            onRegister={handleRegister}
+                            onUnregister={handleUnregister}
+                            isPending={registerMutation.isPending || unregisterMutation.isPending}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <SessionTimeline
+                        sessions={filteredSessions}
+                        userEmail={user?.email}
+                        onRegister={handleRegister}
+                        onUnregister={handleUnregister}
+                        isPending={registerMutation.isPending || unregisterMutation.isPending}
+                      />
+                    )
+                  ) : (
+                    <EmptyState type="no-results" searchQuery={searchQuery} />
+                  )}
+                </>
+              ) : (
+                <EmptyState type="no-sessions" />
+              )}
+            </>
+          )}
         </section>
       )}
 

@@ -1,7 +1,7 @@
 import type { Session, ForumEdition, ForumData, DietaryPreference } from "@shared/schema";
 import { getMicrosoftGraphService, type PastEdition, type FeedbackEmailData } from "./microsoft-graph";
 import { db } from "./db";
-import { dietaryPreferences } from "./db/schema";
+import { dietaryPreferences, forumPhases } from "./db/schema";
 import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
@@ -22,6 +22,9 @@ export interface IStorage {
   getEditionByDate(dateStr: string): Promise<ForumData>;
   // Feedback
   sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData, userAccessToken?: string): Promise<void>;
+  // Forum phase
+  getForumPhase(editionId: string): Promise<number>;
+  setForumPhase(editionId: string, phase: number): Promise<void>;
 }
 
 export class GraphApiUnavailableError extends Error {
@@ -283,6 +286,29 @@ export class GraphStorage implements IStorage {
     } catch (error) {
       if (!userAccessToken) this.recordGraphFailure(error);
       throw error;
+    }
+  }
+
+  async getForumPhase(editionId: string): Promise<number> {
+    const rows = await db.select()
+      .from(forumPhases)
+      .where(eq(forumPhases.editionId, editionId))
+      .limit(1);
+    return rows.length > 0 ? rows[0].phase : 1;
+  }
+
+  async setForumPhase(editionId: string, phase: number): Promise<void> {
+    const existing = await db.select()
+      .from(forumPhases)
+      .where(eq(forumPhases.editionId, editionId))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await db.update(forumPhases)
+        .set({ phase })
+        .where(eq(forumPhases.editionId, editionId));
+    } else {
+      await db.insert(forumPhases).values({ editionId, phase });
     }
   }
 }
