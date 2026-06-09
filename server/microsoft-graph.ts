@@ -702,10 +702,14 @@ export class MicrosoftGraphService {
     });
 
     // Calculate unique speaker and attendee counts across all sessions
+    // Exclude speakers who only appear in "Beheer" sessions
     const uniqueSpeakers = new Set<string>();
     const uniqueAttendees = new Set<string>();
     sessions.forEach(session => {
-      session.speakers.forEach(s => uniqueSpeakers.add(s.email.toLowerCase()));
+      const isBeheer = (session.categories || []).some(c => c.toLowerCase() === "beheer");
+      if (!isBeheer) {
+        session.speakers.forEach(s => uniqueSpeakers.add(s.email.toLowerCase()));
+      }
       session.attendees.forEach(a => uniqueAttendees.add(a.email.toLowerCase()));
     });
 
@@ -998,7 +1002,9 @@ export class MicrosoftGraphService {
       const sessionCount = events.filter((e) => {
         if (this.isAllDayEvent(e)) return false;
         const eventDate = new Date(e.start.dateTime);
-        return this.isSameDate(eventDate, forumDate);
+        if (!this.isSameDate(eventDate, forumDate)) return false;
+        const cats = getCategories(e.categories);
+        return !cats.some(c => c.toLowerCase() === "beheer");
       }).length;
 
       return {
@@ -1105,7 +1111,10 @@ export class MicrosoftGraphService {
     const uniqueSpeakers = new Set<string>();
     const uniqueAttendees = new Set<string>();
     sessions.forEach(session => {
-      session.speakers.forEach(s => uniqueSpeakers.add(s.email.toLowerCase()));
+      const isBeheer = (session.categories || []).some(c => c.toLowerCase() === "beheer");
+      if (!isBeheer) {
+        session.speakers.forEach(s => uniqueSpeakers.add(s.email.toLowerCase()));
+      }
       session.attendees.forEach(a => uniqueAttendees.add(a.email.toLowerCase()));
     });
 

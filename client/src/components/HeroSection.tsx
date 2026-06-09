@@ -27,12 +27,13 @@ interface HeroSectionProps {
 export function HeroSection({ edition, sessions, userEmail }: HeroSectionProps) {
   const backdropImage = useMemo(() => getRandomBackdrop(), []);
   
-  // Filter out "Eten & Drinken" and sessions without categories for the count
+  // Filter out "Eten & Drinken", "Beheer" and sessions without categories for the count
   const contentSessions = useMemo(() => {
     return sessions.filter(session => {
       const categories = session.categories || [];
       if (categories.length === 0) return false;
       if (categories.some(c => c.toLowerCase() === "eten & drinken")) return false;
+      if (categories.some(c => c.toLowerCase() === "beheer")) return false;
       return true;
     });
   }, [sessions]);

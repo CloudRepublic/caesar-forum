@@ -67,7 +67,9 @@ export default function EditionDetail() {
     if (!data?.sessions) return [];
     const categories = new Set<string>();
     data.sessions.forEach((session) => {
-      (session.categories || []).forEach((cat) => categories.add(cat));
+      (session.categories || []).forEach((cat) => {
+        if (cat.toLowerCase() !== "beheer") categories.add(cat);
+      });
     });
     return Array.from(categories).sort();
   }, [data?.sessions]);
@@ -126,10 +128,12 @@ export default function EditionDetail() {
         session.room.toLowerCase().includes(searchLower);
       const matchesFilter =
         activeFilter === "all" || (session.categories || []).includes(activeFilter);
-      const isEtenDrinken = (session.categories || []).includes("Eten & Drinken");
+      const isAlwaysVisible = (session.categories || []).some(c =>
+        c.toLowerCase() === "eten & drinken" || c.toLowerCase() === "beheer"
+      );
       const sessionTracks = Array.isArray(session.track) ? session.track : [session.track ?? "Algemeen"];
       const matchesTrack =
-        activeTrack === "all" || isEtenDrinken || sessionTracks.includes(activeTrack);
+        activeTrack === "all" || isAlwaysVisible || sessionTracks.includes(activeTrack);
       return matchesSearch && matchesFilter && matchesTrack;
     });
   }, [data?.sessions, searchQuery, activeFilter, activeTrack]);
