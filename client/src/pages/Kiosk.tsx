@@ -129,10 +129,10 @@ function SessionBlock({
               LATER
             </span>
           )}
-          {session.categories.length > 0 && (
+          {session.categories.filter((c: string) => c.toLowerCase() !== "beheer").length > 0 && (
             <span className="text-sm font-medium text-muted-foreground">
               {isFoodDrink && <Utensils className="inline mr-1 h-3.5 w-3.5" />}
-              {session.categories.join(", ")}
+              {session.categories.filter((c: string) => c.toLowerCase() !== "beheer").join(", ")}
             </span>
           )}
         </div>

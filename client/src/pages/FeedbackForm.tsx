@@ -221,7 +221,7 @@ export default function FeedbackForm() {
             </p>
           </div>
           <div className="flex flex-wrap gap-1">
-            {(session.categories || []).map((cat) => (
+            {(session.categories || []).filter(c => c.toLowerCase() !== "beheer").map((cat) => (
               <Badge key={cat} variant="secondary" className="no-default-hover-elevate no-default-active-elevate">
                 {cat}
               </Badge>

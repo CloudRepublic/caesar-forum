@@ -464,7 +464,7 @@ export default function SessionDetail() {
       </Link>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        {(session.categories || []).map((category) => (
+        {(session.categories || []).filter(c => c.toLowerCase() !== "beheer").map((category) => (
           <Badge
             key={category}
             variant="secondary"
