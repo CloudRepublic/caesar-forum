@@ -44,7 +44,7 @@ const msalConfig = {
 
 const cryptoProvider = new CryptoProvider();
 
-const LOGIN_SCOPES = ["openid", "profile", "email", "Mail.Send"];
+const LOGIN_SCOPES = ["openid", "profile", "email"];
 
 let msalClient: ConfidentialClientApplication | null = null;
 

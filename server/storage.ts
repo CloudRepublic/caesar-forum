@@ -21,7 +21,7 @@ export interface IStorage {
   getPastEditions(): Promise<PastEdition[]>;
   getEditionByDate(dateStr: string): Promise<ForumData>;
   // Feedback
-  sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData, userAccessToken?: string): Promise<void>;
+  sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData): Promise<void>;
   // Forum phase
   getForumPhase(editionId: string): Promise<number>;
   setForumPhase(editionId: string, phase: number): Promise<void>;
@@ -275,16 +275,16 @@ export class GraphStorage implements IStorage {
     }
   }
 
-  async sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData, userAccessToken?: string): Promise<void> {
-    if (!userAccessToken && !this.shouldTryGraph()) {
+  async sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData): Promise<void> {
+    if (!this.shouldTryGraph()) {
       throw new GraphApiUnavailableError();
     }
     try {
       const graphService = getMicrosoftGraphService();
-      await graphService.sendFeedbackEmail(speakerEmails, data, userAccessToken);
-      if (!userAccessToken) this.recordGraphSuccess();
+      await graphService.sendFeedbackEmail(speakerEmails, data);
+      this.recordGraphSuccess();
     } catch (error) {
-      if (!userAccessToken) this.recordGraphFailure(error);
+      this.recordGraphFailure(error);
       throw error;
     }
   }

@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage, GraphApiUnavailableError } from "./storage";
 import type { FeedbackEmailData } from "./microsoft-graph";
-import { getUserAccessToken } from "./auth";
+
 import { z } from "zod";
 
 const sessionIdSchema = z.object({
@@ -499,15 +499,7 @@ export async function registerRoutes(
         comments: comments || "",
       };
 
-      const userAccessToken = await getUserAccessToken(req);
-      if (!userAccessToken) {
-        return res.status(401).json({ 
-          error: "Je sessie is verlopen. Log opnieuw in om feedback te kunnen versturen.",
-          code: "TOKEN_EXPIRED" 
-        });
-      }
-
-      await storage.sendFeedbackEmail(speakerEmails, feedbackData, userAccessToken);
+      await storage.sendFeedbackEmail(speakerEmails, feedbackData);
 
       res.json({ success: true });
     } catch (error) {

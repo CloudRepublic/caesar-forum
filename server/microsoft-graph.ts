@@ -1130,7 +1130,7 @@ export class MicrosoftGraphService {
     return { edition, sessions };
   }
 
-  async sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData, userAccessToken?: string): Promise<void> {
+  async sendFeedbackEmail(speakerEmails: string[], data: FeedbackEmailData): Promise<void> {
     const starDisplay = (rating: number) => {
       const filled = "\u2605";
       const empty = "\u2606";
@@ -1168,32 +1168,16 @@ export class MicrosoftGraphService {
           content: htmlBody,
         },
         toRecipients,
+        replyTo: [{ emailAddress: { address: data.senderEmail, name: data.senderName } }],
       },
       saveToSentItems: false,
     };
 
-    if (userAccessToken) {
-      const endpoint = "/me/sendMail";
-      logApiRequest("POST", endpoint, `Send feedback email (as user) for: ${data.sessionTitle}`);
-      const startTime = Date.now();
-      try {
-        const userClient = Client.init({
-          authProvider: (done) => done(null, userAccessToken),
-        });
-        await userClient.api(endpoint).post(mailPayload);
-        logApiResponse("POST", endpoint, "SUCCESS", Date.now() - startTime);
-      } catch (error: unknown) {
-        const durationMs = Date.now() - startTime;
-        logApiError("POST", endpoint, error, durationMs, "Failed to send feedback email as user");
-        throw new Error("Kon de e-mail niet versturen. Log opnieuw in en probeer het nogmaals.");
-      }
-    } else {
-      const endpoint = `/users/${FORUM_MAILBOX}/sendMail`;
-      await this.executeWithRetry("POST", endpoint, async () => {
-        const client = await this.getClient();
-        return await client.api(endpoint).post(mailPayload);
-      }, `Send feedback email for: ${data.sessionTitle}`);
-    }
+    const endpoint = `/users/${FORUM_MAILBOX}/sendMail`;
+    await this.executeWithRetry("POST", endpoint, async () => {
+      const client = await this.getClient();
+      return await client.api(endpoint).post(mailPayload);
+    }, `Send feedback email for: ${data.sessionTitle}`);
 
     console.log(`[${new Date().toISOString()}] [FEEDBACK] Email sent to ${speakerEmails.join(", ")} for session "${data.sessionTitle}" from ${data.senderEmail}`);
   }
