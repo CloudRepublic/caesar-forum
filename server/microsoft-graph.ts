@@ -476,14 +476,16 @@ export class MicrosoftGraphService {
         }
 
         if (statusCode === 403) {
-          const graphMessage = (error as any)?.body
-            ? (typeof (error as any).body === "string"
-                ? (() => { try { return JSON.parse((error as any).body)?.error?.message; } catch { return (error as any).body; } })()
-                : (error as any).body?.error?.message)
-            : (error as any)?.message;
-          logApiError(method, endpoint, error, durationMs, `403 Forbidden - ${graphMessage || "Access denied to mailbox or resource"}`);
+          const rawBody = (error as any)?.body;
+          const parsedBody = (() => { try { return typeof rawBody === "string" ? JSON.parse(rawBody) : rawBody; } catch { return null; } })();
+          const graphMessage = parsedBody?.error?.message || parsedBody?.error?.code || (error as any)?.message || "unknown";
+          const graphCode = parsedBody?.error?.code || "";
+          console.error(`[${new Date().toISOString()}] [403 DETAIL] endpoint=${endpoint} code=${graphCode} message=${graphMessage}`);
+          console.error(`[${new Date().toISOString()}] [403 DETAIL] raw body=${typeof rawBody === "string" ? rawBody : JSON.stringify(rawBody)}`);
+          console.error(`[${new Date().toISOString()}] [403 DETAIL] full error=${JSON.stringify(error, Object.getOwnPropertyNames(error as object))}`);
+          logApiError(method, endpoint, error, durationMs, `403 Forbidden - ${graphMessage}`);
           // Don't retry 403 - it's a permission issue
-          throw new Error(`Access denied to ${endpoint}: ${graphMessage || "Check mailbox permissions and application consent."}`);
+          throw new Error(`Access denied to ${endpoint}: [${graphCode}] ${graphMessage}`);
         }
 
         if (statusCode === 404) {
