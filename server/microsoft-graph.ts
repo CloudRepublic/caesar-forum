@@ -476,9 +476,14 @@ export class MicrosoftGraphService {
         }
 
         if (statusCode === 403) {
-          logApiError(method, endpoint, error, durationMs, "403 Forbidden - Access denied to mailbox or resource");
+          const graphMessage = (error as any)?.body
+            ? (typeof (error as any).body === "string"
+                ? (() => { try { return JSON.parse((error as any).body)?.error?.message; } catch { return (error as any).body; } })()
+                : (error as any).body?.error?.message)
+            : (error as any)?.message;
+          logApiError(method, endpoint, error, durationMs, `403 Forbidden - ${graphMessage || "Access denied to mailbox or resource"}`);
           // Don't retry 403 - it's a permission issue
-          throw new Error(`Access denied to ${endpoint}. Check mailbox permissions and application consent.`);
+          throw new Error(`Access denied to ${endpoint}: ${graphMessage || "Check mailbox permissions and application consent."}`);
         }
 
         if (statusCode === 404) {
