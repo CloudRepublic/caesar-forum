@@ -81,7 +81,7 @@ export default function Archive() {
       ) : (
         <div className="space-y-4">
           {editions.map((item) => (
-            <Link key={item.edition.id} href={`/edities/${item.edition.date}`}>
+            <Link key={item.edition.id} href={`/edities/${item.edition.date}`} className="block">
               <Card className="hover-elevate cursor-pointer" data-testid={`card-edition-${item.edition.date}`}>
                 <CardContent className="flex items-center justify-between gap-4 py-5">
                   <div className="min-w-0 flex-1">
