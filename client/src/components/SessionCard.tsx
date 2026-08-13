@@ -1,14 +1,18 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MapPin, Users, Check, Utensils, MessageSquare } from "lucide-react";
+import { Clock, MapPin, Users, Check, Utensils, MessageSquare, Presentation, Upload } from "lucide-react";
 import { isEmailInAttendees, isSpeaker } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
 import foodDrinkBg from "@assets/image_1768474260490.png";
 import { useUser } from "@/context/UserContext";
+import { SlideDeckDialog } from "@/components/SlideDeckDialog";
+import { SlideDeckUploadDialog } from "@/components/SlideDeckUploadDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 const categoryColorMap: Record<string, string> = {
   talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
@@ -40,6 +44,7 @@ interface SessionCardProps {
   editionDate?: string;
   hideTimeAndRoom?: boolean;
   registrationDisabled?: boolean;
+  isAdmin?: boolean;
 }
 
 export function SessionCard({
@@ -52,10 +57,16 @@ export function SessionCard({
   editionDate,
   hideTimeAndRoom = false,
   registrationDisabled = false,
+  isAdmin = false,
 }: SessionCardProps) {
   const { login } = useUser();
+  const queryClient = useQueryClient();
   const isRegistered = userEmail ? isEmailInAttendees(userEmail, session.attendees) : false;
   const isUserSpeaker = userEmail ? isSpeaker(userEmail, session.speakers) : false;
+  const canManageSlidedeck = !!userEmail && (isUserSpeaker || isAdmin);
+
+  const [showSlidedeck, setShowSlidedeck] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -68,101 +79,56 @@ export function SessionCard({
   const isFoodDrink = isFoodDrinkSession(session.categories || []);
 
   return (
-    <Card
-      className={`flex h-full flex-col transition-shadow duration-200 hover:shadow-md ${
-        isFoodDrink ? "relative overflow-hidden" : ""
-      }`}
-      data-testid={`card-session-${session.id}`}
-    >
-      {isFoodDrink && (
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-[0.12] dark:opacity-[0.10]"
-          style={{
-            backgroundImage: `url(${foodDrinkBg})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-      )}
-      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2 space-y-0 pb-4">
-        <div className="flex flex-wrap gap-1">
-          {(session.categories || []).filter(c => c.toLowerCase() !== "beheer").map((category) => (
-            <Badge
-              key={category}
-              variant="secondary"
-              className={`${getCategoryColors(category)} no-default-hover-elevate no-default-active-elevate`}
-              data-testid={`badge-category-${session.id}-${category.toLowerCase()}`}
-            >
-              {category.toLowerCase() === "eten & drinken" && (
-                <Utensils className="mr-1 h-3 w-3" />
-              )}
-              {category}
-            </Badge>
-          ))}
-        </div>
-        {isUserSpeaker && (
-          <Badge
-            variant="default"
-            className="bg-green-600 text-white dark:bg-green-700"
-            data-testid={`badge-speaker-${session.id}`}
-          >
-            <Check className="mr-1 h-3 w-3" />
-            Spreker
-          </Badge>
+    <>
+      <Card
+        className={`flex flex-col ${isFoodDrink ? "relative overflow-hidden" : ""}`}
+        style={isFoodDrink ? {
+          backgroundImage: `url(${foodDrinkBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        } : {}}
+      >
+        {isFoodDrink && (
+          <div className="absolute inset-0 bg-background/85" />
         )}
-        {isRegistered && !isUserSpeaker && (
-          <Badge
-            variant="default"
-            className="bg-green-600 text-white dark:bg-green-700"
-            data-testid={`badge-registered-${session.id}`}
-          >
-            <Check className="mr-1 h-3 w-3" />
-            Ingeschreven
-          </Badge>
-        )}
-      </CardHeader>
+        <div className={`flex flex-col flex-1 ${isFoodDrink ? "relative" : ""}`}>
+        <CardHeader className="pb-3">
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {(session.categories || []).filter(c => c.toLowerCase() !== "beheer").map((category) => (
+              <Badge
+                key={category}
+                className={`text-xs font-medium no-default-hover-elevate no-default-active-elevate ${getCategoryColors(category)}`}
+              >
+                {category}
+              </Badge>
+            ))}
+          </div>
+          <h3 className="text-base font-semibold leading-snug">{session.title}</h3>
+        </CardHeader>
 
-      <CardContent className="flex-1 space-y-4">
-        {isPastEdition ? (
-          <h3
-            className="text-xl font-semibold leading-tight"
-            data-testid={`text-title-${session.id}`}
-          >
-            {session.title}
-          </h3>
-        ) : (
-          <Link href={`/sessies/${session.slug}`}>
-            <h3
-              className="text-xl font-semibold leading-tight hover:text-primary cursor-pointer transition-colors"
-              data-testid={`text-title-${session.id}`}
-            >
-              {session.title}
-            </h3>
-          </Link>
-        )}
+        <CardContent className="pb-4 flex-1">
+          <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+            {session.description}
+          </p>
 
-        <div className="space-y-2 text-sm">
           {!hideTimeAndRoom && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="h-4 w-4 shrink-0" />
-              <span data-testid={`text-time-${session.id}`}>
-                {formatTime(session.startTime)} - {formatTime(session.endTime)}
+            <div className="flex flex-col gap-1.5 text-sm text-muted-foreground mb-3">
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" />
+                {formatTime(session.startTime)} – {formatTime(session.endTime)}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" />
+                {session.room}
               </span>
             </div>
           )}
 
-          {!hideTimeAndRoom && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span data-testid={`text-room-${session.id}`}>{session.room}</span>
-            </div>
-          )}
-
-          {userEmail && session.speakers.length > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {session.speakers.slice(0, 3).map((speaker) => (
-                  <Avatar key={speaker.email} className="h-6 w-6 border-2 border-background">
+          {session.speakers.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {session.speakers.map((speaker) => (
+                <div key={speaker.email} className="flex items-center gap-1.5">
+                  <Avatar className="h-6 w-6">
                     {speaker.photoUrl ? (
                       <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
                     ) : null}
@@ -170,104 +136,168 @@ export function SessionCard({
                       {getInitials(speaker.name)}
                     </AvatarFallback>
                   </Avatar>
-                ))}
-              </div>
-              <span className="font-medium" data-testid={`text-speaker-${session.id}`}>
-                {session.speakers.map(s => s.name).join(" & ")}
-              </span>
+                  <span className="text-xs text-muted-foreground">{speaker.name}</span>
+                </div>
+              ))}
             </div>
           )}
-        </div>
 
-        <p
-          className="line-clamp-2 text-sm text-muted-foreground"
-          data-testid={`text-description-${session.id}`}
-        >
-          {session.description}
-        </p>
+          {session.speakerCount !== undefined && session.speakers.length === 0 && session.speakerCount > 0 && (
+            <div className="flex items-center gap-1.5 mt-3 text-xs text-muted-foreground">
+              <Users className="h-3.5 w-3.5" />
+              {session.speakerCount} {session.speakerCount === 1 ? "spreker" : "sprekers"}
+            </div>
+          )}
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="h-4 w-4" />
-          <span data-testid={`text-attendees-${session.id}`}>
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+            {session.showDietaryForm && (
+              <span className="flex items-center gap-1">
+                <Utensils className="h-3.5 w-3.5" />
+                Dieetvoorkeur
+              </span>
+            )}
+            {isRegistered && (
+              <span className="flex items-center gap-1 text-green-600">
+                <Check className="h-3.5 w-3.5" />
+                Ingeschreven
+              </span>
+            )}
             {(() => {
               const count = session.attendeeCount ?? session.attendees.length;
-              return session.capacity 
+              if (count === 0) return null;
+              return session.capacity
                 ? `${count} van ${session.capacity} deelnemers`
                 : `${count} deelnemer${count !== 1 ? "s" : ""}`;
             })()}
-          </span>
-        </div>
-      </CardContent>
+          </div>
+        </CardContent>
 
-      <CardFooter className="pt-4">
-        {isPastEdition ? (
-          userEmail ? (
-            session.speakers.length > 0 ? (
-              <Link href={`/edities/${editionDate}/feedback/${session.id}`} className="w-full">
+        <CardFooter className="pt-4">
+          {isPastEdition ? (
+            <div className="flex flex-col gap-2 w-full">
+              {/* Main action row: Feedback + Slidedeck */}
+              {userEmail && (session.speakers.length > 0 || session.slidedeck) && (
+                <div className="flex gap-2">
+                  {session.speakers.length > 0 && (
+                    <Link
+                      href={`/edities/${editionDate}/feedback/${session.id}`}
+                      className={session.slidedeck ? "flex-1" : "w-full"}
+                    >
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        data-testid={`button-feedback-${session.id}`}
+                      >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Geef feedback
+                      </Button>
+                    </Link>
+                  )}
+                  {session.slidedeck && (
+                    <Button
+                      variant="outline"
+                      className={session.speakers.length > 0 ? "flex-1" : "w-full"}
+                      onClick={() => setShowSlidedeck(true)}
+                      data-testid={`button-slidedeck-${session.id}`}
+                    >
+                      <Presentation className="mr-2 h-4 w-4" />
+                      Slidedeck
+                    </Button>
+                  )}
+                </div>
+              )}
+              {/* Upload row: only for speakers/admins */}
+              {canManageSlidedeck && (
                 <Button
-                  variant="outline"
-                  className="w-full"
-                  data-testid={`button-feedback-${session.id}`}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-muted-foreground"
+                  onClick={() => setShowUpload(true)}
+                  data-testid={`button-upload-slidedeck-${session.id}`}
                 >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Geef feedback
+                  <Upload className="mr-2 h-3.5 w-3.5" />
+                  {session.slidedeck ? "Slidedeck beheren" : "Slidedeck uploaden"}
                 </Button>
-              </Link>
-            ) : null
-          ) : null
-        ) : registrationDisabled ? (
-          <Button
-            variant="secondary"
-            className="w-full"
-            disabled
-            data-testid={`button-register-disabled-${session.id}`}
-          >
-            Inschrijven nog niet mogelijk
-          </Button>
-        ) : userEmail ? (
-          isUserSpeaker ? (
+              )}
+            </div>
+          ) : registrationDisabled ? (
             <Button
               variant="secondary"
               className="w-full"
               disabled
-              data-testid={`button-speaker-${session.id}`}
+              data-testid={`button-register-disabled-${session.id}`}
             >
-              Je bent spreker
+              Inschrijven nog niet mogelijk
             </Button>
-          ) : isRegistered ? (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => onUnregister(session.id)}
-              disabled={isPending}
-              data-testid={`button-unregister-${session.id}`}
-            >
-              Uitschrijven
-            </Button>
-          ) : session.capacity && (session.attendeeCount ?? session.attendees.length) >= session.capacity ? (
-            <Button
-              className="w-full"
-              disabled
-              data-testid={`button-register-${session.id}`}
-            >
-              Sessie is vol
-            </Button>
+          ) : userEmail ? (
+            isUserSpeaker ? (
+              <Button
+                variant="secondary"
+                className="w-full"
+                disabled
+                data-testid={`button-speaker-${session.id}`}
+              >
+                Je bent spreker
+              </Button>
+            ) : isRegistered ? (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => onUnregister(session.id)}
+                disabled={isPending}
+                data-testid={`button-unregister-${session.id}`}
+              >
+                Uitschrijven
+              </Button>
+            ) : session.capacity && (session.attendeeCount ?? session.attendees.length) >= session.capacity ? (
+              <Button
+                className="w-full"
+                disabled
+                data-testid={`button-register-${session.id}`}
+              >
+                Sessie is vol
+              </Button>
+            ) : (
+              <Button
+                className="w-full"
+                onClick={() => onRegister(session.id)}
+                disabled={isPending}
+                data-testid={`button-register-${session.id}`}
+              >
+                Inschrijven
+              </Button>
+            )
           ) : (
-            <Button
-              className="w-full"
-              onClick={() => onRegister(session.id)}
-              disabled={isPending}
-              data-testid={`button-register-${session.id}`}
-            >
-              Inschrijven
+            <Button variant="secondary" className="w-full" onClick={login} data-testid={`button-login-${session.id}`}>
+              Log in om in te schrijven
             </Button>
-          )
-        ) : (
-          <Button variant="secondary" className="w-full" onClick={login} data-testid={`button-login-${session.id}`}>
-            Log in om in te schrijven
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+          )}
+        </CardFooter>
+        </div>
+      </Card>
+
+      {/* Dialogs */}
+      {session.slidedeck && (
+        <SlideDeckDialog
+          open={showSlidedeck}
+          onOpenChange={setShowSlidedeck}
+          sessionId={session.id}
+          filename={session.slidedeck.filename}
+          contentType={session.slidedeck.contentType}
+        />
+      )}
+      {canManageSlidedeck && (
+        <SlideDeckUploadDialog
+          open={showUpload}
+          onOpenChange={setShowUpload}
+          sessionId={session.id}
+          sessionTitle={session.title}
+          existing={session.slidedeck}
+          onChanged={() => {
+            queryClient.invalidateQueries({ queryKey: ["/api/editions"] });
+          }}
+        />
+      )}
+    </>
   );
 }

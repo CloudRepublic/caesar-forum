@@ -47,6 +47,13 @@ export const sessionSchema = z.object({
   // Counts for unauthenticated users (when personal data is stripped)
   speakerCount: z.number().optional(),
   attendeeCount: z.number().optional(),
+  // Slide deck (uploaded by speaker or admin)
+  slidedeck: z.object({
+    filename: z.string(),
+    contentType: z.string(),
+    fileSize: z.number(),
+    uploadedAt: z.string(),
+  }).optional(),
 });
 
 export type Session = z.infer<typeof sessionSchema>;

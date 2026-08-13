@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MapPin, Users, Check, Utensils, MessageSquare } from "lucide-react";
+import { Clock, MapPin, Users, Check, Utensils, MessageSquare, Presentation, Upload } from "lucide-react";
 import { isEmailInAttendees, isSpeaker } from "@/lib/email-utils";
 import { getInitials } from "@/lib/utils";
 import type { Session } from "@shared/schema";
 import foodDrinkBg from "@assets/image_1768474260490.png";
+import { SlideDeckDialog } from "@/components/SlideDeckDialog";
+import { SlideDeckUploadDialog } from "@/components/SlideDeckUploadDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 const categoryColorMap: Record<string, string> = {
   talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
@@ -36,6 +40,7 @@ interface SessionTimelineProps {
   isPending?: boolean;
   isPastEdition?: boolean;
   editionDate?: string;
+  isAdmin?: boolean;
 }
 
 export function SessionTimeline({
@@ -46,7 +51,15 @@ export function SessionTimeline({
   isPending = false,
   isPastEdition = false,
   editionDate,
+  isAdmin = false,
 }: SessionTimelineProps) {
+  const queryClient = useQueryClient();
+  const [slidedeckSessionId, setSlidedeckSessionId] = useState<string | null>(null);
+  const [uploadSessionId, setUploadSessionId] = useState<string | null>(null);
+
+  const slidedeckSession = sessions.find(s => s.id === slidedeckSessionId);
+  const uploadSession = sessions.find(s => s.id === uploadSessionId);
+
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleTimeString("nl-NL", {
@@ -218,18 +231,43 @@ export function SessionTimeline({
 
                       <div className="flex shrink-0 items-center gap-2 md:flex-col md:items-end">
                         {isPastEdition ? (
-                          userEmail && session.speakers.length > 0 ? (
-                            <Link href={`/edities/${editionDate}/feedback/${session.id}`}>
+                          <>
+                            {userEmail && session.speakers.length > 0 && (
+                              <Link href={`/edities/${editionDate}/feedback/${session.id}`}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  data-testid={`timeline-feedback-${session.id}`}
+                                >
+                                  <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+                                  Feedback
+                                </Button>
+                              </Link>
+                            )}
+                            {session.slidedeck && (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                data-testid={`timeline-feedback-${session.id}`}
+                                onClick={() => setSlidedeckSessionId(session.id)}
+                                data-testid={`timeline-slidedeck-${session.id}`}
                               >
-                                <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
-                                Feedback
+                                <Presentation className="mr-1.5 h-3.5 w-3.5" />
+                                Slidedeck
                               </Button>
-                            </Link>
-                          ) : null
+                            )}
+                            {userEmail && (isUserSpeaker || isAdmin) && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground"
+                                onClick={() => setUploadSessionId(session.id)}
+                                data-testid={`timeline-upload-slidedeck-${session.id}`}
+                              >
+                                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                                {session.slidedeck ? "Beheren" : "Upload"}
+                              </Button>
+                            )}
+                          </>
                         ) : userEmail ? (
                           isUserSpeaker ? (
                             <Button
@@ -282,6 +320,31 @@ export function SessionTimeline({
           </div>
         </div>
       ))}
+
+      {/* Slidedeck viewer dialog */}
+      {slidedeckSession?.slidedeck && (
+        <SlideDeckDialog
+          open={!!slidedeckSessionId}
+          onOpenChange={(open) => !open && setSlidedeckSessionId(null)}
+          sessionId={slidedeckSession.id}
+          filename={slidedeckSession.slidedeck.filename}
+          contentType={slidedeckSession.slidedeck.contentType}
+        />
+      )}
+
+      {/* Slidedeck upload dialog */}
+      {uploadSession && (
+        <SlideDeckUploadDialog
+          open={!!uploadSessionId}
+          onOpenChange={(open) => !open && setUploadSessionId(null)}
+          sessionId={uploadSession.id}
+          sessionTitle={uploadSession.title}
+          existing={uploadSession.slidedeck}
+          onChanged={() => {
+            queryClient.invalidateQueries({ queryKey: ["/api/editions"] });
+          }}
+        />
+      )}
     </div>
   );
 }

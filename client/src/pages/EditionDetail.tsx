@@ -57,6 +57,17 @@ export default function EditionDetail() {
     enabled: !!date,
   });
 
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin-check"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin-check");
+      if (!res.ok) return { isAdmin: false };
+      return res.json();
+    },
+    enabled: !!user,
+  });
+  const isAdmin = adminCheck?.isAdmin ?? false;
+
   useEffect(() => {
     if (data?.edition?.title) {
       document.title = `Caesar Forum - ${data.edition.title}`;
@@ -328,6 +339,7 @@ export default function EditionDetail() {
                     isPending={false}
                     isPastEdition
                     editionDate={date}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>
@@ -340,6 +352,7 @@ export default function EditionDetail() {
                 isPending={false}
                 isPastEdition
                 editionDate={date}
+                isAdmin={isAdmin}
               />
             )
           ) : (

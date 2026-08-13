@@ -1,6 +1,18 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+export const sessionSlidedecks = pgTable("session_slidedecks", {
+  sessionId: text("session_id").primaryKey(),
+  filename: text("filename").notNull(),
+  blobName: text("blob_name").notNull(),
+  contentType: text("content_type").notNull(),
+  fileSize: bigint("file_size", { mode: "number" }).notNull().default(0),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+  uploadedBy: text("uploaded_by").notNull(),
+});
+
+export type SlideDeckRow = typeof sessionSlidedecks.$inferSelect;
 
 export const forumPhases = pgTable("forum_phases", {
   editionId: text("edition_id").primaryKey(),

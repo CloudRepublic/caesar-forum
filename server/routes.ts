@@ -1,9 +1,26 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage, GraphApiUnavailableError } from "./storage";
+import { storage, downloadSlide, GraphApiUnavailableError } from "./storage";
 import type { FeedbackEmailData } from "./microsoft-graph";
-
+import multer from "multer";
 import { z } from "zod";
+
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+];
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Alleen PDF en PowerPoint (.pptx) bestanden zijn toegestaan."));
+    }
+  },
+});
 
 const sessionIdSchema = z.object({
   sessionId: z.string(),
@@ -509,6 +526,103 @@ export async function registerRoutes(
       }
       const errorMessage = error instanceof Error ? error.message : "Er is een fout opgetreden bij het versturen van feedback.";
       res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  // --- Slidedeck endpoints ---
+
+  // Get slidedeck metadata for a session
+  app.get("/api/sessions/:id/slidedeck", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) return res.status(401).json({ error: "Je moet ingelogd zijn." });
+      const sd = await storage.getSlidedeck(req.params.id);
+      if (!sd) return res.status(404).json({ error: "Geen slidedeck gevonden." });
+      res.json({ filename: sd.filename, contentType: sd.contentType, fileSize: sd.fileSize, uploadedAt: sd.uploadedAt });
+    } catch (error) {
+      console.error("Error fetching slidedeck metadata:", error);
+      res.status(500).json({ error: "Er is een fout opgetreden." });
+    }
+  });
+
+  // Download slidedeck file
+  app.get("/api/sessions/:id/slidedeck/download", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) return res.status(401).json({ error: "Je moet ingelogd zijn." });
+      const sd = await storage.getSlidedeck(req.params.id);
+      if (!sd) return res.status(404).json({ error: "Geen slidedeck gevonden." });
+      const { stream, contentType, size } = await downloadSlide(sd.blobName);
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(sd.filename)}"`);
+      if (size > 0) res.setHeader("Content-Length", size);
+      stream.pipe(res);
+    } catch (error) {
+      console.error("Error downloading slidedeck:", error);
+      res.status(500).json({ error: "Er is een fout opgetreden bij het downloaden." });
+    }
+  });
+
+  // Upload slidedeck (speaker or admin)
+  app.post("/api/sessions/:id/slidedeck", upload.single("file"), async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) return res.status(401).json({ error: "Je moet ingelogd zijn." });
+
+      const file = req.file;
+      if (!file) return res.status(400).json({ error: "Geen bestand ontvangen." });
+
+      // Check permission: speaker of this session or forum admin
+      if (!isForumAdmin(user.email)) {
+        const session = await storage.getSession(req.params.id);
+        if (!session) return res.status(404).json({ error: "Sessie niet gevonden." });
+        const isSpeakerOfSession = session.speakers.some(
+          s => s.email.toLowerCase() === user.email.toLowerCase(),
+        );
+        if (!isSpeakerOfSession) {
+          return res.status(403).json({ error: "Je hebt geen toegang om een slidedeck te uploaden voor deze sessie." });
+        }
+      }
+
+      await storage.saveSlidedeck(
+        req.params.id,
+        file.originalname,
+        file.buffer,
+        file.mimetype,
+        file.size,
+        user.email,
+      );
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error uploading slidedeck:", error);
+      const msg = error instanceof Error ? error.message : "Er is een fout opgetreden bij het uploaden.";
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  // Delete slidedeck (speaker or admin)
+  app.delete("/api/sessions/:id/slidedeck", async (req: Request, res: Response) => {
+    try {
+      const user = req.session.user;
+      if (!user) return res.status(401).json({ error: "Je moet ingelogd zijn." });
+
+      if (!isForumAdmin(user.email)) {
+        const session = await storage.getSession(req.params.id);
+        if (!session) return res.status(404).json({ error: "Sessie niet gevonden." });
+        const isSpeakerOfSession = session.speakers.some(
+          s => s.email.toLowerCase() === user.email.toLowerCase(),
+        );
+        if (!isSpeakerOfSession) {
+          return res.status(403).json({ error: "Je hebt geen toegang." });
+        }
+      }
+
+      await storage.deleteSlidedeck(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting slidedeck:", error);
+      res.status(500).json({ error: "Er is een fout opgetreden bij het verwijderen." });
     }
   });
 

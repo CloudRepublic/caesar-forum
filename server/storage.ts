@@ -1,8 +1,10 @@
 import type { Session, ForumEdition, ForumData, DietaryPreference } from "@shared/schema";
 import { getMicrosoftGraphService, type PastEdition, type FeedbackEmailData } from "./microsoft-graph";
 import { db } from "./db";
-import { dietaryPreferences, forumPhases } from "./db/schema";
-import { eq, and } from "drizzle-orm";
+import { dietaryPreferences, forumPhases, sessionSlidedecks } from "./db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { uploadSlide, deleteSlide, downloadSlide } from "./blob-storage";
+export { downloadSlide };
 
 export interface IStorage {
   getForumData(): Promise<ForumData>;
@@ -25,6 +27,11 @@ export interface IStorage {
   // Forum phase
   getForumPhase(editionId: string): Promise<number>;
   setForumPhase(editionId: string, phase: number): Promise<void>;
+  // Slidedecks
+  getSlidedeck(sessionId: string): Promise<{ filename: string; blobName: string; contentType: string; fileSize: number; uploadedAt: Date } | null>;
+  saveSlidedeck(sessionId: string, filename: string, buffer: Buffer, contentType: string, fileSize: number, uploadedBy: string): Promise<void>;
+  deleteSlidedeck(sessionId: string): Promise<void>;
+  getSlidedecksForSessions(sessionIds: string[]): Promise<Map<string, { filename: string; contentType: string; fileSize: number; uploadedAt: Date }>>;
 }
 
 export class GraphApiUnavailableError extends Error {
@@ -268,6 +275,20 @@ export class GraphStorage implements IStorage {
       const graphService = getMicrosoftGraphService();
       const result = await graphService.getEditionByDate(dateStr);
       this.recordGraphSuccess();
+
+      // Merge slidedecks into sessions
+      const sessionIds = result.sessions.map(s => s.id);
+      if (sessionIds.length > 0) {
+        const slidedeckMap = await this.getSlidedecksForSessions(sessionIds);
+        result.sessions = result.sessions.map(session => {
+          const sd = slidedeckMap.get(session.id);
+          if (sd) {
+            return { ...session, slidedeck: { filename: sd.filename, contentType: sd.contentType, fileSize: sd.fileSize, uploadedAt: sd.uploadedAt.toISOString() } };
+          }
+          return session;
+        });
+      }
+
       return result;
     } catch (error) {
       this.recordGraphFailure(error);
@@ -310,6 +331,46 @@ export class GraphStorage implements IStorage {
     } else {
       await db.insert(forumPhases).values({ editionId, phase });
     }
+  }
+
+  async getSlidedeck(sessionId: string) {
+    const rows = await db.select().from(sessionSlidedecks).where(eq(sessionSlidedecks.sessionId, sessionId)).limit(1);
+    if (rows.length === 0) return null;
+    const row = rows[0];
+    return { filename: row.filename, blobName: row.blobName, contentType: row.contentType, fileSize: row.fileSize, uploadedAt: row.uploadedAt };
+  }
+
+  async saveSlidedeck(sessionId: string, filename: string, buffer: Buffer, contentType: string, fileSize: number, uploadedBy: string): Promise<void> {
+    const blobName = `${sessionId}/${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    await uploadSlide(blobName, buffer, contentType);
+
+    // Delete old blob if exists
+    const existing = await this.getSlidedeck(sessionId);
+    if (existing) {
+      await deleteSlide(existing.blobName).catch(() => {/* ignore errors */});
+      await db.update(sessionSlidedecks)
+        .set({ filename, blobName, contentType, fileSize, uploadedBy, uploadedAt: new Date() })
+        .where(eq(sessionSlidedecks.sessionId, sessionId));
+    } else {
+      await db.insert(sessionSlidedecks).values({ sessionId, filename, blobName, contentType, fileSize, uploadedBy });
+    }
+  }
+
+  async deleteSlidedeck(sessionId: string): Promise<void> {
+    const existing = await this.getSlidedeck(sessionId);
+    if (!existing) return;
+    await deleteSlide(existing.blobName).catch(() => {/* ignore blob errors */});
+    await db.delete(sessionSlidedecks).where(eq(sessionSlidedecks.sessionId, sessionId));
+  }
+
+  async getSlidedecksForSessions(sessionIds: string[]): Promise<Map<string, { filename: string; contentType: string; fileSize: number; uploadedAt: Date }>> {
+    if (sessionIds.length === 0) return new Map();
+    const rows = await db.select().from(sessionSlidedecks).where(inArray(sessionSlidedecks.sessionId, sessionIds));
+    const map = new Map<string, { filename: string; contentType: string; fileSize: number; uploadedAt: Date }>();
+    for (const row of rows) {
+      map.set(row.sessionId, { filename: row.filename, contentType: row.contentType, fileSize: row.fileSize, uploadedAt: row.uploadedAt });
+    }
+    return map;
   }
 }
 
