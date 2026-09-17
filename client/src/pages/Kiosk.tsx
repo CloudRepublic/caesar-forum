@@ -89,6 +89,23 @@ function SessionBlock({
         >
           {session.title}
         </span>
+        {session.speakers.length > 0 && (
+          <div className="flex -space-x-1.5 shrink-0 ml-auto">
+            {session.speakers.map((speaker) => (
+              <Avatar
+                key={speaker.name}
+                className="h-6 w-6 border border-background"
+              >
+                {speaker.photoUrl && (
+                  <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                )}
+                <AvatarFallback className="bg-primary/10 text-[9px] font-semibold text-primary">
+                  {getInitials(speaker.name)}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+          </div>
+        )}
         <span className="text-xs text-muted-foreground shrink-0 ml-auto">
           {formatTime(session.startTime)}
         </span>
