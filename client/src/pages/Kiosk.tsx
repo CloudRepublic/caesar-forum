@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, MapPin, User, Monitor, Utensils } from "lucide-react";
+import { Clock, MapPin, Monitor, Utensils } from "lucide-react";
 import foodDrinkBg from "@assets/image_1768474260490.png";
 import type { ForumData } from "@shared/schema";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitials } from "@/lib/utils";
 
 interface KioskSession {
   id: string;
@@ -10,7 +12,7 @@ interface KioskSession {
   room: string;
   startTime: string;
   endTime: string;
-  speakers: { name: string }[];
+  speakers: { name: string; photoUrl?: string }[];
   categories: string[];
 }
 
@@ -149,8 +151,22 @@ function SessionBlock({
         </h3>
 
         {session.speakers.length > 0 && !isCompact && (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <User className="h-4 w-4 shrink-0" />
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <div className="flex -space-x-2 shrink-0">
+              {session.speakers.map((speaker) => (
+                <Avatar
+                  key={speaker.name}
+                  className="h-11 w-11 border-2 border-background shadow-sm"
+                >
+                  {speaker.photoUrl && (
+                    <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                  )}
+                  <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+                    {getInitials(speaker.name)}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+            </div>
             <span className="text-base truncate">
               {session.speakers.map(s => s.name).join(", ")}
             </span>
