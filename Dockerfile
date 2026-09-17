@@ -3,8 +3,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+RUN npm install --global npm@10.9.3
+
 COPY package*.json ./
-RUN npm ci
+RUN npm ci && test -x node_modules/.bin/tsx
 
 COPY . .
 RUN npm run build
@@ -13,6 +15,8 @@ RUN npm run build
 FROM node:20-alpine AS production
 
 WORKDIR /app
+
+RUN npm install --global npm@10.9.3
 
 COPY package*.json ./
 RUN npm ci --omit=dev
