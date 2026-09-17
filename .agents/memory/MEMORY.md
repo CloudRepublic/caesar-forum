@@ -1,1 +1,2 @@
 - [Azure production DB migrations](azure-db-migrations.md) — new tables must be created manually on Azure; Replit db:push does not touch the Azure database.
+- [Azure Docker dependency installs](azure-docker-dependencies.md) — npm crashes consistently on the GitHub Docker runner; use pnpm for container installs.

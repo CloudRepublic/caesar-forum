@@ -3,15 +3,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-RUN npm install --global npm@10.9.3
+RUN npm install --global pnpm@9.15.9
 
 COPY package*.json ./
-RUN npm install --include=dev --no-audit --no-fund \
+RUN pnpm import \
+    && pnpm install --frozen-lockfile \
     && test -x node_modules/.bin/tsx
 
 COPY . .
-RUN npm run build
-RUN npm prune --omit=dev --no-audit --no-fund
+RUN pnpm run build
+RUN pnpm prune --prod
 
 # Production stage
 FROM node:20-alpine AS production
