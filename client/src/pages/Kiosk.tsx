@@ -64,8 +64,8 @@ function SessionBlock({
 }) {
   const isNow = status === "now";
   const isNext = status === "next";
-  const isTiny = heightPx < 56 * uiScale;
-  const isCompact = !isTiny && heightPx < 140 * uiScale;
+  const isTiny = heightPx < 120 * uiScale;
+  const isCompact = !isTiny && heightPx < 180 * uiScale;
   const isFoodDrink = isFoodDrinkSession(session.categories);
 
   const borderClass = isNow
