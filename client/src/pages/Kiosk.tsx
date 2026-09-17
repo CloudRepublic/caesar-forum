@@ -196,9 +196,12 @@ export default function Kiosk() {
     const originalFontSize = root.style.fontSize;
 
     const updateScale = () => {
-      const scale = Math.min(
-        2,
-        Math.max(1, Math.min(window.innerWidth / 1920, window.innerHeight / 1080)),
+      // Scale continuously in both directions from the 1920×1080 design
+      // baseline. Width and height both participate, so resizing the browser
+      // always preserves the kiosk's proportions without clipping.
+      const scale = Math.max(
+        0.2,
+        Math.min(window.innerWidth / 1920, window.innerHeight / 1080),
       );
       setUiScale(scale);
       root.style.fontSize = `${16 * scale}px`;
