@@ -52,6 +52,18 @@ function isDietaryAdmin(email: string): boolean {
   return adminList.includes(email.toLowerCase());
 }
 
+function excludesFeedbackAndSlidedeck(categories: string[]): boolean {
+  return categories.some(category => {
+    const normalized = category
+      .toLowerCase()
+      .replace(/&amp;/g, "&")
+      .replace(/\s*&\s*/g, " en ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return normalized === "beheer" || normalized === "eten en drinken";
+  });
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -493,6 +505,10 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Sessie niet gevonden" });
       }
 
+      if (excludesFeedbackAndSlidedeck(session.categories || [])) {
+        return res.status(400).json({ error: "Voor deze sessie kan geen feedback worden gegeven." });
+      }
+
       if (session.speakers.length === 0) {
         return res.status(400).json({ error: "Deze sessie heeft geen sprekers om feedback naar te sturen" });
       }
@@ -536,6 +552,11 @@ export async function registerRoutes(
     try {
       const user = req.session.user;
       if (!user) return res.status(401).json({ error: "Je moet ingelogd zijn." });
+      const session = await storage.getSession(req.params.id);
+      if (!session) return res.status(404).json({ error: "Sessie niet gevonden." });
+      if (excludesFeedbackAndSlidedeck(session.categories || [])) {
+        return res.status(404).json({ error: "Geen slidedeck beschikbaar voor deze sessie." });
+      }
       const sd = await storage.getSlidedeck(req.params.id);
       if (!sd) return res.status(404).json({ error: "Geen slidedeck gevonden." });
       res.json({ filename: sd.filename, contentType: sd.contentType, fileSize: sd.fileSize, uploadedAt: sd.uploadedAt });
@@ -550,6 +571,11 @@ export async function registerRoutes(
     try {
       const user = req.session.user;
       if (!user) return res.status(401).json({ error: "Je moet ingelogd zijn." });
+      const session = await storage.getSession(req.params.id);
+      if (!session) return res.status(404).json({ error: "Sessie niet gevonden." });
+      if (excludesFeedbackAndSlidedeck(session.categories || [])) {
+        return res.status(404).json({ error: "Geen slidedeck beschikbaar voor deze sessie." });
+      }
       const sd = await storage.getSlidedeck(req.params.id);
       if (!sd) return res.status(404).json({ error: "Geen slidedeck gevonden." });
       const { stream, contentType, size } = await downloadSlide(sd.blobName);
@@ -572,10 +598,14 @@ export async function registerRoutes(
       const file = req.file;
       if (!file) return res.status(400).json({ error: "Geen bestand ontvangen." });
 
+      const session = await storage.getSession(req.params.id);
+      if (!session) return res.status(404).json({ error: "Sessie niet gevonden." });
+      if (excludesFeedbackAndSlidedeck(session.categories || [])) {
+        return res.status(400).json({ error: "Voor deze sessie kan geen slidedeck worden geüpload." });
+      }
+
       // Check permission: speaker of this session or forum admin
       if (!isForumAdmin(user.email)) {
-        const session = await storage.getSession(req.params.id);
-        if (!session) return res.status(404).json({ error: "Sessie niet gevonden." });
         const isSpeakerOfSession = session.speakers.some(
           s => s.email.toLowerCase() === user.email.toLowerCase(),
         );
@@ -607,9 +637,13 @@ export async function registerRoutes(
       const user = req.session.user;
       if (!user) return res.status(401).json({ error: "Je moet ingelogd zijn." });
 
+      const session = await storage.getSession(req.params.id);
+      if (!session) return res.status(404).json({ error: "Sessie niet gevonden." });
+      if (excludesFeedbackAndSlidedeck(session.categories || [])) {
+        return res.status(400).json({ error: "Voor deze sessie kan geen slidedeck worden beheerd." });
+      }
+
       if (!isForumAdmin(user.email)) {
-        const session = await storage.getSession(req.params.id);
-        if (!session) return res.status(404).json({ error: "Sessie niet gevonden." });
         const isSpeakerOfSession = session.speakers.some(
           s => s.email.toLowerCase() === user.email.toLowerCase(),
         );

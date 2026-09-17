@@ -29,6 +29,18 @@ function isFoodDrinkSession(categories: string[]): boolean {
   return categories.some(c => c.toLowerCase() === "eten & drinken");
 }
 
+function excludesFeedbackAndSlidedeck(categories: string[]): boolean {
+  return categories.some(category => {
+    const normalized = category
+      .toLowerCase()
+      .replace(/&amp;/g, "&")
+      .replace(/\s*&\s*/g, " en ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return normalized === "beheer" || normalized === "eten en drinken";
+  });
+}
+
 function getCategoryColors(category: string): string {
   const key = category.toLowerCase().replace(/\s+/g, "");
   return categoryColorMap[key] || "bg-[hsl(var(--category-default-bg))] text-[hsl(var(--category-default-fg))]";
@@ -63,7 +75,8 @@ export function SessionCard({
   const queryClient = useQueryClient();
   const isRegistered = userEmail ? isEmailInAttendees(userEmail, session.attendees) : false;
   const isUserSpeaker = userEmail ? isSpeaker(userEmail, session.speakers) : false;
-  const canManageSlidedeck = !!userEmail && (isUserSpeaker || isAdmin);
+  const extrasExcluded = excludesFeedbackAndSlidedeck(session.categories || []);
+  const canManageSlidedeck = !extrasExcluded && !!userEmail && (isUserSpeaker || isAdmin);
 
   const [showSlidedeck, setShowSlidedeck] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
@@ -103,7 +116,7 @@ export function SessionCard({
               </Badge>
             ))}
           </div>
-          {isPastEdition && editionDate && (session.speakerCount ?? session.speakers.length) > 0 ? (
+          {isPastEdition && !extrasExcluded && editionDate && (session.speakerCount ?? session.speakers.length) > 0 ? (
             <Link href={`/edities/${editionDate}/feedback/${session.id}`}>
               <h3 className="text-base font-semibold leading-snug transition-colors hover:text-primary cursor-pointer">
                 {session.title}
@@ -184,7 +197,7 @@ export function SessionCard({
           {isPastEdition ? (
             <div className="flex flex-col gap-2 w-full">
               {/* Main action row: Feedback + Slidedeck */}
-              {userEmail && (session.speakers.length > 0 || session.slidedeck) && (
+              {!extrasExcluded && userEmail && (session.speakers.length > 0 || session.slidedeck) && (
                 <div className="flex gap-2">
                   {session.speakers.length > 0 && (
                     <Link
@@ -285,7 +298,7 @@ export function SessionCard({
       </Card>
 
       {/* Dialogs */}
-      {session.slidedeck && (
+      {!extrasExcluded && session.slidedeck && (
         <SlideDeckDialog
           open={showSlidedeck}
           onOpenChange={setShowSlidedeck}

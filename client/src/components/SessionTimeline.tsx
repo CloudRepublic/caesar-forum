@@ -28,6 +28,18 @@ function isFoodDrinkSession(categories: string[]): boolean {
   return categories.some(c => c.toLowerCase() === "eten & drinken");
 }
 
+function excludesFeedbackAndSlidedeck(categories: string[]): boolean {
+  return categories.some(category => {
+    const normalized = category
+      .toLowerCase()
+      .replace(/&amp;/g, "&")
+      .replace(/\s*&\s*/g, " en ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return normalized === "beheer" || normalized === "eten en drinken";
+  });
+}
+
 function getCategoryColors(category: string): string {
   const key = category.toLowerCase().replace(/\s+/g, "");
   return categoryColorMap[key] || "bg-[hsl(var(--category-default-bg))] text-[hsl(var(--category-default-fg))]";
@@ -107,6 +119,7 @@ export function SessionTimeline({
                   : false;
 
                 const isFoodDrink = isFoodDrinkSession(session.categories || []);
+                const extrasExcluded = excludesFeedbackAndSlidedeck(session.categories || []);
 
                 return (
                   <div
@@ -169,7 +182,7 @@ export function SessionTimeline({
                         </div>
 
                         {isPastEdition ? (
-                          editionDate && (session.speakerCount ?? session.speakers.length) > 0 ? (
+                          !extrasExcluded && editionDate && (session.speakerCount ?? session.speakers.length) > 0 ? (
                             <Link href={`/edities/${editionDate}/feedback/${session.id}`}>
                               <h4
                                 className="text-lg font-semibold leading-tight hover:text-primary cursor-pointer transition-colors"
@@ -245,7 +258,7 @@ export function SessionTimeline({
                       <div className="flex shrink-0 items-center gap-2 md:flex-col md:items-end">
                         {isPastEdition ? (
                           <>
-                            {userEmail && session.speakers.length > 0 && (
+                            {!extrasExcluded && userEmail && session.speakers.length > 0 && (
                               <Link href={`/edities/${editionDate}/feedback/${session.id}`}>
                                 <Button
                                   variant="outline"
@@ -257,7 +270,7 @@ export function SessionTimeline({
                                 </Button>
                               </Link>
                             )}
-                            {session.slidedeck && (
+                            {!extrasExcluded && session.slidedeck && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -268,7 +281,7 @@ export function SessionTimeline({
                                 Slidedeck
                               </Button>
                             )}
-                            {userEmail && (isUserSpeaker || isAdmin) && (
+                            {!extrasExcluded && userEmail && (isUserSpeaker || isAdmin) && (
                               <Button
                                 variant="ghost"
                                 size="sm"
