@@ -175,12 +175,12 @@ function SessionBlock({
               {session.speakers.map((speaker) => (
                 <Avatar
                   key={speaker.name}
-                  className="h-11 w-11 border-2 border-background shadow-sm"
+                  className="h-6 w-6 border border-background"
                 >
                   {speaker.photoUrl && (
                     <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
                   )}
-                  <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+                  <AvatarFallback className="bg-primary/10 text-[9px] font-semibold text-primary">
                     {getInitials(speaker.name)}
                   </AvatarFallback>
                 </Avatar>
