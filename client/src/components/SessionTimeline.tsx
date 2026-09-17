@@ -169,12 +169,23 @@ export function SessionTimeline({
                         </div>
 
                         {isPastEdition ? (
-                          <h4
-                            className="text-lg font-semibold leading-tight"
-                            data-testid={`timeline-title-${session.id}`}
-                          >
-                            {session.title}
-                          </h4>
+                          editionDate && (session.speakerCount ?? session.speakers.length) > 0 ? (
+                            <Link href={`/edities/${editionDate}/feedback/${session.id}`}>
+                              <h4
+                                className="text-lg font-semibold leading-tight hover:text-primary cursor-pointer transition-colors"
+                                data-testid={`timeline-title-${session.id}`}
+                              >
+                                {session.title}
+                              </h4>
+                            </Link>
+                          ) : (
+                            <h4
+                              className="text-lg font-semibold leading-tight"
+                              data-testid={`timeline-title-${session.id}`}
+                            >
+                              {session.title}
+                            </h4>
+                          )
                         ) : (
                           <Link href={`/sessies/${session.slug}`}>
                             <h4
