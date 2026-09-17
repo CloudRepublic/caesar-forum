@@ -116,14 +116,22 @@ export function SessionCard({
               </Badge>
             ))}
           </div>
-          {isPastEdition && !extrasExcluded && editionDate && (session.speakerCount ?? session.speakers.length) > 0 ? (
-            <Link href={`/edities/${editionDate}/feedback/${session.id}`}>
+          {isPastEdition ? (
+            !extrasExcluded && editionDate && (session.speakerCount ?? session.speakers.length) > 0 ? (
+              <Link href={`/edities/${editionDate}/feedback/${session.id}`}>
+                <h3 className="text-base font-semibold leading-snug transition-colors hover:text-primary cursor-pointer">
+                  {session.title}
+                </h3>
+              </Link>
+            ) : (
+              <h3 className="text-base font-semibold leading-snug">{session.title}</h3>
+            )
+          ) : (
+            <Link href={`/sessies/${session.slug}`}>
               <h3 className="text-base font-semibold leading-snug transition-colors hover:text-primary cursor-pointer">
                 {session.title}
               </h3>
             </Link>
-          ) : (
-            <h3 className="text-base font-semibold leading-snug">{session.title}</h3>
           )}
         </CardHeader>
 
