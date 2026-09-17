@@ -1,0 +1,292 @@
+2026-09-17T11:33:08.4676147Z Current runner version: '2.337.0'
+2026-09-17T11:33:08.4701302Z ##[group]Runner Image Provisioner
+2026-09-17T11:33:08.4702581Z Hosted Compute Agent
+2026-09-17T11:33:08.4703304Z Version: 20260828.587
+2026-09-17T11:33:08.4704011Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-17T11:33:08.4704800Z Build Date: 2026-08-28T16:44:25Z
+2026-09-17T11:33:08.4705595Z Worker ID: {65b561c2-de2d-4a90-8634-ed5bc3071fcc}
+2026-09-17T11:33:08.4706391Z Azure Region: westus
+2026-09-17T11:33:08.4707349Z ##[endgroup]
+2026-09-17T11:33:08.4709177Z ##[group]Operating System
+2026-09-17T11:33:08.4709840Z Ubuntu
+2026-09-17T11:33:08.4710477Z 24.04.5
+2026-09-17T11:33:08.4711082Z LTS
+2026-09-17T11:33:08.4711658Z ##[endgroup]
+2026-09-17T11:33:08.4712563Z ##[group]Runner Image
+2026-09-17T11:33:08.4713221Z Image: ubuntu-24.04
+2026-09-17T11:33:08.4713979Z Version: 20260907.300.1
+2026-09-17T11:33:08.4715341Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-17T11:33:08.4716977Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+2026-09-17T11:33:08.4718019Z ##[endgroup]
+2026-09-17T11:33:08.4719226Z ##[group]GITHUB_TOKEN Permissions
+2026-09-17T11:33:08.4721463Z Contents: read
+2026-09-17T11:33:08.4722369Z Metadata: read
+2026-09-17T11:33:08.4723031Z ##[endgroup]
+2026-09-17T11:33:08.4725363Z Secret source: Actions
+2026-09-17T11:33:08.4726453Z Cache mode: write
+2026-09-17T11:33:08.4727367Z Prepare workflow directory
+2026-09-17T11:33:08.5269249Z Prepare all required actions
+2026-09-17T11:33:08.5316966Z Getting action download info
+2026-09-17T11:33:08.8881845Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-09-17T11:33:09.0086470Z Download action repository 'azure/login@v2' (SHA:7184910d9eb2b1c5e48f7073824a90609bb9b6d6)
+2026-09-17T11:33:09.2961746Z Download action repository 'azure/cli@v2' (SHA:9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956)
+2026-09-17T11:33:09.6157373Z Complete job name: build_push_deploy
+2026-09-17T11:33:09.6910285Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-17T11:33:09.6919662Z ##[group]Run actions/checkout@v4
+2026-09-17T11:33:09.6920578Z with:
+2026-09-17T11:33:09.6921139Z   repository: CloudRepublic/caesar-forum
+2026-09-17T11:33:09.6925965Z   token: ***
+2026-09-17T11:33:09.6926495Z   ssh-strict: true
+2026-09-17T11:33:09.6926992Z   ssh-user: git
+2026-09-17T11:33:09.6927499Z   persist-credentials: true
+2026-09-17T11:33:09.6928044Z   clean: true
+2026-09-17T11:33:09.6928547Z   sparse-checkout-cone-mode: true
+2026-09-17T11:33:09.6929136Z   fetch-depth: 1
+2026-09-17T11:33:09.6929629Z   fetch-tags: false
+2026-09-17T11:33:09.6930134Z   show-progress: true
+2026-09-17T11:33:09.6930648Z   lfs: false
+2026-09-17T11:33:09.6931191Z   submodules: false
+2026-09-17T11:33:09.6931702Z   set-safe-directory: true
+2026-09-17T11:33:09.6932414Z   allow-unsafe-pr-checkout: false
+2026-09-17T11:33:09.6933452Z env:
+2026-09-17T11:33:09.6934003Z   RESOURCE_GROUP: CaesarGroup-forumcaesarnl
+2026-09-17T11:33:09.6934673Z   WEBAPP_NAME: caesarforum
+2026-09-17T11:33:09.6935231Z   ACR_NAME: acrcaesarforum
+2026-09-17T11:33:09.6935764Z   IMAGE_NAME: forum
+2026-09-17T11:33:09.6936253Z ##[endgroup]
+2026-09-17T11:33:09.7950149Z Syncing repository: CloudRepublic/caesar-forum
+2026-09-17T11:33:09.7952569Z ##[group]Getting Git version info
+2026-09-17T11:33:09.7953499Z Working directory is '/home/runner/work/caesar-forum/caesar-forum'
+2026-09-17T11:33:09.7954946Z [command]/usr/bin/git version
+2026-09-17T11:33:09.8006168Z git version 2.55.0
+2026-09-17T11:33:09.8027442Z ##[endgroup]
+2026-09-17T11:33:09.8041806Z Temporarily overriding HOME='/home/runner/work/_temp/2b21d5fe-62ee-4b8a-84c5-9a8ffd0f1790' before making global git config changes
+2026-09-17T11:33:09.8045170Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-17T11:33:09.8048180Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/caesar-forum/caesar-forum
+2026-09-17T11:33:09.8094745Z Deleting the contents of '/home/runner/work/caesar-forum/caesar-forum'
+2026-09-17T11:33:09.8099114Z ##[group]Initializing the repository
+2026-09-17T11:33:09.8102951Z [command]/usr/bin/git init /home/runner/work/caesar-forum/caesar-forum
+2026-09-17T11:33:09.8208788Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-17T11:33:09.8210736Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-17T11:33:09.8212577Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-17T11:33:09.8214358Z hint: call:
+2026-09-17T11:33:09.8215311Z hint:
+2026-09-17T11:33:09.8216503Z hint: 	git config --global init.defaultBranch <name>
+2026-09-17T11:33:09.8217940Z hint:
+2026-09-17T11:33:09.8219409Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-17T11:33:09.8221394Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-17T11:33:09.8223342Z hint:
+2026-09-17T11:33:09.8224348Z hint: 	git branch -m <name>
+2026-09-17T11:33:09.8225411Z hint:
+2026-09-17T11:33:09.8226734Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-17T11:33:09.8228844Z Initialized empty Git repository in /home/runner/work/caesar-forum/caesar-forum/.git/
+2026-09-17T11:33:09.8232097Z [command]/usr/bin/git remote add origin https://github.com/CloudRepublic/caesar-forum
+2026-09-17T11:33:09.8301490Z ##[endgroup]
+2026-09-17T11:33:09.8303520Z ##[group]Disabling automatic garbage collection
+2026-09-17T11:33:09.8305870Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-17T11:33:09.8336372Z ##[endgroup]
+2026-09-17T11:33:09.8337996Z ##[group]Setting up auth
+2026-09-17T11:33:09.8344110Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-17T11:33:09.8375737Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-17T11:33:09.8714244Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-17T11:33:09.8746699Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-17T11:33:09.8970776Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-17T11:33:09.9003558Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-17T11:33:09.9224978Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-17T11:33:09.9259861Z ##[endgroup]
+2026-09-17T11:33:09.9260758Z ##[group]Fetching the repository
+2026-09-17T11:33:09.9271268Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +15cbd84225e3ac584d1203a94a276958f38ad3be:refs/remotes/origin/main
+2026-09-17T11:33:10.9205340Z From https://github.com/CloudRepublic/caesar-forum
+2026-09-17T11:33:10.9207073Z  * [new ref]         15cbd84225e3ac584d1203a94a276958f38ad3be -> origin/main
+2026-09-17T11:33:10.9211900Z ##[endgroup]
+2026-09-17T11:33:10.9213995Z ##[group]Determining the checkout info
+2026-09-17T11:33:10.9215792Z ##[endgroup]
+2026-09-17T11:33:10.9216998Z [command]/usr/bin/git sparse-checkout disable
+2026-09-17T11:33:10.9261931Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-17T11:33:10.9297564Z ##[group]Checking out the ref
+2026-09-17T11:33:10.9300551Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-09-17T11:33:10.9651241Z Switched to a new branch 'main'
+2026-09-17T11:33:10.9657515Z branch 'main' set up to track 'origin/main'.
+2026-09-17T11:33:10.9668120Z ##[endgroup]
+2026-09-17T11:33:10.9708367Z [command]/usr/bin/git log -1 --format=%H
+2026-09-17T11:33:10.9731466Z 15cbd84225e3ac584d1203a94a276958f38ad3be
+2026-09-17T11:33:11.0145806Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-17T11:33:11.0153303Z ##[group]Run azure/login@v2
+2026-09-17T11:33:11.0154456Z with:
+2026-09-17T11:33:11.0155756Z   client-id: ***
+2026-09-17T11:33:11.0156920Z   tenant-id: ***
+2026-09-17T11:33:11.0158144Z   subscription-id: ***
+2026-09-17T11:33:11.0159232Z   enable-AzPSSession: false
+2026-09-17T11:33:11.0160359Z   environment: azurecloud
+2026-09-17T11:33:11.0161526Z   allow-no-subscriptions: false
+2026-09-17T11:33:11.0163097Z   audience: api://AzureADTokenExchange
+2026-09-17T11:33:11.0164409Z   auth-type: SERVICE_PRINCIPAL
+2026-09-17T11:33:11.0165507Z env:
+2026-09-17T11:33:11.0166487Z   RESOURCE_GROUP: CaesarGroup-forumcaesarnl
+2026-09-17T11:33:11.0167871Z   WEBAPP_NAME: caesarforum
+2026-09-17T11:33:11.0168992Z   ACR_NAME: acrcaesarforum
+2026-09-17T11:33:11.0170088Z   IMAGE_NAME: forum
+2026-09-17T11:33:11.0171062Z ##[endgroup]
+2026-09-17T11:33:11.0620844Z Running Azure CLI Login.
+2026-09-17T11:33:11.8285777Z [command]/usr/bin/az cloud set -n azurecloud
+2026-09-17T11:33:12.2162789Z Done setting cloud: "azurecloud"
+2026-09-17T11:33:12.4774619Z Federated token details:
+2026-09-17T11:33:12.4775631Z  issuer - https://token.actions.githubusercontent.com
+2026-09-17T11:33:12.4776895Z  subject claim - repo:CloudRepublic/caesar-forum:ref:refs/heads/main
+2026-09-17T11:33:12.4778090Z  audience - api://AzureADTokenExchange
+2026-09-17T11:33:12.4779497Z  job_workflow_ref - CloudRepublic/caesar-forum/.github/workflows/deploy.yml@refs/heads/main
+2026-09-17T11:33:12.4780917Z Attempting Azure CLI login by using OIDC...
+2026-09-17T11:33:13.9623652Z Subscription is set successfully.
+2026-09-17T11:33:13.9624541Z Azure CLI login succeeds by using OIDC.
+2026-09-17T11:33:13.9720519Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-17T11:33:13.9721882Z ##[group]Run azure/cli@v2
+2026-09-17T11:33:13.9722578Z with:
+2026-09-17T11:33:13.9723186Z   inlineScript: ACR_LOGIN_SERVER=$(az acr show -n "$ACR_NAME" --query loginServer -o tsv)
+echo "loginServer=$ACR_LOGIN_SERVER" >> $GITHUB_OUTPUT
+
+2026-09-17T11:33:13.9723843Z   azcliversion: agentazcliversion
+2026-09-17T11:33:13.9724123Z env:
+2026-09-17T11:33:13.9724350Z   RESOURCE_GROUP: CaesarGroup-forumcaesarnl
+2026-09-17T11:33:13.9724678Z   WEBAPP_NAME: caesarforum
+2026-09-17T11:33:13.9724919Z   ACR_NAME: acrcaesarforum
+2026-09-17T11:33:13.9725158Z   IMAGE_NAME: forum
+2026-09-17T11:33:13.9725374Z ##[endgroup]
+2026-09-17T11:33:14.4694694Z Starting script execution via docker image mcr.microsoft.com/azure-cli:2.90.0
+2026-09-17T11:33:29.3977794Z az script ran successfully.
+2026-09-17T11:33:29.3978313Z cleaning up container...
+2026-09-17T11:33:29.4149680Z MICROSOFT_AZURE_CLI_1789644794016_CONTAINER
+2026-09-17T11:33:29.4150133Z 
+2026-09-17T11:33:29.4301714Z ##[group]Run TAG=15cbd84225e3ac584d1203a94a276958f38ad3be
+2026-09-17T11:33:29.4302459Z [36;1mTAG=15cbd84225e3ac584d1203a94a276958f38ad3be[0m
+2026-09-17T11:33:29.4302863Z [36;1mACR_LOGIN_SERVER=acrcaesarforum.azurecr.io[0m
+2026-09-17T11:33:29.4303206Z [36;1m[0m
+2026-09-17T11:33:29.4303431Z [36;1maz acr login --name "$ACR_NAME"[0m
+2026-09-17T11:33:29.4303733Z [36;1m[0m
+2026-09-17T11:33:29.4304020Z [36;1mdocker build -t "$ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG" .[0m
+2026-09-17T11:33:29.4304643Z [36;1mdocker push "$ACR_LOGIN_SERVER/$IMAGE_NAME:$TAG"[0m
+2026-09-17T11:33:29.4304975Z [36;1m[0m
+2026-09-17T11:33:29.4305186Z [36;1mecho "TAG=$TAG" >> $GITHUB_ENV[0m
+2026-09-17T11:33:29.4305539Z [36;1mecho "ACR_LOGIN_SERVER=$ACR_LOGIN_SERVER" >> $GITHUB_ENV[0m
+2026-09-17T11:33:29.4345807Z shell: /usr/bin/bash -e {0}
+2026-09-17T11:33:29.4346086Z env:
+2026-09-17T11:33:29.4346326Z   RESOURCE_GROUP: CaesarGroup-forumcaesarnl
+2026-09-17T11:33:29.4346643Z   WEBAPP_NAME: caesarforum
+2026-09-17T11:33:29.4346942Z   ACR_NAME: acrcaesarforum
+2026-09-17T11:33:29.4347174Z   IMAGE_NAME: forum
+2026-09-17T11:33:29.4347389Z ##[endgroup]
+2026-09-17T11:33:33.9687291Z Login Succeeded
+2026-09-17T11:33:34.8723811Z #0 building with "default" instance using docker driver
+2026-09-17T11:33:34.8724576Z 
+2026-09-17T11:33:34.8725203Z #1 [internal] load build definition from Dockerfile
+2026-09-17T11:33:34.8725980Z #1 transferring dockerfile: 520B 0.0s done
+2026-09-17T11:33:34.8726620Z #1 DONE 0.0s
+2026-09-17T11:33:34.8726877Z 
+2026-09-17T11:33:34.8727234Z #2 [internal] load metadata for docker.io/library/node:20-alpine
+2026-09-17T11:33:35.0872938Z #2 ...
+2026-09-17T11:33:35.0873277Z 
+2026-09-17T11:33:35.0873643Z #3 [auth] library/node:pull token for registry-1.docker.io
+2026-09-17T11:33:35.0874228Z #3 DONE 0.0s
+2026-09-17T11:33:35.2369504Z 
+2026-09-17T11:33:35.2370007Z #2 [internal] load metadata for docker.io/library/node:20-alpine
+2026-09-17T11:33:35.5778086Z #2 DONE 0.9s
+2026-09-17T11:33:35.6947879Z 
+2026-09-17T11:33:35.6948791Z #4 [internal] load .dockerignore
+2026-09-17T11:33:35.6949364Z #4 transferring context: 110B done
+2026-09-17T11:33:35.6949794Z #4 DONE 0.0s
+2026-09-17T11:33:35.6949982Z 
+2026-09-17T11:33:35.6950144Z #5 [internal] load build context
+2026-09-17T11:33:35.6950582Z #5 transferring context: 11.46MB 0.1s done
+2026-09-17T11:33:35.6951033Z #5 DONE 0.1s
+2026-09-17T11:33:35.6951213Z 
+2026-09-17T11:33:35.6951876Z #6 [builder 1/8] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+2026-09-17T11:33:35.6954186Z #6 resolve docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 done
+2026-09-17T11:33:35.6955626Z #6 extracting sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb
+2026-09-17T11:33:35.7953794Z #6 extracting sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 0.1s done
+2026-09-17T11:33:35.7956118Z #6 sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 7.67kB / 7.67kB done
+2026-09-17T11:33:35.7957299Z #6 sha256:afdf98210b07b586eb71fa22ba2e432e058e4cd1304d31ed60888755b8c865fb 1.72kB / 1.72kB done
+2026-09-17T11:33:35.7958433Z #6 sha256:11cedc39e663e7c5d5cb9cc77a461a0d2adc25537b94e6831a6108f09cb2001b 6.52kB / 6.52kB done
+2026-09-17T11:33:35.7959602Z #6 sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb 3.86MB / 3.86MB 0.1s done
+2026-09-17T11:33:35.7960812Z #6 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 0B / 43.23MB 0.1s
+2026-09-17T11:33:35.7961988Z #6 sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 0B / 1.26MB 0.1s
+2026-09-17T11:33:35.7963596Z #6 sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 0B / 445B 0.1s
+2026-09-17T11:33:35.8976815Z #6 sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 43.23MB / 43.23MB 0.3s done
+2026-09-17T11:33:35.8978854Z #6 sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 1.26MB / 1.26MB 0.2s done
+2026-09-17T11:33:35.8980083Z #6 sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 445B / 445B 0.2s done
+2026-09-17T11:33:36.0085842Z #6 extracting sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 0.1s
+2026-09-17T11:33:37.1129832Z #6 extracting sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287 1.1s done
+2026-09-17T11:33:37.1230765Z #6 extracting sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122
+2026-09-17T11:33:37.3633929Z #6 extracting sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122 0.0s done
+2026-09-17T11:33:37.3635341Z #6 extracting sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096 done
+2026-09-17T11:33:37.3636506Z #6 DONE 1.6s
+2026-09-17T11:33:37.3636899Z 
+2026-09-17T11:33:37.3637106Z #7 [builder 2/8] WORKDIR /app
+2026-09-17T11:33:37.3637629Z #7 DONE 0.0s
+2026-09-17T11:33:37.3637860Z 
+2026-09-17T11:33:37.3638115Z #8 [production 3/5] COPY package*.json ./
+2026-09-17T11:33:37.3638496Z #8 DONE 0.0s
+2026-09-17T11:33:37.3638641Z 
+2026-09-17T11:33:37.3638848Z #9 [builder 3/8] RUN npm install --global npm@10.9.3
+2026-09-17T11:33:41.2314048Z #9 4.036 
+2026-09-17T11:33:41.2314686Z #9 4.036 removed 14 packages, and changed 100 packages in 4s
+2026-09-17T11:33:41.2315333Z #9 4.036 
+2026-09-17T11:33:41.3322667Z #9 4.036 25 packages are looking for funding
+2026-09-17T11:33:41.3323312Z #9 4.036   run `npm fund` for details
+2026-09-17T11:33:41.3323678Z #9 DONE 4.1s
+2026-09-17T11:33:41.3323805Z 
+2026-09-17T11:33:41.3323920Z #10 [builder 4/8] COPY package*.json ./
+2026-09-17T11:33:41.3324209Z #10 DONE 0.0s
+2026-09-17T11:33:41.4836798Z 
+2026-09-17T11:33:41.4837909Z #11 [builder 5/8] RUN npm ci && test -x node_modules/.bin/tsx
+2026-09-17T11:34:53.4808326Z #11 72.15 npm notice
+2026-09-17T11:34:53.4809202Z #11 72.15 npm notice New major version of npm available! 10.9.3 -> 12.0.2
+2026-09-17T11:34:53.4809943Z #11 72.15 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+2026-09-17T11:34:53.4814606Z #11 72.15 npm notice To update run: npm install -g npm@12.0.2
+2026-09-17T11:34:53.4820888Z #11 72.15 npm notice
+2026-09-17T11:34:53.5954741Z #11 72.15 npm error Exit handler never called!
+2026-09-17T11:34:53.5955686Z #11 72.15 npm error This is an error with npm itself. Please report this error at:
+2026-09-17T11:34:53.5956586Z #11 72.15 npm error   <https://github.com/npm/cli/issues>
+2026-09-17T11:34:53.5957680Z #11 72.15 npm error A complete log of this run can be found in: /root/.npm/_logs/2026-09-17T11_33_41_525Z-debug-0.log
+2026-09-17T11:34:53.5958926Z #11 ERROR: process "/bin/sh -c npm ci && test -x node_modules/.bin/tsx" did not complete successfully: exit code: 1
+2026-09-17T11:34:53.6072796Z ------
+2026-09-17T11:34:53.6073742Z  > [builder 5/8] RUN npm ci && test -x node_modules/.bin/tsx:
+2026-09-17T11:34:53.6074526Z 72.15 npm notice
+2026-09-17T11:34:53.6075309Z 72.15 npm notice New major version of npm available! 10.9.3 -> 12.0.2
+2026-09-17T11:34:53.6076176Z 72.15 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+2026-09-17T11:34:53.6076997Z 72.15 npm notice To update run: npm install -g npm@12.0.2
+2026-09-17T11:34:53.6077589Z 72.15 npm notice
+2026-09-17T11:34:53.6078009Z 72.15 npm error Exit handler never called!
+2026-09-17T11:34:53.6078680Z 72.15 npm error This is an error with npm itself. Please report this error at:
+2026-09-17T11:34:53.6079457Z 72.15 npm error   <https://github.com/npm/cli/issues>
+2026-09-17T11:34:53.6080419Z 72.15 npm error A complete log of this run can be found in: /root/.npm/_logs/2026-09-17T11_33_41_525Z-debug-0.log
+2026-09-17T11:34:53.6081268Z ------
+2026-09-17T11:34:53.6146302Z Dockerfile:9
+2026-09-17T11:34:53.6172794Z --------------------
+2026-09-17T11:34:53.6173209Z    7 |     
+2026-09-17T11:34:53.6173588Z    8 |     COPY package*.json ./
+2026-09-17T11:34:53.6174124Z    9 | >>> RUN npm ci && test -x node_modules/.bin/tsx
+2026-09-17T11:34:53.6174653Z   10 |     
+2026-09-17T11:34:53.6175004Z   11 |     COPY . .
+2026-09-17T11:34:53.6175726Z --------------------
+2026-09-17T11:34:53.6176738Z ERROR: failed to build: failed to solve: process "/bin/sh -c npm ci && test -x node_modules/.bin/tsx" did not complete successfully: exit code: 1
+2026-09-17T11:34:53.6210964Z ##[error]Process completed with exit code 1.
+2026-09-17T11:34:53.6361048Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-17T11:34:53.6362985Z Post job cleanup.
+2026-09-17T11:34:53.6852419Z Clearing azure cli accounts from the local cache.
+2026-09-17T11:34:53.6864225Z [command]/usr/bin/az account clear
+2026-09-17T11:34:54.3705798Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-09-17T11:34:54.3708200Z Post job cleanup.
+2026-09-17T11:34:54.4849214Z [command]/usr/bin/git version
+2026-09-17T11:34:54.4891951Z git version 2.55.0
+2026-09-17T11:34:54.4930702Z Temporarily overriding HOME='/home/runner/work/_temp/b1644b67-eb68-478d-b6bd-4385a9892d84' before making global git config changes
+2026-09-17T11:34:54.4932655Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-17T11:34:54.4936297Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/caesar-forum/caesar-forum
+2026-09-17T11:34:54.4975099Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-17T11:34:54.5010560Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-17T11:34:54.5258411Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-17T11:34:54.5286015Z http.https://github.com/.extraheader
+2026-09-17T11:34:54.5298658Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-17T11:34:54.5333045Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-17T11:34:54.5581899Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-17T11:34:54.5612826Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-17T11:34:54.6031153Z Cleaning up orphan processes
+2026-09-17T11:34:54.6360710Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, azure/cli@v2, azure/login@v2. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

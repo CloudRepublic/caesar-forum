@@ -6,11 +6,12 @@ WORKDIR /app
 RUN npm install --global npm@10.9.3
 
 COPY package*.json ./
-RUN npm ci && test -x node_modules/.bin/tsx
+RUN npm install --include=dev --no-audit --no-fund \
+    && test -x node_modules/.bin/tsx
 
 COPY . .
 RUN npm run build
-RUN npm prune --omit=dev
+RUN npm prune --omit=dev --no-audit --no-fund
 
 # Production stage
 FROM node:20-alpine AS production
