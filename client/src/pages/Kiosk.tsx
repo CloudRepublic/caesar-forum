@@ -175,6 +175,23 @@ function SessionBlock({
       </div>
 
       <div className="flex items-center gap-2 mt-1 text-muted-foreground relative z-10">
+        {isCompact && session.speakers.length > 0 && (
+          <div className="flex -space-x-1.5 shrink-0">
+            {session.speakers.map((speaker) => (
+              <Avatar
+                key={speaker.name}
+                className="h-6 w-6 border border-background"
+              >
+                {speaker.photoUrl && (
+                  <AvatarImage src={speaker.photoUrl} alt={speaker.name} />
+                )}
+                <AvatarFallback className="bg-primary/10 text-[9px] font-semibold text-primary">
+                  {getInitials(speaker.name)}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+          </div>
+        )}
         <Clock className="h-4 w-4 shrink-0" />
         <span className="text-sm font-medium">
           {formatTime(session.startTime)} – {formatTime(session.endTime)}
