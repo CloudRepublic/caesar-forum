@@ -170,7 +170,7 @@ function SessionBlock({
         </h3>
 
         {session.speakers.length > 0 && !isCompact && (
-          <div className="flex items-center gap-3 text-muted-foreground">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <div className="flex -space-x-2 shrink-0">
               {session.speakers.map((speaker) => (
                 <Avatar
