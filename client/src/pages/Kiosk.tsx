@@ -53,15 +53,17 @@ function SessionBlock({
   session,
   status,
   heightPx,
+  uiScale,
 }: {
   session: KioskSession;
   status: SessionStatus;
   heightPx: number;
+  uiScale: number;
 }) {
   const isNow = status === "now";
   const isNext = status === "next";
-  const isTiny = heightPx < 56;
-  const isCompact = !isTiny && heightPx < 140;
+  const isTiny = heightPx < 56 * uiScale;
+  const isCompact = !isTiny && heightPx < 140 * uiScale;
   const isFoodDrink = isFoodDrinkSession(session.categories);
 
   const borderClass = isNow
@@ -173,6 +175,7 @@ const ROOM_HEADER_MARGIN = 16;
 
 export default function Kiosk() {
   const [now, setNow] = useState(() => new Date(new Date().toISOString().replace(/^\d{4}-\d{2}-\d{2}/, "2026-04-16")));
+  const [uiScale, setUiScale] = useState(1);
   // Ref on the first room's timeline div — CSS (flex-1) determines its height
   const timelineRef = useRef<HTMLDivElement>(null);
   const [timelineHeightPx, setTimelineHeightPx] = useState(0);
@@ -186,6 +189,27 @@ export default function Kiosk() {
 
   useEffect(() => {
     document.title = "Caesar Forum — Kiosk";
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const originalFontSize = root.style.fontSize;
+
+    const updateScale = () => {
+      const scale = Math.min(
+        2,
+        Math.max(1, Math.min(window.innerWidth / 1920, window.innerHeight / 1080)),
+      );
+      setUiScale(scale);
+      root.style.fontSize = `${16 * scale}px`;
+    };
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      root.style.fontSize = originalFontSize;
+    };
   }, []);
 
   const { data, isLoading } = useQuery<ForumData>({
@@ -296,7 +320,7 @@ export default function Kiosk() {
 
           {/* Time axis: mirrors room column structure (fixed header + flex-1 timeline) */}
           <div className="w-20 shrink-0 flex flex-col h-full">
-            <div style={{ height: ROOM_HEADER_H, marginBottom: ROOM_HEADER_MARGIN }} />
+            <div style={{ height: ROOM_HEADER_H * uiScale, marginBottom: ROOM_HEADER_MARGIN * uiScale }} />
             <div className="relative flex-1">
               {timeMarkers.map((marker, i) => (
                 <div
@@ -327,7 +351,7 @@ export default function Kiosk() {
                   {/* Room header — fixed height, same as time axis spacer */}
                   <div
                     className="flex items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-5 text-primary-foreground shrink-0 overflow-hidden"
-                    style={{ height: ROOM_HEADER_H, marginBottom: ROOM_HEADER_MARGIN }}
+                    style={{ height: ROOM_HEADER_H * uiScale, marginBottom: ROOM_HEADER_MARGIN * uiScale }}
                   >
                     <MapPin className="h-5 w-5 shrink-0" />
                     <h2 className="text-base font-bold truncate" data-testid={`kiosk-room-name-${room}`}>{room}</h2>
@@ -342,7 +366,7 @@ export default function Kiosk() {
                       const startMs = new Date(session.startTime).getTime();
                       const endMs = new Date(session.endTime).getTime();
                       const topPx = ((startMs - timelineStart) / 60000) * PIXELS_PER_MINUTE;
-                      const heightPx = Math.max(((endMs - startMs) / 60000) * PIXELS_PER_MINUTE, 28);
+                      const heightPx = Math.max(((endMs - startMs) / 60000) * PIXELS_PER_MINUTE, 28 * uiScale);
 
                       const baseStatus = getSessionStatus(session, now);
                       const status: SessionStatus = baseStatus === "later" && nextSessionIds.has(session.id) ? "next" : baseStatus;
@@ -353,7 +377,7 @@ export default function Kiosk() {
                           className="absolute left-0 right-0"
                           style={{ top: `${topPx}px`, height: `${heightPx}px` }}
                         >
-                          <SessionBlock session={session} status={status} heightPx={heightPx} />
+                          <SessionBlock session={session} status={status} heightPx={heightPx} uiScale={uiScale} />
                         </div>
                       );
                     })}
