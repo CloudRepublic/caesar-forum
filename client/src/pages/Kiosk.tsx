@@ -81,15 +81,25 @@ function SessionBlock({
         style={{ height: `${heightPx}px` }}
         data-testid={`kiosk-session-${session.id}`}
       >
-        {isNow && <span className="h-2 w-2 rounded-full bg-green-500 shrink-0 animate-pulse" />}
-        {isNext && <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />}
+        {isFoodDrink && (
+          <div
+            className="absolute inset-0 z-0 pointer-events-none opacity-[0.12] dark:opacity-[0.10]"
+            style={{
+              backgroundImage: `url(${foodDrinkBg})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+        )}
+        {isNow && <span className="relative z-10 h-2 w-2 rounded-full bg-green-500 shrink-0 animate-pulse" />}
+        {isNext && <span className="relative z-10 h-2 w-2 rounded-full bg-amber-500 shrink-0" />}
         <span
-          className="text-sm font-semibold truncate"
+          className="relative z-10 text-sm font-semibold truncate"
           data-testid={`kiosk-title-${session.id}`}
         >
           {session.title}
         </span>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        <div className="relative z-10 ml-auto flex shrink-0 items-center gap-2">
           {session.speakers.length > 0 && (
             <div className="flex -space-x-1.5">
               {session.speakers.map((speaker) => (
