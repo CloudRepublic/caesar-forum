@@ -11,6 +11,7 @@ import foodDrinkBg from "@assets/image_1768474260490.png";
 import { SlideDeckDialog } from "@/components/SlideDeckDialog";
 import { SlideDeckUploadDialog } from "@/components/SlideDeckUploadDialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@/context/UserContext";
 
 const categoryColorMap: Record<string, string> = {
   talk: "bg-[hsl(var(--category-talk-bg))] text-[hsl(var(--category-talk-fg))]",
@@ -53,6 +54,7 @@ export function SessionTimeline({
   editionDate,
   isAdmin = false,
 }: SessionTimelineProps) {
+  const { login } = useUser();
   const queryClient = useQueryClient();
   const [slidedeckSessionId, setSlidedeckSessionId] = useState<string | null>(null);
   const [uploadSessionId, setUploadSessionId] = useState<string | null>(null);
@@ -307,8 +309,13 @@ export function SessionTimeline({
                             </Button>
                           )
                         ) : (
-                          <Button variant="secondary" size="sm" disabled>
-                            Log in
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={login}
+                            data-testid={`timeline-login-${session.id}`}
+                          >
+                            Log in om in te schrijven
                           </Button>
                         )}
                       </div>
